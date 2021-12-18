@@ -1,0 +1,457 @@
+# -*- coding: utf-8 -*-
+
+try:
+    import pywikibot
+    from pywikibot import pagegenerators, textlib
+    no_pywikibot = False
+except ImportError:
+    no_pywikibot = True
+    input("Pywikibot doit être installé sur votre PC ou serveur pour exécuter ce bot, ou il est possible que vous n'avez pas installé ou utilisé Pywikibot correctement.")
+
+import base64, datetime, json, logging, os, random, re, socket, time, urllib.request, urllib.error, urllib.parse, zlib
+from config import *
+
+class get_wiki:
+    def __init__(self, url=None, user_wiki=user_bot, lang="", family=None):
+        self.user_wiki = user_wiki
+        if url is not None:
+            self.site = pywikibot.Site(url.split(".")[0], url.split(".")[1], self.user_wiki)
+        else:
+            self.site = pywikibot.Site(lang, family, self.user_wiki)
+        self.fullurl = self.site.siteinfo["general"]["server"]
+        self.protocol = self.fullurl.split("/")[0]
+        if self.protocol == "":
+            self.protocol = "https:"
+        self.url = self.fullurl.split("/")[2]
+        self.articlepath = self.site.siteinfo["general"]["articlepath"].replace("$1", "")
+        self.scriptpath = self.site.siteinfo["general"]["scriptpath"]
+
+    def site_info(self, prop, info):
+        return self.site.siteinfo["general"][prop][info]
+
+    def all_pages(self, n_pages=5000, ns=0, start=None, end=None, apfilterredir=None, apprefix=None, urladd=None):
+        pages = []
+        url = "%s//%s%s/api.php?action=query&list=allpages&aplimit=%s&apnamespace=%s&format=json" % (self.protocol, self.url, self.scriptpath, str(n_pages), str(ns))
+        if start is not None:
+            url += "&apfrom=" + start
+        if end is not None:
+            url += "&apto=" + end
+        if apfilterredir is not None:
+            url += "&apfilterredir=" + apfilterredir
+        if apprefix is not None:
+            url += "&apprefix=" + urllib.parse.quote(apprefix)
+        if urladd is not None:
+            url += urllib.parse.quote(urladd)
+        apcontinue = ""
+        while apcontinue != None:
+            if apcontinue != "":
+                j = json.loads(request_site(url + "&apcontinue=" + urllib.parse.quote(apcontinue)))
+            else:
+                j = json.loads(request_site(url))
+            try:
+                contribs = j["query"]["allpages"]
+            except KeyError:
+                return []
+            try:
+                apcontinue = j["continue"]["apcontinue"]
+            except KeyError:
+                apcontinue = None
+            for contrib in contribs:
+                pages.append(contrib["title"])
+        return pages
+
+    def rc_pages(self, n_edits=5000, timestamp=None):
+        pages = []
+        url = "%s//%s%s/api.php?action=query&list=recentchanges&rclimit=%s&rcend=%s&rcprop=timestamp|title|user|ids|comment&rcshow=!bot&format=json" % (self.protocol, self.url, self.scriptpath, str(n_edits), str(timestamp))
+        rccontinue = ""
+        while rccontinue != None:
+            if rccontinue != "":
+                j = json.loads(request_site(url + "&rccontinue=" + rccontinue))
+            else:
+                j = json.loads(request_site(url))
+            contribs = j["query"]["recentchanges"]
+            try:
+                rccontinue = j["continue"]["rccontinue"]
+            except KeyError:
+                rccontinue = None
+            for contrib in contribs:
+                pages.append(contrib["title"])
+        return pages
+
+    def rc_list(self, n_edits=10, timestamp=None):
+        lines = []
+        stats_vandalisms = {"ip": 0, "user": 0, "score_ip": 0, "score_user": 0}
+        try:
+            if timestamp is None:
+                url = "%s//%s%s/api.php?action=query&list=recentchanges&rclimit=%s&rcprop=timestamp|title|user|ids|comment&rcshow=!bot&format=json" % (self.protocol, self.url, self.scriptpath, str(n_edits))
+            else:
+                url = self.protocol + "//" + self.url + self.scriptpath + "/api.php?action=query&list=recentchanges&rclimit=5000&rcend=" + str(timestamp) + "&rcprop=timestamp|title|user|ids|comment&rcshow=!bot&format=json"
+            j = json.loads(request_site(url))
+            contribs = j["query"]["recentchanges"]
+
+            for contrib in contribs:
+                info = contrib["timestamp"] + " - page : " + contrib["title"] + " - utilisateur : " + contrib["user"] + " - " + self.protocol + "//" + self.url + "/w/index.php?diff=next&oldid=" + str(contrib["revid"]) + " (" + contrib["comment"] + ")"
+                try:
+                    page_modif = get_page(self, contrib["title"])
+                    vand = page_modif.vandalism_score(contrib["revid"])
+                    info += " - score de vandalisme : " + str(vand)
+                    if page_modif.isIpEdit():
+                        stats_vandalisms["ip"] += 1
+                        stats_vandalisms["score_ip"] += vand
+                    else:
+                        stats_vandalisms["user"] += 1
+                        stats_vandalisms["score_user"] += vand
+                except Exception as e:
+                    print(e)
+                lines.append(info)
+            try:
+                ip_score = stats_vandalisms["score_ip"]/stats_vandalisms["ip"]
+            except:
+                ip_score = 0
+            try:
+                user_score = stats_vandalisms["score_user"]/stats_vandalisms["user"]
+            except:
+                user_score = 0
+            try:
+                ip_user_score = (stats_vandalisms["score_ip"]+stats_vandalisms["score_user"])/(stats_vandalisms["ip"]+stats_vandalisms["user"])
+            except:
+                ip_user_score = 0
+            lines.append(str(n_edits) + " modifications, seul les 10 dernières modifications sont affichées. Score de vandalismes par IP : " + str(ip_score) + ". Score des vandalismes par utilisateur : " + str(user_score) + ". Score total : " + str(ip_user_score))
+        except Exception as e:
+            print(e)
+            lines = ["Erreur."]
+        with open("report_rc.txt", "a") as file:
+            file.write("-----" + datetime.datetime.now().strftime("%d/%m/%Y %H:%M:%S") + "-----\n")
+            file.write("\n".join(lines) + "\n")
+        return lines
+
+    def page(self, page_wiki):
+        return get_page(self, page_wiki)
+
+    def category(self, page_wiki):
+        return get_category(self, page_wiki)
+
+    def contribs_user(self, user_wiki):
+        try:
+            url = self.protocol + "//" + self.url + self.scriptpath + "/api.php?action=query&list=users&ususers=" + user_wiki + "&usprop=blockinfo|editcount|groups|registration&format=json"
+            j = json.loads(request_site(url))
+            msg = self.protocol + "//" + self.url + self.articlepath + "User:" + user_wiki + " " + str(j["query"]["users"][0]["editcount"]) + " contributions (" + ", ".join(j["query"]["users"][0]["groups"]) + ") - inscrit le " + j["query"]["users"][0]["registration"]
+            try:
+                msg += " - Utilisateur bloqué le " + j["query"]["users"][0]["blockedtimestamp"] + " par " + j["query"]["users"][0]["blockedby"] + ". Fin du blocage : " + j["query"]["users"][0]["blockexpiry"] + ". Raison : " + j["query"]["users"][0]["blockreason"]
+            except KeyError:
+                pass
+        except KeyError:
+            msg = self.protocol + "//" + self.url + self.articlepath + "User:" + user_wiki
+        return msg
+
+    def contribs_user_list(self, user_wiki, limit=10):
+        url = self.protocol + "//" + self.url + self.scriptpath + "/api.php?action=query&list=usercontribs&ucuser=" + user_wiki + "&uclimit=" + str(limit) + "&format=json"
+        j = json.loads(request_site(url))
+        return j["query"]["usercontribs"]
+
+class get_page(pywikibot.Page):
+    def __init__(self, source, title):
+        self.user_wiki = source.user_wiki
+        self.source = source.site
+        self.page_name = title
+        if self.page_name.split(":")[0].lower() == "special" or self.page_name.split(":")[0].lower() == "spécial":
+            self.special = True
+        else:
+            self.special = False
+            pywikibot.Page.__init__(self, self.source, self.page_name)
+        self.init_page()
+
+    def init_page(self):
+        self.fullurl = self.source.siteinfo["general"]["server"] + self.source.siteinfo["general"]["articlepath"].replace("$1", self.page_name)
+        self.protocol = self.fullurl.split("/")[0]
+        if self.protocol == "":
+            self.protocol = "https:"
+        self.url = self.fullurl.split("/")[2]
+        self.articlepath = self.source.siteinfo["general"]["articlepath"].replace("$1", "")
+        self.scriptpath = self.source.siteinfo["general"]["scriptpath"]
+        if not self.special:
+            try:
+                self.revisions_list = list(self.revisions())
+                self.contributor_name = self.userName()
+                self.page_ns = self.namespace()
+                self.oldid = self.latest_revision_id
+            except:
+                self.revisions_list = []
+                self.contributor_name = ""
+                self.page_ns = -1
+                self.oldid = None
+
+        self.limit = -50
+        self.limit2 = -30
+        self.except_contribs = 50
+        self.alert_page = "Project:Alerte"
+        self.alert_request = False
+
+    def __str__(self):
+        if self.special:
+            return self.protocol + "//" + self.url + self.articlepath + self.page_name + " (page spéciale)"
+        else:
+            if not self.exists():
+                return self.protocol + "//" + self.url + self.articlepath + self.page_name + " (page inexistante)"
+            elif self.isRedirectPage():
+                return self.protocol + "//" + self.url + self.articlepath + self.page_name + " (redirection)"
+            else:
+                return self.protocol + "//" + self.url + self.articlepath + self.page_name
+
+    def revert(self):
+        self.text = self.get_text_page_old()[1]
+        self.save("Annulation modification non-constructive", botflag=False)
+        talk = pywikibot.Page(self.source, "User Talk:%s" % self.contributor_name)
+        if not talk.exists():
+            talk.text = ""
+        if ("averto-1" in talk.text.lower() or "niveau=1" in talk.text.lower()) and "averto-2" not in talk.text.lower() and "niveau=2" not in talk.text.lower():
+            alert = pywikibot.Page(self.source, self.alert_page)
+            alert.text = alert.get() + "\n{{subst:User:%s/Alert|%s}}" % (self.user_wiki, self.contributor_name)
+            alert.save("Alerte vandalisme", botflag=False)
+            if talk.exists():
+                talk.text = talk.get() + "\n{{subst:User:%s/Vandalism2|%s}}" % (self.user_wiki, self.page_name)
+                talk.save("Avertissement 2", botflag=False)
+            else:
+                talk.text = "{{subst:User:%s/Vandalism2|%s}}" % (self.user_wiki, self.page_name)
+                talk.save("Avertissement 2", botflag=False)
+            self.alert_request = True
+        elif ("averto-0" in talk.text.lower() or "niveau=0" in talk.text.lower()) and "averto-1" not in talk.text.lower() and "niveau=1" not in talk.text.lower() and "averto-2" not in talk.text.lower() and "niveau=2" not in talk.text.lower():
+            if talk.exists():
+                talk.text = talk.get() + "\n{{subst:User:%s/Vandalism1|%s}}" % (self.user_wiki, self.page_name)
+                talk.save("Avertissement 1", botflag=False)
+            else:
+                talk.text = "{{subst:User:%s/Vandalism1|%s}}" % (self.user_wiki, self.page_name)
+                talk.save("Avertissement 1", botflag=False)
+        elif "averto-0" not in talk.text.lower() and "niveau=0" not in talk.text.lower() and "averto-1" not in talk.text.lower() and "niveau=1" not in talk.text.lower() and "averto-2" not in talk.text.lower() and "niveau=2" not in talk.text.lower():
+            if talk.exists():
+                talk.text = talk.get() + "\n{{subst:User:%s/Vandalism0|%s}}" % (self.user_wiki, self.page_name)
+                talk.save("Avertissement 0", botflag=False)
+            else:
+                talk.text = "{{subst:User:%s/Vandalism0|%s}}" % (self.user_wiki, self.page_name)
+                talk.save("Avertissement 0", botflag=False)
+
+    def vandalism_revert(self):
+        vand = self.vandalism_score()
+        revert = False
+        if vand <= self.limit:
+            print("Modification non-constructive détectée (%s)." % str(vand))
+            revert = True
+        elif vand <= self.limit2:
+            print("Modification suspecte détectée (%s)." % str(vand))
+        else:
+            print("Pas de modification suspecte détectée (%s)." % str(vand))
+        vandal = pywikibot.User(self.source, self.contributor_name)
+        if (vandal.editCount() > self.except_contribs or self.contributor_name == self.user_wiki) and not test:
+            revert = False
+            vand = 0
+        if self.page_ns == 2 and not test:
+            if self.contributor_name in self.page_name:
+                revert = False
+                vand = 0
+        if revert:
+            self.revert()
+        return vand
+
+    def get_text_page_old(self, revision_oldid=None, revision_oldid2=None): #revision_oldid : nouvelle version/version à vérifier, revision_oldid2 : ancienne version/version à comparer
+        oldid = -1
+        if revision_oldid is not None:
+            text_page = self.getOldVersion(oldid = revision_oldid)
+        else:
+            text_page = self.text
+        if revision_oldid2 is not None:
+            oldid = revision_oldid2
+        else:
+            for revision in self.revisions_list:
+                if revision.user != self.contributor_name and (revision_oldid is None or revision.revid <= revision_oldid):
+                    oldid = revision.revid
+                    break
+        if oldid != -1:
+            text_page_old = self.getOldVersion(oldid = oldid)
+        else:
+            text_page_old = "{{subst:User:%s/VandalismDelete}}" % self.user_wiki
+        if text_page is None:
+            text_page = ""
+        if text_page_old is None:
+            text_page_old = ""
+        return text_page, text_page_old
+
+    def vandalism_score(self, revision_oldid=None, revision_oldid2=None):
+        self.vandalism_score_detect = []
+        text_page, text_page_old = self.get_text_page_old(revision_oldid, revision_oldid2)
+        open("regex_vandalisms_0.txt", "a").close()
+        open("size_vandalisms_0.txt", "a").close()
+        open("diff_vandalisms_0.txt", "a").close()
+        open("regex_vandalisms_del_0.txt", "a").close()
+        open("regex_vandalisms_0-3.txt", "a").close()
+        vand = 0
+        if self.page_ns == 0 or test:
+            with open("regex_vandalisms_0.txt", "r") as regex_vandalisms_file:
+                for regex_vandalisms in regex_vandalisms_file.readlines():
+                    regex = regex_vandalisms[0:len(regex_vandalisms)-len(regex_vandalisms.split(":")[-1])-1]
+                    regex_detect = regex_vandalism(regex, text_page, text_page_old)
+                    if regex_detect:
+                        score = int(regex_vandalisms.split(":")[-1])
+                        self.vandalism_score_detect.append(["add_regex", score, regex_detect])
+                        vand += score
+            with open("size_vandalisms_0.txt", "r") as regex_vandalisms_file:
+                for regex_vandalisms in regex_vandalisms_file.readlines():
+                    size = regex_vandalisms[0:len(regex_vandalisms)-len(regex_vandalisms.split(":")[-1])-1]
+                    if len(text_page) < int(size):
+                        score = int(regex_vandalisms.split(":")[-1])
+                        self.vandalism_score_detect.append(["size", score, size])
+                        vand += score
+            with open("diff_vandalisms_0.txt", "r") as regex_vandalisms_file:
+                for regex_vandalisms in regex_vandalisms_file.readlines():
+                    diff = regex_vandalisms[0:len(regex_vandalisms)-len(regex_vandalisms.split(":")[-1])-1]
+                    if (int(diff) < 0 and len(text_page) - len(text_page_old) <= int(diff)) or (int(diff) >= 0 and len(text_page) - len(text_page_old) >= int(diff)):
+                        score = int(regex_vandalisms.split(":")[-1])
+                        self.vandalism_score_detect.append(["diff", score, diff])
+                        vand += score
+            with open("regex_vandalisms_del_0.txt", "r") as regex_vandalisms_file:
+                for regex_vandalisms in regex_vandalisms_file.readlines():
+                    regex = regex_vandalisms[0:len(regex_vandalisms)-len(regex_vandalisms.split(":")[-1])-1]
+                    regex_detect = regex_vandalism(regex, text_page_old, text_page)
+                    if regex_detect:
+                        score = int(regex_vandalisms.split(":")[-1])
+                        self.vandalism_score_detect.append(["del_regex", score, regex_detect])
+                        vand += score
+
+        if self.page_ns == 0 or self.page_ns == 3 or test:
+            regex_vandalisms_file = open("regex_vandalisms_0-3.txt", "r")
+            for regex_vandalisms in regex_vandalisms_file.readlines():
+                regex = regex_vandalisms[0:len(regex_vandalisms)-len(regex_vandalisms.split(":")[-1])-1]
+                regex_detect = regex_vandalism(regex, text_page, text_page_old)
+                if regex_detect:
+                    score = int(regex_vandalisms.split(":")[-1])
+                    self.vandalism_score_detect.append(["add_regex", score, regex_detect])
+                    vand += score
+
+        return vand
+
+    def edit_replace(self, file1="replace1.txt", file2="replace2.txt"):
+        replace = False
+        while True:
+            try:
+                replace1_file = open(file1, "r")
+                replace2_file = open(file2, "r")
+                break
+            except:
+                replace1_file = open(file1, "w")
+                replace2_file = open(file2, "w")
+                replace1_file.write("")
+                replace2_file.write("")
+                replace1_file.close()
+                replace2_file.close()
+            
+        replace1_lines, replace2_lines = replace1_file.readlines(), replace2_file.readlines()
+        i = 0
+
+        for replace1 in replace1_lines:
+            replace2 = replace2_lines[i]
+            print("Remplacement de %s par %s..." % (replace1, replace2))
+            self.text = re.sub(replace1, replace2, text_page)
+            i += 1
+
+        if self.text != self.get():
+            self.save("Recherche-remplacement")
+            replace = True
+            print("Recherche-remplacement effectuée (" + self.protocol + "//" + self.url + self.scriptpath + "/index.php?diff=next&oldid=" + str(self.previousRevision()) + ").")
+        else:
+            print("Rien à remplacer.")
+
+        replace1_file.close()
+        replace2_file.close()
+        return replace
+
+    def redirects(self):
+        type_redirect = None
+        try:
+            if self.isRedirectPage():
+                page_redirect = self.getRedirectTarget()
+                if page_redirect.exists() != True:
+                    type_redirect = "broken"
+                    self.put("{{User:%s/RedirectDelete}}" % self.user_wiki, "Demande suppression redirection cassée")
+                    print("Redirecton cassée demandée à la suppression.")
+                elif page_redirect.isRedirectPage():
+                    type_redirect = "double"
+                    self.put("#REDIRECT[[%s]]" % page_redirect.getRedirectTarget().title(), "Correction redirection")
+                    print("Double redirection corrigée.")
+                else:
+                    type_redirect = "correct"
+                    print("Redirection correcte.")
+            else:
+                print("Pas une redirection.")
+        except pywikibot.exceptions.CircularRedirect:
+            type_redirect = "circular"
+            self.put("{{User:%s/RedirectDelete|circular=True}}" % self.user_wiki, "Demande suppression redirection en boucle")
+            print("Redirecton en boucle demandée à la suppression.")
+        return type_redirect
+
+    def category_page(self, category_name):
+        for category in self.categories():
+            if category.title() == category_name:
+                return True
+        return False
+
+    def del_categories_no_exists(self):
+        categories_list = []
+        for category in self.categories():
+            if not category.exists():
+                self.text = re.sub(r"\[\[(?i)" + re.escape(category.title()) + r"(\|.*)?\]\]", "", self.text, flags=re.IGNORECASE)
+                categories_list.append(category.title())
+        if categories_list != []:
+            self.save("Suppression des catégories inexistantes")
+        return categories_list
+
+    def del_files_no_exists(self):
+        files_list = []
+        for file_page in self.imagelinks():
+            if not file_page.exists():
+                self.text = re.sub(r"\[\[(?i)" + re.escape(file_page.title()) + r"(\|.*)?\]\]", "", self.text, flags=re.IGNORECASE)
+                files_list.append(file_page.title())
+        if files_list != []:
+            self.save("Suppression des fichiers inexistantes")
+        return files_list
+
+class get_category(get_page, pywikibot.Category):
+    def __init__(self, source, title):
+        self.source = source.site
+        self.page_name = title
+        pywikibot.Category.__init__(self, self.source, title)
+        get_page.init_page(self)
+
+    def cat_pages(self):
+        gen = pagegenerators.CategorizedPageGenerator(self)
+        i = 0
+        for page in gen:
+            i += 1
+        return i
+
+    def get_pages(self, ns=None):
+        gen = pagegenerators.CategorizedPageGenerator(self)
+        pages = []
+        for page in gen:
+            if page.namespace() == ns or ns is None:
+                pages.append(page.title())
+        return pages
+
+def request_site(url, headers={"User-Agent": "Mozilla/5.0"}):
+    site = urllib.request.Request(url, headers=headers)
+    page = urllib.request.urlopen(site)
+    return page.read().decode("utf-8")
+
+def regex_vandalism(regex, text_page1, text_page2, ignorecase=True):
+    if ignorecase:
+        re1 = re.search(regex, text_page1, re.IGNORECASE)
+        re2 = re.search(regex, text_page2, re.IGNORECASE)
+        if re1 and not re2:
+            return re1
+        else:
+            return None
+    else:
+        re1 = re.search(regex, text_page1)
+        re2 = re.search(regex, text_page2)
+        if re1 and not re2:
+            return re1
+        else:
+            return None

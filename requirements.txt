@@ -1,0 +1,2 @@
+pywikibot
+requests>=2.20.1
