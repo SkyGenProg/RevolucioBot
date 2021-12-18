@@ -1,1 +1,3 @@
-password_file = "user-password.py"
+family_files['dicoado'] = 'https://fr.dicoado.org/wiki/api.php'
+#family_files['nomwiki'] = 'https://url.../api.php'
+password_file = "user-password.py" #Ajouter les identifiants de Revolucio dans ce fichier

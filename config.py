@@ -2,12 +2,10 @@
 
 import argparse, getpass
 
-wikis = ["fr.vikidia.org", "dicoado.org:443"]
 user_bot = "RevolucioBot"
-page_test = "Utilisateur:" + user_bot + "/Test"
+page_test = "User:" + user_bot + "/Test"
 
 ver = "5.0.0"
-lang = "fr"
 release_date = "19/12/2021"
 
 arg = argparse.ArgumentParser()

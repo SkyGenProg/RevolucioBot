@@ -1,23 +1,18 @@
 # -*- coding: utf-8 -*-
 
-try:
-    import pywikibot
-    from pywikibot import pagegenerators, textlib
-    no_pywikibot = False
-except ImportError:
-    no_pywikibot = True
-    input("Pywikibot doit être installé sur votre PC ou serveur pour exécuter ce bot, ou il est possible que vous n'avez pas installé ou utilisé Pywikibot correctement.")
-
+import pywikibot
+from pywikibot import pagegenerators, textlib
 import base64, datetime, json, logging, os, random, re, socket, time, urllib.request, urllib.error, urllib.parse, zlib
 from config import *
 
+vand_f = lambda x: 101.2391 + (5.57778 - 101.2391) / (1 + (x / 9.042732)**1.931107)
+
 class get_wiki:
-    def __init__(self, url=None, user_wiki=user_bot, lang="", family=None):
+    def __init__(self, family, lang, user_wiki=user_bot):
         self.user_wiki = user_wiki
-        if url is not None:
-            self.site = pywikibot.Site(url.split(".")[0], url.split(".")[1], self.user_wiki)
-        else:
-            self.site = pywikibot.Site(lang, family, self.user_wiki)
+        self.family = family
+        self.lang = lang
+        self.site = pywikibot.Site(lang, family, self.user_wiki)
         self.fullurl = self.site.siteinfo["general"]["server"]
         self.protocol = self.fullurl.split("/")[0]
         if self.protocol == "":
@@ -116,7 +111,7 @@ class get_wiki:
                 ip_user_score = (stats_vandalisms["score_ip"]+stats_vandalisms["score_user"])/(stats_vandalisms["ip"]+stats_vandalisms["user"])
             except:
                 ip_user_score = 0
-            lines.append(str(n_edits) + " modifications, seul les 10 dernières modifications sont affichées. Score de vandalismes par IP : " + str(ip_score) + ". Score des vandalismes par utilisateur : " + str(user_score) + ". Score total : " + str(ip_user_score))
+            lines.append(str(n_edits) + " modifications, seules les 10 dernières modifications sont affichées. Score de vandalismes par IP : " + str(ip_score) + ". Score des vandalismes par utilisateur : " + str(user_score) + ". Score total : " + str(ip_user_score))
         except Exception as e:
             print(e)
             lines = ["Erreur."]
@@ -153,6 +148,7 @@ class get_page(pywikibot.Page):
     def __init__(self, source, title):
         self.user_wiki = source.user_wiki
         self.source = source.site
+        self.lang = source.lang
         self.page_name = title
         if self.page_name.split(":")[0].lower() == "special" or self.page_name.split(":")[0].lower() == "spécial":
             self.special = True
@@ -184,7 +180,10 @@ class get_page(pywikibot.Page):
         self.limit = -50
         self.limit2 = -30
         self.except_contribs = 50
-        self.alert_page = "Project:Alerte"
+        if self.lang == "fr":
+            self.alert_page = "Project:Alerte"
+        else:
+            self.alert_page = "Project:Alert"
         self.alert_request = False
 
     def __str__(self):
@@ -435,7 +434,7 @@ class get_category(get_page, pywikibot.Category):
                 pages.append(page.title())
         return pages
 
-def request_site(url, headers={"User-Agent": "Mozilla/5.0"}):
+def request_site(url, headers={"User-Agent": "Mozilla/5.0 Revolucio"}):
     site = urllib.request.Request(url, headers=headers)
     page = urllib.request.urlopen(site)
     return page.read().decode("utf-8")

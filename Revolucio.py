@@ -4,16 +4,19 @@ import os, threading
 
 from includes.wiki import *
 from includes.wiki_tasks import *
-from includes.vikidia import *
 from config import *
 
 if __name__ == "__main__":
-    print("Revolució %s %s." % (ver, lang))
+    print("Revolució %s" % ver)
     if(not os.path.exists("files")):
        os.mkdir("files")
     os.chdir("files")
-    #dicoado_site = get_wiki(user_wiki=user_bot, lang=lang, family="dicoado")
-    vikidia_task = wiki_task(wikis[0], user_bot)
-    #dicoado_task = wiki_task(site=dicoado_site, user_bot=user_bot)
-    threading.Thread(target=vikidia_task.execute).start()
-    #threading.Thread(target=dicoado_task.execute).start()
+    vikidiafr_site = get_wiki("vikidia", "fr")
+    dicoado_site = get_wiki("dicoado", "dicoado")
+    #nomwiki_site = get_wiki("nomwiki", "langue")
+    vikidiafr_task = wiki_task(vikidiafr_site)
+    dicoado_task = wiki_task(dicoado_site)
+    #nomwiki_task = wiki_task(nomwiki_site)
+    threading.Thread(target=vikidiafr_task.execute).start()
+    threading.Thread(target=dicoado_task.execute).start()
+    #threading.Thread(target=nomwiki_task.execute).start()
