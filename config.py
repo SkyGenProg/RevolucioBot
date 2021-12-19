@@ -13,12 +13,3 @@ headers = {
     'content-type': 'application/json',
     'user-agent': 'Mozilla/5.0 Revolucio'
 }
-
-arg = argparse.ArgumentParser()
-arg.add_argument("--test")
-args = arg.parse_args()
-
-if args.test:
-    test = True
-else:
-    test = False

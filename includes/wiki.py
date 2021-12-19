@@ -229,22 +229,23 @@ class get_page(pywikibot.Page):
 
     def vandalism_revert(self):
         vand = self.vandalism_score()
-        revert = False
-        if vand <= self.limit:
-            print("Modification non-constructive détectée (%s)." % str(vand))
-            revert = True
-        elif vand <= self.limit2:
-            print("Modification suspecte détectée (%s)." % str(vand))
-        else:
-            print("Pas de modification suspecte détectée (%s)." % str(vand))
+        revert = vand <= self.limit
         vandal = pywikibot.User(self.source, self.contributor_name)
-        if (vandal.editCount() > self.except_contribs or self.contributor_name == self.user_wiki) and not test:
+        if (vandal.editCount() > self.except_contribs or self.contributor_name == self.user_wiki):
             revert = False
             vand = 0
-        if self.page_ns == 2 and not test:
+        if self.page_ns == 2:
             if self.contributor_name in self.page_name:
                 revert = False
                 vand = 0
+        if vand <= self.limit:
+            print("Modification non-constructive détectée (%s)." % str(vand))
+        elif vand <= self.limit2:
+            print("Modification suspecte détectée (%s)." % str(vand))
+        elif vand < 0:
+            print("Modification à vérifier détectée (%s)." % str(vand))
+        else:
+            print("Pas de modification suspecte détectée (%s)." % str(vand))
         if revert:
             self.revert()
         return vand
@@ -281,7 +282,7 @@ class get_page(pywikibot.Page):
         open("regex_vandalisms_del_0.txt", "a").close()
         open("regex_vandalisms_0-3.txt", "a").close()
         vand = 0
-        if self.page_ns == 0 or test:
+        if self.page_ns == 0:
             with open("regex_vandalisms_0.txt", "r") as regex_vandalisms_file:
                 for regex_vandalisms in regex_vandalisms_file.readlines():
                     regex = regex_vandalisms[0:len(regex_vandalisms)-len(regex_vandalisms.split(":")[-1])-1]
@@ -313,7 +314,7 @@ class get_page(pywikibot.Page):
                         self.vandalism_score_detect.append(["del_regex", score, regex_detect])
                         vand += score
 
-        if self.page_ns == 0 or self.page_ns == 3 or test:
+        if self.page_ns == 0 or self.page_ns == 3:
             regex_vandalisms_file = open("regex_vandalisms_0-3.txt", "r")
             for regex_vandalisms in regex_vandalisms_file.readlines():
                 regex = regex_vandalisms[0:len(regex_vandalisms)-len(regex_vandalisms.split(":")[-1])-1]

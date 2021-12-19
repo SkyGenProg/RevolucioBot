@@ -180,7 +180,7 @@ class wiki_task:
                                     title = "Modification à vérifier"
                                     description = "Cette modification est peut-être un vandalisme"
                                     color = 12161032
-                                if wiki != None:
+                                if webhooks_url[wiki] != None:
                                     payload = {'embeds': [
                                                 {
                                                       'title': title,
