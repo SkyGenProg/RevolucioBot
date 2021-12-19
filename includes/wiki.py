@@ -5,8 +5,6 @@ from pywikibot import pagegenerators, textlib
 import base64, datetime, json, logging, os, random, re, socket, time, urllib.request, urllib.error, urllib.parse, zlib
 from config import *
 
-vand_f = lambda x: 101.2391 + (5.57778 - 101.2391) / (1 + (x / 9.042732)**1.931107)
-
 class get_wiki:
     def __init__(self, family, lang, user_wiki=user_bot):
         self.user_wiki = user_wiki
@@ -434,7 +432,7 @@ class get_category(get_page, pywikibot.Category):
                 pages.append(page.title())
         return pages
 
-def request_site(url, headers={"User-Agent": "Mozilla/5.0 Revolucio"}):
+def request_site(url, headers=headers):
     site = urllib.request.Request(url, headers=headers)
     page = urllib.request.urlopen(site)
     return page.read().decode("utf-8")

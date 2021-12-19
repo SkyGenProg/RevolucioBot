@@ -6,6 +6,8 @@ import base64, datetime, json, logging, os, random, re, socket, time, urllib.req
 from config import *
 from includes.wiki import *
 
+vand_f = lambda x: 101.2391 + (5.57778 - 101.2391) / (1 + (x / 9.042732)**1.931107)
+
 class wiki_task:
     def __init__(self, site):
         self.site = site
@@ -142,7 +144,6 @@ class wiki_task:
                 if datetime.datetime.now().strftime("%Y%m%d%H") not in tasks_time:
                     #Taches réalisées une fois par heure
                     #print(self.site.rc_list(timestamp=(datetime.datetime.now() - datetime.timedelta(hours=2)).strftime("%Y%m%d%H%M%S")))
-                    talks_update = self.site.talks_update() #nettoyage des PDD d'IP
                     if int(datetime.datetime.now().strftime("%H")) == 0:
                         time1hour = datetime.datetime.now() - datetime.timedelta(hours = 24)
                     else:
@@ -157,22 +158,70 @@ class wiki_task:
                         print("Page : " + str(page))
                         if page.isRedirectPage():
                             print("Correction de redirection sur la page " + str(page))
-                            redirect = page.redirects()
+                            redirect = page.redirects() #Correction redirections
                         else:
+                            #détection vandalismes
                             vandalism_revert = page.vandalism_revert()
                             if wiki == "dicoado":
                                 page.alert_page = "Project:Alerte/" + datetime.datetime.now().strftime("%Y%m%d%H%M%S") #Page alerte Dico des Ados
-                            if vandalism_revert <= page.limit2:
-                                print("Modification suspecte détectée.")
+                            if vandalism_revert < 0: #Webhook d'avertissement
+                                vand_prob = vand_f(vandalism_revert)
+                                if vand_prob > 100:
+                                    vand_prob = 100
+                                if vandalism_revert <= page.limit:
+                                    title = "Vandalisme révoqué"
+                                    description = "Cette modification a été détectée comme un vandalisme"
+                                    color = 13371938
+                                elif vandalism_revert <= page.limit2:
+                                    title = "Modification suspecte"
+                                    description = "Cette modification est probablement un vandalisme"
+                                    color = 12138760
+                                else:
+                                    title = "Modification à vérifier"
+                                    description = "Cette modification est peut-être un vandalisme"
+                                    color = 12161032
+                                if wiki != None:
+                                    payload = {'embeds': [
+                                                {
+                                                      'title': title,
+                                                      'description': description,
+                                                      'url': page.protocol + "//" + page.url + page.articlepath + "index.php?diff=prev&oldid=" + str(page.oldid),
+                                                      'author': {'name': page.contributor_name},
+                                                      'color': color,
+                                                      'fields': [
+                                                        {
+                                                          "name": "Score",
+                                                          "value": str(vandalism_revert),
+                                                          "inline": True
+                                                        },
+                                                        {
+                                                          "name": "Probabilité qu'il s'agisse d'un vandalisme",
+                                                          "value": str(round(vand_prob, 2)) + " %",
+                                                          "inline": True
+                                                        }
+                                            }
+                                        ]
+                                    }
+                                    req = urllib.request.Request(url=webhooks_url[wiki], data=json.dumps(payload).encode('utf-8'), headers=headers, method='POST')
+                                    try:
+                                        response = urllib.request.urlopen(req)
+                                        print(response.status)
+                                        print(response.reason)
+                                        print(response.headers)
+                                    except Exception as e:
+                                        print("Erreur :")
+                                        print(e.reason)
+                                        print(e.hdrs)
+                                        print(e.file.read())
                             if page.namespace() == 0:
-                                edit_replace = page.edit_replace()
+                                edit_replace = page.edit_replace() #Recherches-remplacements
                                 if edit_replace:
                                     with open("replace1.txt", "r") as replace1:
                                         with open("replace2.txt", "r") as replace2:
                                             print(replace1.read() + " remplacé par " + replace2.read() + " sur la page " + str(page) + ".")
                             if int(datetime.datetime.now().strftime("%H")) == 0:
                                 print("Suppression des catégories inexistantes sur la page " + str(page))
-                                del_categories_no_exists = page.del_categories_no_exists()
+                                del_categories_no_exists = page.del_categories_no_exists() #Suppression 
                                 if del_categories_no_exists != []:
                                     print("Catégories retirées " + ", ".join(del_categories_no_exists))
                                 else:
