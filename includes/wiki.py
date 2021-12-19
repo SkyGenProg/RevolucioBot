@@ -433,8 +433,8 @@ class get_category(get_page, pywikibot.Category):
                 pages.append(page.title())
         return pages
 
-def request_site(url, headers=headers):
-    site = urllib.request.Request(url, headers=headers)
+def request_site(url, headers=headers, data=None, method="GET"):
+    site = urllib.request.Request(url, headers=headers, data=data, method=method)
     page = urllib.request.urlopen(site)
     return page.read().decode("utf-8")
 

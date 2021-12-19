@@ -181,39 +181,29 @@ class wiki_task:
                                     description = "Cette modification est peut-être un vandalisme"
                                     color = 12161032
                                 if webhooks_url[wiki] != None:
-                                    payload = {'embeds': [
-                                                {
-                                                      'title': title,
-                                                      'description': description,
-                                                      'url': page.protocol + "//" + page.url + page.articlepath + "index.php?diff=prev&oldid=" + str(page.oldid),
-                                                      'author': {'name': page.contributor_name},
-                                                      'color': color,
-                                                      'fields': [
-                                                        {
-                                                          "name": "Score",
-                                                          "value": str(vandalism_revert),
-                                                          "inline": True
-                                                        },
-                                                        {
-                                                          "name": "Probabilité qu'il s'agisse d'un vandalisme",
-                                                          "value": str(round(vand_prob, 2)) + " %",
-                                                          "inline": True
-                                                        }
-                                                    ]
+                                    discord_msg = {'embeds': [
+                                                    {
+                                                          'title': title,
+                                                          'description': description,
+                                                          'url': page.protocol + "//" + page.url + page.articlepath + "index.php?diff=prev&oldid=" + str(page.oldid),
+                                                          'author': {'name': page.contributor_name},
+                                                          'color': color,
+                                                          'fields': [
+                                                            {
+                                                              "name": "Score",
+                                                              "value": str(vandalism_revert),
+                                                              "inline": True
+                                                            },
+                                                            {
+                                                              "name": "Probabilité qu'il s'agisse d'un vandalisme",
+                                                              "value": str(round(vand_prob, 2)) + " %",
+                                                              "inline": True
+                                                            }
+                                                        ]
+                                                    }
+                                                ]
                                             }
-                                        ]
-                                    }
-                                    req = urllib.request.Request(url=webhooks_url[wiki], data=json.dumps(payload).encode('utf-8'), headers=headers, method='POST')
-                                    try:
-                                        response = urllib.request.urlopen(req)
-                                        print(response.status)
-                                        print(response.reason)
-                                        print(response.headers)
-                                    except Exception as e:
-                                        print("Erreur :")
-                                        print(e.reason)
-                                        print(e.hdrs)
-                                        print(e.file.read())
+                                    request_site(webhooks_url[wiki], headers, json.dumps(discord_msg).encode('utf-8'), "POST")
                             if page.namespace() == 0:
                                 edit_replace = page.edit_replace() #Recherches-remplacements
                                 if edit_replace:
