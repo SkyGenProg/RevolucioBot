@@ -120,7 +120,7 @@ class wiki_task:
                                 if page.page_ns == 3 and ("=" in page.text or "averto" in page.text.lower()) and abs((datetime.datetime.utcnow() - page.editTime()).days) > 365:
                                     print("Suppression des avertissements de la page " + page_name)
                                     try:
-                                        page.put("{{Avertissement effacé|{{subst:#time: j F Y}}}}", "Avertissement effacé")
+                                        page.put("{{Avertissement effacé|{{subst:#time: j F Y}}}}", "Anciens messages effacés")
                                     except Exception as e:
                                         print("Erreur :")
                                         try:
@@ -165,19 +165,19 @@ class wiki_task:
                             if wiki == "dicoado":
                                 page.alert_page = "Project:Alerte/" + datetime.datetime.now().strftime("%Y%m%d%H%M%S") #Page alerte Dico des Ados
                             if vandalism_revert < 0: #Webhook d'avertissement
-                                vand_prob = vand_f(vandalism_revert)
+                                vand_prob = vand_f(abs(vandalism_revert))
                                 if vand_prob > 100:
                                     vand_prob = 100
                                 if vandalism_revert <= page.limit:
-                                    title = "Vandalisme révoqué"
+                                    title = "Vandalisme révoqué sur " + str(page_name)
                                     description = "Cette modification a été détectée comme un vandalisme"
                                     color = 13371938
                                 elif vandalism_revert <= page.limit2:
-                                    title = "Modification suspecte"
+                                    title = "Modification suspecte sur " + str(page_name)
                                     description = "Cette modification est probablement un vandalisme"
                                     color = 12138760
                                 else:
-                                    title = "Modification à vérifier"
+                                    title = "Modification à vérifier sur " + str(page_name)
                                     description = "Cette modification est peut-être un vandalisme"
                                     color = 12161032
                                 if webhooks_url[wiki] != None:
