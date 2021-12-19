@@ -199,6 +199,7 @@ class wiki_task:
                                                           "value": str(round(vand_prob, 2)) + " %",
                                                           "inline": True
                                                         }
+                                                    ]
                                             }
                                         ]
                                     }
