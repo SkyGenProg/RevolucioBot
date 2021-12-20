@@ -71,71 +71,11 @@ class get_wiki:
                 pages.append(contrib["title"])
         return pages
 
-    def rc_list(self, n_edits=10, timestamp=None):
-        lines = []
-        stats_vandalisms = {"ip": 0, "user": 0, "score_ip": 0, "score_user": 0}
-        try:
-            if timestamp is None:
-                url = "%s//%s%s/api.php?action=query&list=recentchanges&rclimit=%s&rcprop=timestamp|title|user|ids|comment&rcshow=!bot&format=json" % (self.protocol, self.url, self.scriptpath, str(n_edits))
-            else:
-                url = self.protocol + "//" + self.url + self.scriptpath + "/api.php?action=query&list=recentchanges&rclimit=5000&rcend=" + str(timestamp) + "&rcprop=timestamp|title|user|ids|comment&rcshow=!bot&format=json"
-            j = json.loads(request_site(url))
-            contribs = j["query"]["recentchanges"]
-
-            for contrib in contribs:
-                info = contrib["timestamp"] + " - page : " + contrib["title"] + " - utilisateur : " + contrib["user"] + " - " + self.protocol + "//" + self.url + "/w/index.php?diff=next&oldid=" + str(contrib["revid"]) + " (" + contrib["comment"] + ")"
-                try:
-                    page_modif = get_page(self, contrib["title"])
-                    vand = page_modif.vandalism_score(contrib["revid"])
-                    info += " - score de vandalisme : " + str(vand)
-                    if page_modif.isIpEdit():
-                        stats_vandalisms["ip"] += 1
-                        stats_vandalisms["score_ip"] += vand
-                    else:
-                        stats_vandalisms["user"] += 1
-                        stats_vandalisms["score_user"] += vand
-                except Exception as e:
-                    print(e)
-                lines.append(info)
-            try:
-                ip_score = stats_vandalisms["score_ip"]/stats_vandalisms["ip"]
-            except:
-                ip_score = 0
-            try:
-                user_score = stats_vandalisms["score_user"]/stats_vandalisms["user"]
-            except:
-                user_score = 0
-            try:
-                ip_user_score = (stats_vandalisms["score_ip"]+stats_vandalisms["score_user"])/(stats_vandalisms["ip"]+stats_vandalisms["user"])
-            except:
-                ip_user_score = 0
-            lines.append(str(n_edits) + " modifications, seules les 10 dernières modifications sont affichées. Score de vandalismes par IP : " + str(ip_score) + ". Score des vandalismes par utilisateur : " + str(user_score) + ". Score total : " + str(ip_user_score))
-        except Exception as e:
-            print(e)
-            lines = ["Erreur."]
-        with open("report_rc.txt", "a") as file:
-            file.write("-----" + datetime.datetime.now().strftime("%d/%m/%Y %H:%M:%S") + "-----\n")
-            file.write("\n".join(lines) + "\n")
-        return lines
-
     def page(self, page_wiki):
         return get_page(self, page_wiki)
 
     def category(self, page_wiki):
         return get_category(self, page_wiki)
-
-    def contribs_user(self, user_wiki):
-        try:
-            url = self.protocol + "//" + self.url + self.scriptpath + "/api.php?action=query&list=users&ususers=" + user_wiki + "&usprop=blockinfo|editcount|groups|registration&format=json"
-            j = json.loads(request_site(url))
-            msg = self.protocol + "//" + self.url + self.articlepath + "User:" + user_wiki + " " + str(j["query"]["users"][0]["editcount"]) + " contributions (" + ", ".join(j["query"]["users"][0]["groups"]) + ") - inscrit le " + j["query"]["users"][0]["registration"]
-            try:
-                msg += " - Utilisateur bloqué le " + j["query"]["users"][0]["blockedtimestamp"] + " par " + j["query"]["users"][0]["blockedby"] + ". Fin du blocage : " + j["query"]["users"][0]["blockexpiry"] + ". Raison : " + j["query"]["users"][0]["blockreason"]
-            except KeyError:
-                pass
-        except KeyError:
-            msg = self.protocol + "//" + self.url + self.articlepath + "User:" + user_wiki
-        return msg
 
     def contribs_user_list(self, user_wiki, limit=10):
         url = self.protocol + "//" + self.url + self.scriptpath + "/api.php?action=query&list=usercontribs&ucuser=" + user_wiki + "&uclimit=" + str(limit) + "&format=json"

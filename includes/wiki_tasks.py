@@ -143,11 +143,10 @@ class wiki_task:
                     tasks_time = tasks_time_file.read()
                 if datetime.datetime.now().strftime("%Y%m%d%H") not in tasks_time:
                     #Taches réalisées une fois par heure
-                    #print(self.site.rc_list(timestamp=(datetime.datetime.now() - datetime.timedelta(hours=2)).strftime("%Y%m%d%H%M%S")))
                     if int(datetime.datetime.now().strftime("%H")) == 0:
                         time1hour = datetime.datetime.now() - datetime.timedelta(hours = 24)
                     else:
-                        time1hour = datetime.datetime.now() - datetime.timedelta(hours = 3)
+                        time1hour = datetime.datetime.now() - datetime.timedelta(hours = 1)
                     for page_name in self.site.rc_pages(timestamp=time1hour.strftime("%Y%m%d%H%M%S")):
                         #parcours des modifications récentes
                         if page_name in pages_checked: #passage des pages déjà vérifiées
@@ -165,22 +164,23 @@ class wiki_task:
                             if wiki == "dicoado":
                                 page.alert_page = "Project:Alerte/" + datetime.datetime.now().strftime("%Y%m%d%H%M%S") #Page alerte Dico des Ados
                             if vandalism_revert < 0: #Webhook d'avertissement
-                                vand_prob = vand_f(abs(vandalism_revert))
-                                if vand_prob > 100:
-                                    vand_prob = 100
-                                if vandalism_revert <= page.limit:
-                                    title = "Vandalisme révoqué sur " + str(page_name)
-                                    description = "Cette modification a été détectée comme un vandalisme"
-                                    color = 13371938
-                                elif vandalism_revert <= page.limit2:
-                                    title = "Modification suspecte sur " + str(page_name)
-                                    description = "Cette modification est probablement un vandalisme"
-                                    color = 12138760
-                                else:
-                                    title = "Modification à vérifier sur " + str(page_name)
-                                    description = "Cette modification est peut-être un vandalisme"
-                                    color = 12161032
                                 if webhooks_url[wiki] != None:
+                                    vand_prob = vand_f(abs(vandalism_revert))
+                                    if vand_prob > 100:
+                                        vand_prob = 100
+                                    if vandalism_revert <= page.limit:
+                                        title = "Vandalisme révoqué sur " + str(page_name)
+                                        description = "Cette modification a été détectée comme un vandalisme"
+                                        color = 13371938
+                                    elif vandalism_revert <= page.limit2:
+                                        title = "Modification suspecte sur " + str(page_name)
+                                        description = "Cette modification est probablement un vandalisme"
+                                        color = 12138760
+                                    else:
+                                        title = "Modification à vérifier sur " + str(page_name)
+                                        description = "Cette modification est peut-être un vandalisme"
+                                        color = 12161032
+
                                     discord_msg = {'embeds': [
                                                     {
                                                           'title': title,
@@ -203,7 +203,19 @@ class wiki_task:
                                                     }
                                                 ]
                                             }
-                                    request_site(webhooks_url[wiki], headers, json.dumps(discord_msg).encode('utf-8'), "POST")
+                                    request_site(webhooks_url[wiki], headers, json.dumps(discord_msg).encode("utf-8"), "POST")
+                                    if page.alert_request:
+                                        discord_msg = {'embeds': [
+                                                    {
+                                                          'title': "Demande de blocage de " + page.contributor_name,
+                                                          'description': "Un vandale est à bloquer.",
+                                                          'url': page.protocol + "//" + page.url + page.articlepath + page.alert_page,
+                                                          'author': {'name': page.contributor_name},
+                                                          'color': 16711680
+                                                    }
+                                                ]
+                                            }
+                                        request_site(webhooks_url[wiki], headers, json.dumps(discord_msg).encode("utf-8"), "POST")
                             if page.namespace() == 0:
                                 edit_replace = page.edit_replace() #Recherches-remplacements
                                 if edit_replace:
