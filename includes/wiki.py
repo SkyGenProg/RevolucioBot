@@ -84,25 +84,25 @@ class get_wiki:
 
 class get_page(pywikibot.Page):
     def __init__(self, source, title):
+        self.source = source
         self.user_wiki = source.user_wiki
-        self.source = source.site
         self.lang = source.lang
         self.page_name = title
         if self.page_name.split(":")[0].lower() == "special" or self.page_name.split(":")[0].lower() == "spécial":
             self.special = True
         else:
             self.special = False
-            pywikibot.Page.__init__(self, self.source, self.page_name)
+            pywikibot.Page.__init__(self, self.source.site, self.page_name)
         self.init_page()
 
     def init_page(self):
-        self.fullurl = self.source.siteinfo["general"]["server"] + self.source.siteinfo["general"]["articlepath"].replace("$1", self.page_name)
+        self.fullurl = self.source.site.siteinfo["general"]["server"] + self.source.site.siteinfo["general"]["articlepath"].replace("$1", self.page_name)
         self.protocol = self.fullurl.split("/")[0]
         if self.protocol == "":
             self.protocol = "https:"
         self.url = self.fullurl.split("/")[2]
-        self.articlepath = self.source.siteinfo["general"]["articlepath"].replace("$1", "")
-        self.scriptpath = self.source.siteinfo["general"]["scriptpath"]
+        self.articlepath = self.source.site.siteinfo["general"]["articlepath"].replace("$1", "")
+        self.scriptpath = self.source.site.siteinfo["general"]["scriptpath"]
         if not self.special:
             try:
                 self.revisions_list = list(self.revisions())
@@ -118,10 +118,18 @@ class get_page(pywikibot.Page):
         self.limit = -50
         self.limit2 = -30
         self.except_contribs = 50
+        #Page d'alerte par défaut
         if self.lang == "fr":
             self.alert_page = "Project:Alerte"
         else:
             self.alert_page = "Project:Alert"
+        #Pages wiki
+        open("config_" + self.source.family + "_" + self.lang + ".txt", "a")
+        with open("config_" + self.source.family + "_" + self.lang + ".txt", "r") as config_wiki:
+            for config_wikiline in config_wiki.readlines():
+                config_wikiline_s = config_wikiline.split("=")
+                if config_wikiline_s[0] == "alert_page":
+                    self.alert_page = datetime.datetime.now().strftime(config_wikiline_s[1].replace("\r", "").replace("\n", ""))
         self.alert_request = False
 
     def __str__(self):
@@ -138,39 +146,27 @@ class get_page(pywikibot.Page):
     def revert(self):
         self.text = self.get_text_page_old()[1]
         self.save("Annulation modification non-constructive", botflag=False)
-        talk = pywikibot.Page(self.source, "User Talk:%s" % self.contributor_name)
+        talk = pywikibot.Page(self.source.site, "User Talk:%s" % self.contributor_name)
         if not talk.exists():
             talk.text = ""
-        if ("averto-1" in talk.text.lower() or "niveau=1" in talk.text.lower()) and "averto-2" not in talk.text.lower() and "niveau=2" not in talk.text.lower():
-            alert = pywikibot.Page(self.source, self.alert_page)
-            alert.text = alert.get() + "\n{{subst:User:%s/Alert|%s}}" % (self.user_wiki, self.contributor_name)
+        if ("averto-1" in talk.text.lower() or "niveau=1" in talk.text.lower() or "level=1" in talk.text.lower()) and "averto-2" not in talk.text.lower() and "niveau=2" not in talk.text.lower() and "level=2" not in talk.text.lower(): #averti 2 fois
+            alert = pywikibot.Page(self.source.site, self.alert_page)
+            alert.text = alert.text + "\n{{subst:User:%s/Alert|%s}}" % (self.user_wiki, self.contributor_name)
             alert.save("Alerte vandalisme", botflag=False)
-            if talk.exists():
-                talk.text = talk.get() + "\n{{subst:User:%s/Vandalism2|%s}}" % (self.user_wiki, self.page_name)
-                talk.save("Avertissement 2", botflag=False)
-            else:
-                talk.text = "{{subst:User:%s/Vandalism2|%s}}" % (self.user_wiki, self.page_name)
-                talk.save("Avertissement 2", botflag=False)
+            talk.text = talk.text + "\n{{subst:User:%s/Vandalism2|%s}} <!-- level=2 -->" % (self.user_wiki, self.page_name)
+            talk.save("Avertissement 2", botflag=False)
             self.alert_request = True
-        elif ("averto-0" in talk.text.lower() or "niveau=0" in talk.text.lower()) and "averto-1" not in talk.text.lower() and "niveau=1" not in talk.text.lower() and "averto-2" not in talk.text.lower() and "niveau=2" not in talk.text.lower():
-            if talk.exists():
-                talk.text = talk.get() + "\n{{subst:User:%s/Vandalism1|%s}}" % (self.user_wiki, self.page_name)
-                talk.save("Avertissement 1", botflag=False)
-            else:
-                talk.text = "{{subst:User:%s/Vandalism1|%s}}" % (self.user_wiki, self.page_name)
-                talk.save("Avertissement 1", botflag=False)
-        elif "averto-0" not in talk.text.lower() and "niveau=0" not in talk.text.lower() and "averto-1" not in talk.text.lower() and "niveau=1" not in talk.text.lower() and "averto-2" not in talk.text.lower() and "niveau=2" not in talk.text.lower():
-            if talk.exists():
-                talk.text = talk.get() + "\n{{subst:User:%s/Vandalism0|%s}}" % (self.user_wiki, self.page_name)
-                talk.save("Avertissement 0", botflag=False)
-            else:
-                talk.text = "{{subst:User:%s/Vandalism0|%s}}" % (self.user_wiki, self.page_name)
-                talk.save("Avertissement 0", botflag=False)
+        elif ("averto-0" in talk.text.lower() or "niveau=0" in talk.text.lower() or "level=0" in talk.text.lower()) and "averto-1" not in talk.text.lower() and "niveau=1" not in talk.text.lower() and "level=1" not in talk.text.lower(): #averti une fois
+            talk.text = talk.text + "\n{{subst:User:%s/Vandalism1|%s}} <!-- level=1 -->" % (self.user_wiki, self.page_name)
+            talk.save("Avertissement 1", botflag=False)
+        elif "averto-0" not in talk.text.lower() and "niveau=0" not in talk.text.lower() and "level=0" not in talk.text.lower(): #pas averti
+            talk.text = talk.text + "\n{{subst:User:%s/Vandalism0|%s}} <!-- level=0 -->" % (self.user_wiki, self.page_name)
+            talk.save("Avertissement 0", botflag=False)
 
     def vandalism_revert(self):
         vand = self.vandalism_score()
         revert = vand <= self.limit
-        vandal = pywikibot.User(self.source, self.contributor_name)
+        vandal = pywikibot.User(self.source.site, self.contributor_name)
         if (vandal.editCount() > self.except_contribs or self.contributor_name == self.user_wiki):
             revert = False
             vand = 0
@@ -283,6 +279,7 @@ class get_page(pywikibot.Page):
             
         replace1_lines, replace2_lines = replace1_file.readlines(), replace2_file.readlines()
         i = 0
+        old_text = self.text
 
         for replace1 in replace1_lines:
             replace2 = replace2_lines[i]
@@ -290,7 +287,7 @@ class get_page(pywikibot.Page):
             self.text = re.sub(replace1, replace2, text_page)
             i += 1
 
-        if self.text != self.get():
+        if self.text != old_text:
             self.save("Recherche-remplacement")
             replace = True
             print("Recherche-remplacement effectuée (" + self.protocol + "//" + self.url + self.scriptpath + "/index.php?diff=next&oldid=" + str(self.previousRevision()) + ").")
@@ -353,9 +350,9 @@ class get_page(pywikibot.Page):
 
 class get_category(get_page, pywikibot.Category):
     def __init__(self, source, title):
-        self.source = source.site
+        self.source = source
         self.page_name = title
-        pywikibot.Category.__init__(self, self.source, title)
+        pywikibot.Category.__init__(self, self.source.site, title)
         get_page.init_page(self)
 
     def cat_pages(self):

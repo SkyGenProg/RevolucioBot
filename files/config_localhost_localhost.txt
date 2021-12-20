@@ -1,0 +1,1 @@
+alert_page=Project:Alerte/%Y%m%d%H%M%S
