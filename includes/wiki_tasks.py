@@ -22,6 +22,93 @@ class wiki_task:
                 open("tasks_time_month_" + wiki + "_" + lang + ".txt", "a").close()
                 with open("tasks_time_month_" + wiki + "_" + lang + ".txt", "r") as tasks_time_file:
                     tasks_time = tasks_time_file.read()
+                if datetime.datetime.now().strftime("%Y%m") not in tasks_time: #taches mensuelles
+                    #spécifiques au Dico des Ados
+                    if wiki == "dicoado":
+                        for page_name in self.site.all_pages(ns=0):
+                            page = self.site.page(page_name)
+                            print("Page : " + str(page))
+                            try:
+                                if not page.isRedirectPage():
+                                    page_text_old = page.text
+                                    for i in range(1, 5):
+                                        if i == 1:
+                                            n = ""
+                                        else:
+                                            n = str(i)
+                                        if "|ex" + n + "=" in page.text:
+                                            try:
+                                                page_text_split = page.text.split("|ex" + n + "=")
+                                                if "=" in page_text_split[1]:
+                                                    page_text_split2 = page_text_split[1].split("=")
+                                                else:
+                                                    page_text_split2 = page_text_split[1].split("}}")
+                                                page_text_split2[0] = re.sub("(\s|[=#'])(?!'{3,})\b(" + re.escape(page_name) + ")(\w{0,})\b(?!'{3,})", r"'''\2\3'''", page_text_split2[0])
+                                                page_text_split2[0] = re.sub('\B(?!{{\"\|)\"\b([^\"]*)\b\"(?!}})\B', r'{{"|\1}}', page_text_split2[0])
+                                                page_text_split3 = [i for i in page_text_split2[0]]
+                                                page_text_split3[0] = page_text_split3[0].upper()
+                                                page_text_split2[0] = "".join(page_text_split3)
+                                                page_text_split[1] = "=".join(page_text_split2)
+                                                page.text = ("|ex" + n + "=").join(page_text_split)
+                                            except Exception as e:
+                                                print(e)
+                                        if "|contr" + n + "=" in page.text:
+                                            try:
+                                                page_text_split = page.text.split("|contr" + n + "=")
+                                                if "=" in page_text_split[1]:
+                                                    page_text_split2 = page_text_split[1].split("=")
+                                                else:
+                                                    page_text_split2 = page_text_split[1].split("}}")
+                                                page_text_split2[0] = page_text_split2[0].replace("[[", "").replace("]]", "")
+                                                page_text_split[1] = "=".join(page_text_split2)
+                                                page.text = ("|contr" + n + "=").join(page_text_split)
+                                            except Exception as e:
+                                                print(e)
+                                        if "|syn" + n + "=" in page.text:
+                                            try:
+                                                page_text_split = page.text.split("|syn" + n + "=")
+                                                if "=" in page_text_split[1]:
+                                                    page_text_split2 = page_text_split[1].split("=")
+                                                else:
+                                                    page_text_split2 = page_text_split[1].split("}}")
+                                                page_text_split2[0] = page_text_split2[0].replace("[[", "").replace("]]", "")
+                                                page_text_split[1] = "=".join(page_text_split2)
+                                                page.text = ("|syn" + n + "=").join(page_text_split)
+                                            except Exception as e:
+                                                print(e)
+                                        if "|voir" + n + "=" in page.text:
+                                            try:
+                                                page_text_split = page.text.split("|voir" + n + "=")
+                                                if "=" in page_text_split[1]:
+                                                    page_text_split2 = page_text_split[1].split("=")
+                                                else:
+                                                    page_text_split2 = page_text_split[1].split("}}")
+                                                page_text_split2[0] = page_text_split2[0].replace("[[", "").replace("]]", "")
+                                                page_text_split[1] = "=".join(page_text_split2)
+                                                page.text = ("|voir" + n + "=").join(page_text_split)
+                                            except Exception as e:
+                                                print(e)
+                                        if "|def" + n + "=" in page.text:
+                                            try:
+                                                page_text_split = page.text.split("|def" + n + "=")
+                                                if "=" in page_text_split[1]:
+                                                    page_text_split2 = page_text_split[1].split("=")
+                                                else:
+                                                    page_text_split2 = page_text_split[1].split("}}")
+                                                page_text_split3 = [i for i in page_text_split2[0]]
+                                                page_text_split3[0] = page_text_split3[0].lower()
+                                                page_text_split2[0] = "".join(page_text_split3)
+                                                page_text_split2[0] = re.sub('\B(?!{{\"\|)\"\b([^\"]*)\b\"(?!}})\B', r'{{"|\1}}', page_text_split2[0])
+                                                page_text_split[1] = "=".join(page_text_split2)
+                                                page.text = ("|def" + n + "=").join(page_text_split)
+                                            except Exception as e:
+                                                print(e)
+                                    if "|son=LL-Q150" in page.text:
+                                        page.text = page.text.replace("|son=LL-Q150", "|prononciation=LL-Q150")
+                                    if page.text != page_text_old:
+                                        page.save("maintenance")
+                            except Exception as e:
+                                print(e)
                 if datetime.datetime.utcnow().strftime("%Y%m") not in tasks_time: #taches mensuelles
                     #Nettoyage des PDDs d'IPs (créer Modèle:Avertissement effacé)
                     for page_name in self.site.all_pages(ns=3, start="1", end="A"):
@@ -175,3 +262,4 @@ class wiki_task:
                     print(traceback.format_exc())
                 except UnicodeError:
                     pass
+            time.sleep(60)
