@@ -15,6 +15,7 @@ class wiki_task:
     def execute(self):
         wiki = self.site.family
         lang = self.site.lang
+        lang_bot = self.site.lang_bot
         while True:
             try:
                 pages_checked = [] #pages vérifiées (pour éviter de revérifier la page)
@@ -121,7 +122,10 @@ class wiki_task:
                                 if page.page_ns == 3 and ("=" in page.text or "averto" in page.text.lower()) and abs((datetime.datetime.utcnow() - page.editTime()).days) > 365:
                                     print("Suppression des avertissements de la page " + page_name)
                                     try:
-                                        page.put("{{Avertissement effacé|{{subst:#time: j F Y}}}}", "Anciens messages effacés")
+                                        if lang_bot == "fr":
+                                            page.put("{{Avertissement effacé|{{subst:#time: j F Y}}}}", "Anciens messages effacés")
+                                        else:
+                                            page.put("{{Warning cleared|{{subst:#time: j F Y}}}}", "Old messages cleared")
                                     except Exception as e:
                                         print("Erreur :")
                                         try:
@@ -168,18 +172,51 @@ class wiki_task:
                                     if vand_prob > 100:
                                         vand_prob = 100
                                     if vandalism_revert <= page.limit:
-                                        title = "Vandalisme révoqué sur " + str(page_name)
-                                        description = "Cette modification a été détectée comme un vandalisme"
+                                        if lang_bot == "fr":
+                                            title = "Modification non-constructive révoquée sur " + lang + ":" + page_name
+                                            description = "Cette modification a été détectée comme non-constructive"
+                                        else:
+                                            title = "Unconstructive edit reverted on " + lang + ":" + page_name
+                                            description = "This edit has been detected as unconstructive"
                                         color = 13371938
                                     elif vandalism_revert <= page.limit2:
-                                        title = "Modification suspecte sur " + str(page_name)
-                                        description = "Cette modification est probablement un vandalisme"
+                                        if lang_bot == "fr":
+                                            title = "Modification suspecte sur " + lang + ":" + page_name
+                                            description = "Cette modification est probablement non-constructive"
+                                        else:
+                                            title = "Edit maybe unconstructive on " + lang + ":" + page_name
+                                            description = "This edit is probably unconstructive"
                                         color = 12138760
                                     else:
-                                        title = "Modification à vérifier sur " + str(page_name)
-                                        description = "Cette modification est peut-être un vandalisme"
+                                        title = "Edit to verify on " + lang + ":" + page_name
+                                        description = "This edit is maybe unconstructive"
                                         color = 12161032
-
+                                    if lang_bot == "fr":
+                                        fields = [
+                                                {
+                                                  "name": "Score",
+                                                  "value": str(vandalism_revert),
+                                                  "inline": True
+                                                },
+                                                {
+                                                  "name": "Probabilité qu'il s'agisse d'une modification non-constructive",
+                                                  "value": str(round(vand_prob, 2)) + " %",
+                                                  "inline": True
+                                                }
+                                            ]
+                                    else:
+                                        fields = [
+                                                {
+                                                  "name": "Score",
+                                                  "value": str(vandalism_revert),
+                                                  "inline": True
+                                                },
+                                                {
+                                                  "name": "Probability it's an unconstructive edit",
+                                                  "value": str(round(vand_prob, 2)) + " %",
+                                                  "inline": True
+                                                }
+                                            ]
                                     discord_msg = {'embeds': [
                                                     {
                                                           'title': title,
@@ -187,33 +224,34 @@ class wiki_task:
                                                           'url': page.protocol + "//" + page.url + page.articlepath + "index.php?diff=prev&oldid=" + str(page.oldid),
                                                           'author': {'name': page.contributor_name},
                                                           'color': color,
-                                                          'fields': [
-                                                            {
-                                                              "name": "Score",
-                                                              "value": str(vandalism_revert),
-                                                              "inline": True
-                                                            },
-                                                            {
-                                                              "name": "Probabilité qu'il s'agisse d'un vandalisme",
-                                                              "value": str(round(vand_prob, 2)) + " %",
-                                                              "inline": True
-                                                            }
-                                                        ]
+                                                          'fields': fields
                                                     }
                                                 ]
                                             }
                                     request_site(webhooks_url[wiki], headers, json.dumps(discord_msg).encode("utf-8"), "POST")
                                     if page.alert_request:
-                                        discord_msg = {'embeds': [
-                                                    {
-                                                          'title': "Demande de blocage de " + page.contributor_name,
-                                                          'description': "Un vandale est à bloquer.",
-                                                          'url': page.protocol + "//" + page.url + page.articlepath + page.alert_page,
-                                                          'author': {'name': page.contributor_name},
-                                                          'color': 16711680
-                                                    }
-                                                ]
-                                            }
+                                        if lang_bot == "fr":
+                                            discord_msg = {'embeds': [
+                                                        {
+                                                              'title': "Demande de blocage de " + page.contributor_name,
+                                                              'description': "Un vandale est à bloquer.",
+                                                              'url': page.protocol + "//" + page.url + page.articlepath + page.alert_page,
+                                                              'author': {'name': page.contributor_name},
+                                                              'color': 16711680
+                                                        }
+                                                    ]
+                                                }
+                                        else:
+                                            discord_msg = {'embeds': [
+                                                        {
+                                                              'title': "Request to block against " + page.contributor_name,
+                                                              'description': "A vandal must be blocked.",
+                                                              'url': page.protocol + "//" + page.url + page.articlepath + page.alert_page,
+                                                              'author': {'name': page.contributor_name},
+                                                              'color': 16711680
+                                                        }
+                                                    ]
+                                                }
                                         request_site(webhooks_url[wiki], headers, json.dumps(discord_msg).encode("utf-8"), "POST")
                             if page.namespace() == 0:
                                 edit_replace = page.edit_replace() #Recherches-remplacements
@@ -244,7 +282,7 @@ class wiki_task:
                                     print("SI de " + page_name)
                                     bas_page.text = "{{SI|Remise à zéro du bac à sable}}\n" + bas_page.text
                                     bas_page.save("Remise à zéro du bac à sable")
-##                    if lang == "fr" or lang == "dicoado":
+##                    if lang_bot == "fr":
 ##                        cat_files_no_exists = self.site.category("Category:Pages avec des liens de fichiers brisés")
 ##                        for page_cat in cat_files_no_exists.get_pages(ns=0):
 ##                            print("Suppression des fichiers inexistantes sur la page " + page_cat)

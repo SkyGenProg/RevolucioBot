@@ -10,6 +10,19 @@ class get_wiki:
         self.user_wiki = user_wiki
         self.family = family
         self.lang = lang
+        self.config = {}
+        open("config_" + family + "_" + lang + ".txt", "a").close()
+        with open("config_" + family + "_" + lang + ".txt", "r") as config_wiki:
+            config_file_content = config_wiki.read()
+            if config_file_content != "":
+                try:
+                    self.config = json.loads(config_file_content.replace("\r", "").replace("\n", ""))
+                except json.decoder.JSONDecodeError:
+                    print("Erreur de configuration sur " + lang + "." + family)
+        if "lang_bot" in self.config:
+            self.lang_bot = self.config["lang_bot"]
+        else:
+            self.lang_bot = "en"
         self.site = pywikibot.Site(lang, family, self.user_wiki)
         self.fullurl = self.site.siteinfo["general"]["server"]
         self.protocol = self.fullurl.split("/")[0]
@@ -87,6 +100,7 @@ class get_page(pywikibot.Page):
         self.source = source
         self.user_wiki = source.user_wiki
         self.lang = source.lang
+        self.lang_bot = source.lang_bot
         self.page_name = title
         if self.page_name.split(":")[0].lower() == "special" or self.page_name.split(":")[0].lower() == "spécial":
             self.special = True
@@ -118,18 +132,14 @@ class get_page(pywikibot.Page):
         self.limit = -50
         self.limit2 = -30
         self.except_contribs = 50
-        #Page d'alerte par défaut
-        if self.lang == "fr":
-            self.alert_page = "Project:Alerte"
+        #Page d'alerte
+        if "alert_page" in self.source.config:
+            self.alert_page = datetime.datetime.now().strftime(self.source.config["alert_page"].replace("\r", "").replace("\n", ""))
         else:
-            self.alert_page = "Project:Alert"
-        #Pages wiki
-        open("config_" + self.source.family + "_" + self.lang + ".txt", "a")
-        with open("config_" + self.source.family + "_" + self.lang + ".txt", "r") as config_wiki:
-            for config_wikiline in config_wiki.readlines():
-                config_wikiline_s = config_wikiline.split("=")
-                if config_wikiline_s[0] == "alert_page":
-                    self.alert_page = datetime.datetime.now().strftime(config_wikiline_s[1].replace("\r", "").replace("\n", ""))
+            if self.lang_bot == "fr":
+                self.alert_page = "Project:Alerte"
+            else:
+                self.alert_page = "Project:Alert"
         self.alert_request = False
 
     def __str__(self):
@@ -145,23 +155,38 @@ class get_page(pywikibot.Page):
 
     def revert(self):
         self.text = self.get_text_page_old()[1]
-        self.save("Annulation modification non-constructive", botflag=False)
+        if self.lang_bot == "fr":
+            self.save("Annulation modification non-constructive", botflag=False)
+        else:
+            self.save("Revert", botflag=False)
         talk = pywikibot.Page(self.source.site, "User Talk:%s" % self.contributor_name)
         if not talk.exists():
             talk.text = ""
         if ("averto-1" in talk.text.lower() or "niveau=1" in talk.text.lower() or "level=1" in talk.text.lower()) and "averto-2" not in talk.text.lower() and "niveau=2" not in talk.text.lower() and "level=2" not in talk.text.lower(): #averti 2 fois
             alert = pywikibot.Page(self.source.site, self.alert_page)
             alert.text = alert.text + "\n{{subst:User:%s/Alert|%s}}" % (self.user_wiki, self.contributor_name)
-            alert.save("Alerte vandalisme", botflag=False)
+            if self.lang_bot == "fr":
+                alert.save("Alerte vandalisme", botflag=False)
+            else:
+                alert.save("Vandalism alert", botflag=False)
             talk.text = talk.text + "\n{{subst:User:%s/Vandalism2|%s}} <!-- level=2 -->" % (self.user_wiki, self.page_name)
-            talk.save("Avertissement 2", botflag=False)
+            if self.lang_bot == "fr":
+                talk.save("Avertissement 2", botflag=False)
+            else:
+                talk.save("Warning 2", botflag=False)
             self.alert_request = True
         elif ("averto-0" in talk.text.lower() or "niveau=0" in talk.text.lower() or "level=0" in talk.text.lower()) and "averto-1" not in talk.text.lower() and "niveau=1" not in talk.text.lower() and "level=1" not in talk.text.lower(): #averti une fois
             talk.text = talk.text + "\n{{subst:User:%s/Vandalism1|%s}} <!-- level=1 -->" % (self.user_wiki, self.page_name)
-            talk.save("Avertissement 1", botflag=False)
+            if self.lang_bot == "fr":
+                talk.save("Avertissement 1", botflag=False)
+            else:
+                talk.save("Warning 1", botflag=False)
         elif "averto-0" not in talk.text.lower() and "niveau=0" not in talk.text.lower() and "level=0" not in talk.text.lower(): #pas averti
             talk.text = talk.text + "\n{{subst:User:%s/Vandalism0|%s}} <!-- level=0 -->" % (self.user_wiki, self.page_name)
-            talk.save("Avertissement 0", botflag=False)
+            if self.lang_bot == "fr":
+                talk.save("Avertissement 0", botflag=False)
+            else:
+                talk.save("Warning 0", botflag=False)
 
     def vandalism_revert(self):
         vand = self.vandalism_score()
@@ -288,7 +313,7 @@ class get_page(pywikibot.Page):
             i += 1
 
         if self.text != old_text:
-            self.save("Recherche-remplacement")
+            self.save(replace1 + " -> " + replace2)
             replace = True
             print("Recherche-remplacement effectuée (" + self.protocol + "//" + self.url + self.scriptpath + "/index.php?diff=next&oldid=" + str(self.previousRevision()) + ").")
         else:
@@ -303,13 +328,19 @@ class get_page(pywikibot.Page):
         try:
             if self.isRedirectPage():
                 page_redirect = self.getRedirectTarget()
-                if page_redirect.exists() != True:
+                if not page_redirect.exists():
                     type_redirect = "broken"
-                    self.put("{{User:%s/RedirectDelete}}" % self.user_wiki, "Demande suppression redirection cassée")
+                    if self.lang_bot == "fr":
+                        self.put("{{User:%s/RedirectDelete}}" % self.user_wiki, "Demande suppression redirection cassée")
+                    else:
+                        self.put("{{User:%s/RedirectDelete}}" % self.user_wiki, "Delete broken redirect")
                     print("Redirecton cassée demandée à la suppression.")
                 elif page_redirect.isRedirectPage():
                     type_redirect = "double"
-                    self.put("#REDIRECT[[%s]]" % page_redirect.getRedirectTarget().title(), "Correction redirection")
+                    if self.lang_bot == "fr":
+                        self.put("#REDIRECT[[%s]]" % page_redirect.getRedirectTarget().title(), "Correction redirection")
+                    else:
+                        self.put("#REDIRECT[[%s]]" % page_redirect.getRedirectTarget().title(), "Correct redirect")
                     print("Double redirection corrigée.")
                 else:
                     type_redirect = "correct"
@@ -318,7 +349,10 @@ class get_page(pywikibot.Page):
                 print("Pas une redirection.")
         except pywikibot.exceptions.CircularRedirect:
             type_redirect = "circular"
-            self.put("{{User:%s/RedirectDelete|circular=True}}" % self.user_wiki, "Demande suppression redirection en boucle")
+            if self.lang_bot == "fr":
+                self.put("{{User:%s/RedirectDelete|circular=True}}" % self.user_wiki, "Demande suppression redirection en boucle")
+            else:
+                self.put("{{User:%s/RedirectDelete|circular=True}}" % self.user_wiki, "Delete circular redirect")
             print("Redirecton en boucle demandée à la suppression.")
         return type_redirect
 

@@ -4,8 +4,8 @@ import argparse, getpass
 
 user_bot = "RevolucioBot"
 
-ver = "5.0.2"
-release_date = "21/12/2021"
+ver = "5.1.0-beta.1"
+release_date = "/12/2021"
 
 webhooks_url = {'localhost': "https://discord.com/api/webhooks/922633624912814120/Rx1F2e81k9IbBYd32f9txntk_yMVEirVlTVfqMKGdKGcLPM_sZfoFoPxa1C2JbBbFlQz",
                 'vikidia': "REMOVED",
