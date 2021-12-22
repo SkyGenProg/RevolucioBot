@@ -287,41 +287,33 @@ class get_page(pywikibot.Page):
 
         return vand
 
-    def edit_replace(self, file1="replace1.txt", file2="replace2.txt"):
-        replace = False
-        while True:
-            try:
-                replace1_file = open(file1, "r")
-                replace2_file = open(file2, "r")
-                break
-            except:
-                replace1_file = open(file1, "w")
-                replace2_file = open(file2, "w")
-                replace1_file.write("")
-                replace2_file.write("")
-                replace1_file.close()
-                replace2_file.close()
-            
-        replace1_lines, replace2_lines = replace1_file.readlines(), replace2_file.readlines()
-        i = 0
-        old_text = self.text
-
-        for replace1 in replace1_lines:
-            replace2 = replace2_lines[i]
-            print("Remplacement de %s par %s..." % (replace1, replace2))
-            self.text = re.sub(replace1, replace2, text_page)
-            i += 1
-
-        if self.text != old_text:
-            self.save(replace1 + " -> " + replace2)
-            replace = True
-            print("Recherche-remplacement effectuée (" + self.protocol + "//" + self.url + self.scriptpath + "/index.php?diff=next&oldid=" + str(self.previousRevision()) + ").")
+    def edit_replace(self):
+        file1 = "replace1_" + self.source.family + "_" + self.lang + ".txt"
+        file2 = "replace2_" + self.source.family + "_" + self.lang + ".txt"
+        open(file1, "a").close()
+        open(file2, "a").close()
+        text_page = self.text
+        n = 0
+        with open(file1, "r") as replace1_file:
+            with open(file2, "r") as replace2_file:
+                replace1_lines, replace2_lines = replace1_file.readlines(), replace2_file.readlines()
+                for replace1 in replace1_lines:
+                    replace2 = replace2_lines[n]
+                    print("Remplacement du regex %s par %s..." % (replace1, replace2))
+                    self.text = re.sub(replace1, replace2, text_page)
+                    if self.text != text_page:
+                        n += 1
+                        text_page = self.text
+                        print("Le regex %s a été trouvé et va être remplacé par %s." % (replace1, replace2))
+        if n > 0:
+            if self.lang_bot == "fr":
+                self.save(str(n) + " recherches-remplacements")
+            else:
+                self.save(str(n) + " find-replaces")
+            print(str(n) + " recherches-remplacements effectuées (" + str(self) + ")")
         else:
             print("Rien à remplacer.")
-
-        replace1_file.close()
-        replace2_file.close()
-        return replace
+        return n
 
     def redirects(self):
         type_redirect = None

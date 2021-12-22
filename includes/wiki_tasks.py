@@ -259,10 +259,7 @@ class wiki_task:
                                         request_site(webhooks_url[wiki], headers, json.dumps(discord_msg).encode("utf-8"), "POST")
                             if page.namespace() == 0:
                                 edit_replace = page.edit_replace() #Recherches-remplacements
-                                if edit_replace:
-                                    with open("replace1.txt", "r") as replace1:
-                                        with open("replace2.txt", "r") as replace2:
-                                            print(replace1.read() + " remplacé par " + replace2.read() + " sur la page " + str(page) + ".")
+                                print(str(edit_replace) + " recherche(s)-remplacement(s) sur la page " + str(page) + ".")
                             if int(datetime.datetime.utcnow().strftime("%H")) == 0:
                                 print("Suppression des catégories inexistantes sur la page " + str(page))
                                 del_categories_no_exists = page.del_categories_no_exists() #Suppression 
