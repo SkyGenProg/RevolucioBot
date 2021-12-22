@@ -2,8 +2,6 @@
 
 import argparse, getpass
 
-user_bot = "RevolucioBot"
-
 ver = "5.1.0-beta.1"
 release_date = "/12/2021"
 

@@ -11,6 +11,6 @@ if __name__ == "__main__":
     if(not os.path.exists("files")):
        os.mkdir("files")
     os.chdir("files")
-    localhost_site = get_wiki("localhost", "localhost")
+    localhost_site = get_wiki("localhost", "localhost", "RevolucioBot")
     localhost_task = wiki_task(localhost_site)
     threading.Thread(target=localhost_task.execute).start()

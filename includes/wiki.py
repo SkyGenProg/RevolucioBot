@@ -6,7 +6,7 @@ import base64, datetime, json, logging, os, random, re, socket, time, urllib.req
 from config import *
 
 class get_wiki:
-    def __init__(self, family, lang, user_wiki=user_bot):
+    def __init__(self, family, lang, user_wiki):
         self.user_wiki = user_wiki
         self.family = family
         self.lang = lang
