@@ -188,8 +188,12 @@ class wiki_task:
                                             description = "This edit is probably unconstructive"
                                         color = 12138760
                                     else:
-                                        title = "Edit to verify on " + lang + ":" + page_name
-                                        description = "This edit is maybe unconstructive"
+                                        if lang_bot == "fr":
+                                            title = "Modification à vérifier sur " + lang + ":" + page_name
+                                            description = "Cette modification est peut-être non-constructive"
+                                        else:
+                                            title = "Edit to verify on " + lang + ":" + page_name
+                                            description = "This edit is maybe unconstructive"
                                         color = 12161032
                                     if lang_bot == "fr":
                                         fields = [
