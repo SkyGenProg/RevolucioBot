@@ -361,7 +361,10 @@ class get_page(pywikibot.Page):
                 self.text = re.sub(r"\[\[(?i)" + re.escape(category.title()) + r"(\|.*)?\]\]", "", self.text, flags=re.IGNORECASE)
                 categories_list.append(category.title())
         if categories_list != []:
-            self.save("Suppression des catégories inexistantes")
+            if self.lang_bot == "fr":
+                self.save("Suppression des catégories inexistantes")
+            else:
+                self.save("Deleting non-existent categories")
         return categories_list
 
     def del_files_no_exists(self):
