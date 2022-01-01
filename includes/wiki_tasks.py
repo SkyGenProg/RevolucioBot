@@ -123,9 +123,9 @@ class wiki_task:
                                     print("Suppression des avertissements de la page " + page_name)
                                     try:
                                         if lang_bot == "fr":
-                                            page.put("{{Avertissement effacé|{{subst:#time: j F Y}}}}", "Anciens messages effacés")
+                                            page.put("{{Avertissement effacé|{{subst:#time: j F Y}}}}", "Anciens messages effacés", minor=False, botflag=True)
                                         else:
-                                            page.put("{{Warning cleared|{{subst:#time: j F Y}}}}", "Old messages cleared")
+                                            page.put("{{Warning cleared|{{subst:#time: j F Y}}}}", "Old messages cleared", minor=False, botflag=True)
                                     except Exception as e:
                                         print("Erreur :")
                                         try:
