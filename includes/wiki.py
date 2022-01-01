@@ -241,7 +241,6 @@ class get_page(pywikibot.Page):
         open("size_vandalisms_0.txt", "a").close()
         open("diff_vandalisms_0.txt", "a").close()
         open("regex_vandalisms_del_0.txt", "a").close()
-        open("regex_vandalisms_0-3.txt", "a").close()
         vand = 0
         if self.page_ns == 0:
             with open("regex_vandalisms_0.txt", "r") as regex_vandalisms_file:
@@ -274,16 +273,6 @@ class get_page(pywikibot.Page):
                         score = int(regex_vandalisms.split(":")[-1])
                         self.vandalism_score_detect.append(["del_regex", score, regex_detect])
                         vand += score
-
-        if self.page_ns == 0 or self.page_ns == 3:
-            regex_vandalisms_file = open("regex_vandalisms_0-3.txt", "r")
-            for regex_vandalisms in regex_vandalisms_file.readlines():
-                regex = regex_vandalisms[0:len(regex_vandalisms)-len(regex_vandalisms.split(":")[-1])-1]
-                regex_detect = regex_vandalism(regex, text_page, text_page_old)
-                if regex_detect:
-                    score = int(regex_vandalisms.split(":")[-1])
-                    self.vandalism_score_detect.append(["add_regex", score, regex_detect])
-                    vand += score
 
         return vand
 
