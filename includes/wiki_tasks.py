@@ -260,7 +260,7 @@ class wiki_task:
                             if page.page_ns == 0:
                                 edit_replace = page.edit_replace() #Recherches-remplacements
                                 print(str(edit_replace) + " recherche(s)-remplacement(s) sur la page " + str(page) + ".")
-                            if int(datetime.datetime.utcnow().strftime("%H")) == 0 and page.page_ns != 2:
+                            if not (wiki == "vikidia" and lang == "en") and int(datetime.datetime.utcnow().strftime("%H")) == 0 and page.page_ns != 2:
                                 print("Suppression des catégories inexistantes sur la page " + str(page))
                                 del_categories_no_exists = page.del_categories_no_exists() #Suppression 
                                 if del_categories_no_exists != []:
