@@ -16,6 +16,7 @@ class wiki_task:
         wiki = self.site.family
         lang = self.site.lang
         lang_bot = self.site.lang_bot
+        logging.basicConfig(filename=wiki + "_" + lang + ".log", encoding="utf-8", level=logging.DEBUG)
         while True:
             try:
                 pages_checked = [] #pages vérifiées (pour éviter de revérifier la page)
@@ -129,7 +130,9 @@ class wiki_task:
                                     except Exception as e:
                                         print("Erreur :")
                                         try:
-                                            print(traceback.format_exc())
+                                            bt = traceback.format_exc()
+                                            logging.error(bt)
+                                            print(bt)
                                         except UnicodeError:
                                             pass
                                 else:
@@ -260,7 +263,7 @@ class wiki_task:
                             if page.page_ns == 0:
                                 edit_replace = page.edit_replace() #Recherches-remplacements
                                 print(str(edit_replace) + " recherche(s)-remplacement(s) sur la page " + str(page) + ".")
-                            if not (wiki == "vikidia" and lang == "en") and int(datetime.datetime.utcnow().strftime("%H")) == 0 and page.page_ns != 2:
+                            if not ("disable_del_categories" in self.site.config and self.site.config["disable_del_categories"]) and int(datetime.datetime.utcnow().strftime("%H")) == 0 and page.page_ns != 2:
                                 print("Suppression des catégories inexistantes sur la page " + str(page))
                                 del_categories_no_exists = page.del_categories_no_exists() #Suppression 
                                 if del_categories_no_exists != []:
@@ -298,7 +301,9 @@ class wiki_task:
             except Exception as e:
                 print("Erreur :")
                 try:
-                    print(traceback.format_exc())
+                    bt = traceback.format_exc()
+                    logging.error(bt)
+                    print(bt)
                 except UnicodeError:
                     pass
             time.sleep(60)
