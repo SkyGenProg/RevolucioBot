@@ -18,7 +18,7 @@ class get_wiki:
                 try:
                     self.config = json.loads(config_file_content.replace("\r", "").replace("\n", ""))
                 except json.decoder.JSONDecodeError:
-                    print("Erreur de configuration sur " + lang + "." + family)
+                    logging.error("Erreur de configuration sur " + lang + "." + family)
         if "lang_bot" in self.config:
             self.lang_bot = self.config["lang_bot"]
         else:
@@ -90,11 +90,6 @@ class get_wiki:
     def category(self, page_wiki):
         return get_category(self, page_wiki)
 
-    def contribs_user_list(self, user_wiki, limit=10):
-        url = self.protocol + "//" + self.url + self.scriptpath + "/api.php?action=query&list=usercontribs&ucuser=" + user_wiki + "&uclimit=" + str(limit) + "&format=json"
-        j = json.loads(request_site(url))
-        return j["query"]["usercontribs"]
-
 class get_page(pywikibot.Page):
     def __init__(self, source, title):
         self.source = source
@@ -107,6 +102,8 @@ class get_page(pywikibot.Page):
         else:
             self.special = False
             pywikibot.Page.__init__(self, self.source.site, self.page_name)
+        self.text_page_oldid = None
+        self.text_page_oldid2 = None
         self.init_page()
 
     def init_page(self):
@@ -119,19 +116,17 @@ class get_page(pywikibot.Page):
         self.scriptpath = self.source.site.siteinfo["general"]["scriptpath"]
         if not self.special:
             try:
-                self.revisions_list = list(self.revisions())
                 self.contributor_name = self.userName()
                 self.page_ns = self.namespace()
                 self.oldid = self.latest_revision_id
             except:
-                self.revisions_list = []
                 self.contributor_name = ""
                 self.page_ns = -1
                 self.oldid = None
 
         self.limit = -50
         self.limit2 = -30
-        self.except_contribs = 50
+        self.lim_contribs = 50
         #Page d'alerte
         if "alert_page" in self.source.config:
             self.alert_page = datetime.datetime.now().strftime(self.source.config["alert_page"].replace("\r", "").replace("\n", ""))
@@ -142,26 +137,15 @@ class get_page(pywikibot.Page):
                 self.alert_page = "Project:Alert"
         self.alert_request = False
 
-    def __str__(self):
-        if self.special:
-            return self.protocol + "//" + self.url + self.articlepath + self.page_name + " (page spéciale)"
-        else:
-            if not self.exists():
-                return self.protocol + "//" + self.url + self.articlepath + self.page_name + " (page inexistante)"
-            elif self.isRedirectPage():
-                return self.protocol + "//" + self.url + self.articlepath + self.page_name + " (redirection)"
-            else:
-                return self.protocol + "//" + self.url + self.articlepath + self.page_name
-
     def revert(self):
-        self.text = self.get_text_page_old()[1]
+        if self.text_page_oldid == None or self.text_page_oldid2 == None:
+            self.get_text_page_old()
+        self.text = self.text_page_oldid2
         if self.lang_bot == "fr":
             self.save("Annulation modification non-constructive", botflag=False, minor=False)
         else:
             self.save("Revert", botflag=False, minor=False)
         talk = pywikibot.Page(self.source.site, "User Talk:%s" % self.contributor_name)
-        if not talk.exists():
-            talk.text = ""
         if ("averto-1" in talk.text.lower() or "niveau=1" in talk.text.lower() or "level=1" in talk.text.lower()) and "averto-2" not in talk.text.lower() and "niveau=2" not in talk.text.lower() and "level=2" not in talk.text.lower(): #averti 2 fois
             alert = pywikibot.Page(self.source.site, self.alert_page)
             alert.text = alert.text + "\n{{subst:User:%s/Alert|%s}}" % (self.user_wiki, self.contributor_name)
@@ -189,24 +173,29 @@ class get_page(pywikibot.Page):
                 talk.save("Warning 0", botflag=False, minor=False)
 
     def vandalism_revert(self):
+        if self.contributor_name == self.user_wiki:
+            return 0
         vand = self.vandalism_score()
         revert = vand <= self.limit
-        vandal = pywikibot.User(self.source.site, self.contributor_name)
-        if (vandal.editCount() > self.except_contribs or self.contributor_name == self.user_wiki):
-            revert = False
-            vand = 0
+        if vand < 0:
+            vandal_api = json.loads(request_site("%s//%s%s/api.php?action=query&list=users&ususers=%s&usprop=editcount&format=json" % (self.protocol, self.url, self.scriptpath, self.contributor_name)))
+            try:
+                vandal_contribs = vandal_api["query"]["users"][0]["editcount"]
+            except KeyError:
+                vandal_contribs = 0
+            if vandal_contribs > self.lim_contribs:
+                return 0
         if self.page_ns == 2:
             if self.contributor_name in self.page_name:
-                revert = False
-                vand = 0
+                return 0
         if vand <= self.limit:
-            print("Modification non-constructive détectée (%s)." % str(vand))
+            logging.info("Modification non-constructive détectée (%s)." % str(vand))
         elif vand <= self.limit2:
-            print("Modification suspecte détectée (%s)." % str(vand))
+            logging.info("Modification suspecte détectée (%s)." % str(vand))
         elif vand < 0:
-            print("Modification à vérifier détectée (%s)." % str(vand))
+            logging.info("Modification à vérifier détectée (%s)." % str(vand))
         else:
-            print("Pas de modification suspecte détectée (%s)." % str(vand))
+            logging.info("Pas de modification suspecte détectée (%s)." % str(vand))
         if revert:
             self.revert()
         return vand
@@ -214,29 +203,34 @@ class get_page(pywikibot.Page):
     def get_text_page_old(self, revision_oldid=None, revision_oldid2=None): #revision_oldid : nouvelle version/version à vérifier, revision_oldid2 : ancienne version/version à comparer
         oldid = -1
         if revision_oldid is not None:
-            text_page = self.getOldVersion(oldid = revision_oldid)
+            text_page_oldid = self.getOldVersion(oldid = revision_oldid)
         else:
-            text_page = self.text
+            text_page_oldid = self.text
         if revision_oldid2 is not None:
             oldid = revision_oldid2
         else:
-            for revision in self.revisions_list:
+            try:
+                revisions_list = list(self.revisions())
+            except:
+                revisions_list = []
+            for revision in revisions_list:
                 if revision.user != self.contributor_name and (revision_oldid is None or revision.revid <= revision_oldid):
                     oldid = revision.revid
                     break
         if oldid != -1:
-            text_page_old = self.getOldVersion(oldid = oldid)
+            text_page_oldid2 = self.getOldVersion(oldid = oldid)
         else:
-            text_page_old = "{{subst:User:%s/VandalismDelete}}" % self.user_wiki
-        if text_page is None:
-            text_page = ""
-        if text_page_old is None:
-            text_page_old = ""
-        return text_page, text_page_old
+            text_page_oldid2 = "{{subst:User:%s/VandalismDelete}}" % self.user_wiki
+        if text_page_oldid is None:
+            text_page_oldid = ""
+        if text_page_oldid2 is None:
+            text_page_oldid2 = ""
+        self.text_page_oldid = text_page_oldid
+        self.text_page_oldid2 = text_page_oldid2
 
     def vandalism_score(self, revision_oldid=None, revision_oldid2=None):
         self.vandalism_score_detect = []
-        text_page, text_page_old = self.get_text_page_old(revision_oldid, revision_oldid2)
+        self.get_text_page_old(revision_oldid, revision_oldid2)
         open("regex_vandalisms_0.txt", "a").close()
         open("size_vandalisms_0.txt", "a").close()
         open("diff_vandalisms_0.txt", "a").close()
@@ -246,7 +240,7 @@ class get_page(pywikibot.Page):
             with open("regex_vandalisms_0.txt", "r") as regex_vandalisms_file:
                 for regex_vandalisms in regex_vandalisms_file.readlines():
                     regex = regex_vandalisms[0:len(regex_vandalisms)-len(regex_vandalisms.split(":")[-1])-1]
-                    regex_detect = regex_vandalism(regex, text_page, text_page_old)
+                    regex_detect = regex_vandalism(regex, self.text_page_oldid, self.text_page_oldid2)
                     if regex_detect:
                         score = int(regex_vandalisms.split(":")[-1])
                         self.vandalism_score_detect.append(["add_regex", score, regex_detect])
@@ -254,21 +248,21 @@ class get_page(pywikibot.Page):
             with open("size_vandalisms_0.txt", "r") as regex_vandalisms_file:
                 for regex_vandalisms in regex_vandalisms_file.readlines():
                     size = regex_vandalisms[0:len(regex_vandalisms)-len(regex_vandalisms.split(":")[-1])-1]
-                    if len(text_page) < int(size):
+                    if len(self.text_page_oldid) < int(size):
                         score = int(regex_vandalisms.split(":")[-1])
                         self.vandalism_score_detect.append(["size", score, size])
                         vand += score
             with open("diff_vandalisms_0.txt", "r") as regex_vandalisms_file:
                 for regex_vandalisms in regex_vandalisms_file.readlines():
                     diff = regex_vandalisms[0:len(regex_vandalisms)-len(regex_vandalisms.split(":")[-1])-1]
-                    if (int(diff) < 0 and len(text_page) - len(text_page_old) <= int(diff)) or (int(diff) >= 0 and len(text_page) - len(text_page_old) >= int(diff)):
+                    if (int(diff) < 0 and len(self.text_page_oldid) - len(self.text_page_oldid2) <= int(diff)) or (int(diff) >= 0 and len(self.text_page_oldid) - len(self.text_page_oldid2) >= int(diff)):
                         score = int(regex_vandalisms.split(":")[-1])
                         self.vandalism_score_detect.append(["diff", score, diff])
                         vand += score
             with open("regex_vandalisms_del_0.txt", "r") as regex_vandalisms_file:
                 for regex_vandalisms in regex_vandalisms_file.readlines():
                     regex = regex_vandalisms[0:len(regex_vandalisms)-len(regex_vandalisms.split(":")[-1])-1]
-                    regex_detect = regex_vandalism(regex, text_page_old, text_page)
+                    regex_detect = regex_vandalism(regex, self.text_page_oldid2, self.text_page_oldid)
                     if regex_detect:
                         score = int(regex_vandalisms.split(":")[-1])
                         self.vandalism_score_detect.append(["del_regex", score, regex_detect])
@@ -288,53 +282,50 @@ class get_page(pywikibot.Page):
                 replace1_lines, replace2_lines = replace1_file.readlines(), replace2_file.readlines()
                 for replace1 in replace1_lines:
                     replace2 = replace2_lines[n]
-                    print("Remplacement du regex %s par %s..." % (replace1, replace2))
+                    logging.info("Remplacement du regex %s par %s..." % (replace1, replace2))
                     self.text = re.sub(replace1, replace2, text_page)
                     if self.text != text_page:
                         n += 1
                         text_page = self.text
-                        print("Le regex %s a été trouvé et va être remplacé par %s." % (replace1, replace2))
+                        logging.info("Le regex %s a été trouvé et va être remplacé par %s." % (replace1, replace2))
         if n > 0:
             if self.lang_bot == "fr":
                 self.save(str(n) + " recherches-remplacements")
             else:
                 self.save(str(n) + " find-replaces")
-            print(str(n) + " recherches-remplacements effectuées (" + str(self) + ")")
+            logging.info(str(n) + " recherches-remplacements effectuées (" + str(self) + ")")
         else:
-            print("Rien à remplacer.")
+            logging.info("Rien à remplacer.")
         return n
 
     def redirects(self):
         type_redirect = None
         try:
-            if self.isRedirectPage():
-                page_redirect = self.getRedirectTarget()
-                if not page_redirect.exists():
-                    type_redirect = "broken"
-                    if self.lang_bot == "fr":
-                        self.put("{{User:%s/RedirectDelete}}" % self.user_wiki, "Demande suppression redirection cassée")
-                    else:
-                        self.put("{{User:%s/RedirectDelete}}" % self.user_wiki, "Delete broken redirect")
-                    print("Redirecton cassée demandée à la suppression.")
-                elif page_redirect.isRedirectPage():
-                    type_redirect = "double"
-                    if self.lang_bot == "fr":
-                        self.put("#REDIRECT[[%s]]" % page_redirect.getRedirectTarget().title(), "Correction redirection")
-                    else:
-                        self.put("#REDIRECT[[%s]]" % page_redirect.getRedirectTarget().title(), "Correct redirect")
-                    print("Double redirection corrigée.")
+            page_redirect = self.getRedirectTarget()
+            if not page_redirect.exists():
+                type_redirect = "broken"
+                if self.lang_bot == "fr":
+                    self.put("{{User:%s/RedirectDelete}}" % self.user_wiki, "Demande suppression redirection cassée")
                 else:
-                    type_redirect = "correct"
-                    print("Redirection correcte.")
+                    self.put("{{User:%s/RedirectDelete}}" % self.user_wiki, "Delete broken redirect")
+                logging.info("Redirecton cassée demandée à la suppression.")
+            elif page_redirect.isRedirectPage():
+                type_redirect = "double"
+                if self.lang_bot == "fr":
+                    self.put("#REDIRECT[[%s]]" % page_redirect.getRedirectTarget().title(), "Correction redirection")
+                else:
+                    self.put("#REDIRECT[[%s]]" % page_redirect.getRedirectTarget().title(), "Correct redirect")
+                logging.info("Double redirection corrigée.")
             else:
-                print("Pas une redirection.")
+                type_redirect = "correct"
+                logging.info("Redirection correcte.")
         except pywikibot.exceptions.CircularRedirect:
             type_redirect = "circular"
             if self.lang_bot == "fr":
                 self.put("{{User:%s/RedirectDelete|circular=True}}" % self.user_wiki, "Demande suppression redirection en boucle")
             else:
                 self.put("{{User:%s/RedirectDelete|circular=True}}" % self.user_wiki, "Delete circular redirect")
-            print("Redirecton en boucle demandée à la suppression.")
+            logging.info("Redirecton en boucle demandée à la suppression.")
         return type_redirect
 
     def category_page(self, category_name):
