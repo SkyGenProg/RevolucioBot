@@ -178,7 +178,7 @@ class get_page(pywikibot.Page):
         vand = self.vandalism_score()
         revert = vand <= self.limit
         if vand < 0:
-            vandal_api = json.loads(request_site("%s//%s%s/api.php?action=query&list=users&ususers=%s&usprop=editcount&format=json" % (self.protocol, self.url, self.scriptpath, self.contributor_name)))
+            vandal_api = json.loads(request_site("%s//%s%s/api.php?action=query&list=users&ususers=%s&usprop=editcount&format=json" % (self.protocol, self.url, self.scriptpath, urllib.parse.quote(self.contributor_name))))
             try:
                 vandal_contribs = vandal_api["query"]["users"][0]["editcount"]
             except KeyError:
