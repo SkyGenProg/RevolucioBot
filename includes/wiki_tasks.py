@@ -16,7 +16,7 @@ class wiki_task:
         wiki = self.site.family
         lang = self.site.lang
         lang_bot = self.site.lang_bot
-        logging.basicConfig(filename=wiki + "_" + lang + ".log", encoding="utf-8", level=logging.DEBUG, format="%(asctime)s %(message)s")
+        logging.basicConfig(filename=wiki + "_" + lang + ".log", encoding="utf-8", level=logging.DEBUG, format="%(asctime)s %(levelname)s:%(message)s")
         logging.getLogger().addHandler(logging.StreamHandler())
         while True:
             try:
@@ -30,7 +30,7 @@ class wiki_task:
                     if wiki == "dicoado":
                         for page_name in self.site.all_pages(ns=0):
                             page = self.site.page(page_name)
-                            logging.info("Page : " + str(page))
+                            pywikibot.output("Page : " + str(page))
                             try:
                                 if not page.isRedirectPage():
                                     page_text_old = page.text
@@ -54,7 +54,7 @@ class wiki_task:
                                                 page_text_split[1] = "=".join(page_text_split2)
                                                 page.text = ("|ex" + n + "=").join(page_text_split)
                                             except Exception as e:
-                                                logging.error(e)
+                                                pywikibot.error(e)
                                         if "|contr" + n + "=" in page.text:
                                             try:
                                                 page_text_split = page.text.split("|contr" + n + "=")
@@ -66,7 +66,7 @@ class wiki_task:
                                                 page_text_split[1] = "=".join(page_text_split2)
                                                 page.text = ("|contr" + n + "=").join(page_text_split)
                                             except Exception as e:
-                                                logging.error(e)
+                                                pywikibot.error(e)
                                         if "|syn" + n + "=" in page.text:
                                             try:
                                                 page_text_split = page.text.split("|syn" + n + "=")
@@ -78,7 +78,7 @@ class wiki_task:
                                                 page_text_split[1] = "=".join(page_text_split2)
                                                 page.text = ("|syn" + n + "=").join(page_text_split)
                                             except Exception as e:
-                                                logging.error(e)
+                                                pywikibot.error(e)
                                         if "|voir" + n + "=" in page.text:
                                             try:
                                                 page_text_split = page.text.split("|voir" + n + "=")
@@ -90,7 +90,7 @@ class wiki_task:
                                                 page_text_split[1] = "=".join(page_text_split2)
                                                 page.text = ("|voir" + n + "=").join(page_text_split)
                                             except Exception as e:
-                                                logging.error(e)
+                                                pywikibot.error(e)
                                         if "|def" + n + "=" in page.text:
                                             try:
                                                 page_text_split = page.text.split("|def" + n + "=")
@@ -105,24 +105,24 @@ class wiki_task:
                                                 page_text_split[1] = "=".join(page_text_split2)
                                                 page.text = ("|def" + n + "=").join(page_text_split)
                                             except Exception as e:
-                                                logging.error(e)
+                                                pywikibot.error(e)
                                     if "|son=LL-Q150" in page.text:
                                         page.text = page.text.replace("|son=LL-Q150", "|prononciation=LL-Q150")
                                     if page.text != page_text_old:
                                         page.save("maintenance")
                             except Exception as e:
-                                logging.error(e)
+                                pywikibot.error(e)
                 if datetime.datetime.utcnow().strftime("%Y%m") not in tasks_time: #taches mensuelles
                     #Nettoyage des PDDs d'IPs (créer Modèle:Avertissement effacé)
                     for page_name in self.site.all_pages(ns=3, start="1", end="A"):
-                        logging.info("Page : " + page_name)
+                        pywikibot.output("Page : " + page_name)
                         if (page_name.count(".") == 3 or page_name.count(":") == 8):
                             user_talk = pywikibot.User(self.site.site, ":".join(page_name.split(":")[1:]))
                             if user_talk.isAnonymous():
                                 page = self.site.page(page_name)
-                                logging.info("PDD d'IP")
+                                pywikibot.output("PDD d'IP")
                                 if page.page_ns == 3 and ("=" in page.text or "averto" in page.text.lower()) and abs((datetime.datetime.utcnow() - page.editTime()).days) > 365:
-                                    logging.info("Suppression des avertissements de la page " + page_name)
+                                    pywikibot.output("Suppression des avertissements de la page " + page_name)
                                     try:
                                         if lang_bot == "fr":
                                             page.put("{{Avertissement effacé|{{subst:#time: j F Y}}}}", "Anciens messages effacés", minor=False, botflag=True)
@@ -131,15 +131,15 @@ class wiki_task:
                                     except Exception as e:
                                         try:
                                             bt = traceback.format_exc()
-                                            logging.error(bt)
+                                            pywikibot.error(bt)
                                         except UnicodeError:
                                             pass
                                 else:
-                                    logging.info("Pas d'avertissement à effacer")
+                                    pywikibot.output("Pas d'avertissement à effacer")
                             else:
-                                logging.info("Pas une PDD d'IP")
+                                pywikibot.output("Pas une PDD d'IP")
                         else:
-                            logging.info("Pas une PDD d'IP")
+                            pywikibot.output("Pas une PDD d'IP")
                     with open("tasks_time_month_" + wiki + "_" + lang + ".txt", "w") as tasks_time_file:
                         tasks_time_file.write(datetime.datetime.utcnow().strftime("%Y%m"))
 
@@ -153,7 +153,7 @@ class wiki_task:
                     if int(datetime.datetime.utcnow().strftime("%H")) == 0 and int(datetime.datetime.utcnow().strftime("%M")[:-1]) == 0:
                         time1hour = datetime.datetime.utcnow() - datetime.timedelta(hours = 24)
                     else:
-                        time1hour = datetime.datetime.utcnow() - datetime.timedelta(minutes = 15)
+                        time1hour = datetime.datetime.utcnow() - datetime.timedelta(minutes = 10)
                     for page_name in self.site.rc_pages(timestamp=time1hour.strftime("%Y%m%d%H%M%S")):
                         #parcours des modifications récentes
                         if page_name in pages_checked: #passage des pages déjà vérifiées
@@ -161,9 +161,9 @@ class wiki_task:
                         page = self.site.page(page_name)
                         if page.special or not page.exists(): #passage des pages spéciales ou inexistantes
                             continue
-                        logging.info("Page : " + str(page))
+                        pywikibot.output("Page : " + str(page))
                         if page.isRedirectPage():
-                            logging.info("Correction de redirection sur la page " + str(page))
+                            pywikibot.output("Correction de redirection sur la page " + str(page))
                             redirect = page.redirects() #Correction redirections
                         else:
                             #détection vandalismes
@@ -261,14 +261,14 @@ class wiki_task:
                                         request_site(webhooks_url[wiki], headers, json.dumps(discord_msg).encode("utf-8"), "POST")
                             if page.page_ns == 0:
                                 edit_replace = page.edit_replace() #Recherches-remplacements
-                                logging.info(str(edit_replace) + " recherche(s)-remplacement(s) sur la page " + str(page) + ".")
+                                pywikibot.output(str(edit_replace) + " recherche(s)-remplacement(s) sur la page " + str(page) + ".")
                             if not ("disable_del_categories" in self.site.config and self.site.config["disable_del_categories"]) and int(datetime.datetime.utcnow().strftime("%H")) == 0 and page.page_ns != 2:
-                                logging.info("Suppression des catégories inexistantes sur la page " + str(page))
+                                pywikibot.output("Suppression des catégories inexistantes sur la page " + str(page))
                                 del_categories_no_exists = page.del_categories_no_exists() #Suppression 
                                 if del_categories_no_exists != []:
-                                    logging.info("Catégories retirées " + ", ".join(del_categories_no_exists))
+                                    pywikibot.output("Catégories retirées " + ", ".join(del_categories_no_exists))
                                 else:
-                                    logging.info("Aucune catégorie à retirer.")
+                                    pywikibot.output("Aucune catégorie à retirer.")
                             pages_checked.append(page_name)
                     if wiki == "dicoado":
                         #spécifiques aux Dico des Ados
@@ -276,31 +276,31 @@ class wiki_task:
                         bas = self.site.page("Dico:Bac à sable")
                         bas_zero = self.site.page("Dico:Bac à sable/Zéro")
                         if abs((datetime.datetime.utcnow() - bas.editTime()).seconds) > 3600 and bas.text != bas_zero.text:
-                            logging.info("Remise à zéro du bac à sable")
+                            pywikibot.output("Remise à zéro du bac à sable")
                             bas.put(bas_zero.text, "Remise à zéro du bac à sable")
                         for page_name in self.site.all_pages(ns=4, apprefix="Bac à sable/Test/"):
                             if page_name != "Dico:Bac à sable/Zéro":
                                 bas_page = self.site.page(page_name)
                                 if abs((datetime.datetime.utcnow() - bas_page.editTime()).seconds) > 7200 and "{{SI" not in bas_page.text:
-                                    logging.info("SI de " + page_name)
+                                    pywikibot.output("SI de " + page_name)
                                     bas_page.text = "{{SI|Remise à zéro du bac à sable}}\n" + bas_page.text
                                     bas_page.save("Remise à zéro du bac à sable")
 ##                    if lang_bot == "fr":
 ##                        cat_files_no_exists = self.site.category("Category:Pages avec des liens de fichiers brisés")
 ##                        for page_cat in cat_files_no_exists.get_pages(ns=0):
-##                            logging.info("Suppression des fichiers inexistantes sur la page " + page_cat)
+##                            pywikibot.output("Suppression des fichiers inexistantes sur la page " + page_cat)
 ##                            page_cat_get = self.site.page(page_cat)
 ##                            del_files_no_exists = page_cat_get.del_files_no_exists()
 ##                            if del_files_no_exists != []:
-##                                logging.info("Fichiers retirés " + ", ".join(del_files_no_exists))
+##                                pywikibot.output("Fichiers retirés " + ", ".join(del_files_no_exists))
 ##                            else:
-##                                logging.info("Aucun fichier à retirer.")
+##                                pywikibot.output("Aucun fichier à retirer.")
                     with open("tasks_time_hour_" + wiki + "_" + lang + ".txt", "w") as tasks_time_file:
                         tasks_time_file.write(datetime.datetime.utcnow().strftime("%Y%m%d%H%M"))
             except Exception as e:
                 try:
                     bt = traceback.format_exc()
-                    logging.error(bt)
+                    pywikibot.error(bt)
                 except UnicodeError:
                     pass
             time.sleep(60)

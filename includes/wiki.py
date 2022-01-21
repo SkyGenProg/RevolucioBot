@@ -2,7 +2,7 @@
 
 import pywikibot
 from pywikibot import pagegenerators, textlib
-import base64, datetime, json, logging, os, random, re, socket, time, urllib.request, urllib.error, urllib.parse, zlib
+import base64, datetime, json, os, random, re, socket, time, urllib.request, urllib.error, urllib.parse, zlib
 from config import *
 
 class get_wiki:
@@ -18,7 +18,7 @@ class get_wiki:
                 try:
                     self.config = json.loads(config_file_content.replace("\r", "").replace("\n", ""))
                 except json.decoder.JSONDecodeError:
-                    logging.error("Erreur de configuration sur " + lang + "." + family)
+                    pywikibot.error("Erreur de configuration sur " + lang + "." + family)
         if "lang_bot" in self.config:
             self.lang_bot = self.config["lang_bot"]
         else:
@@ -189,13 +189,13 @@ class get_page(pywikibot.Page):
             if self.contributor_name in self.page_name:
                 return 0
         if vand <= self.limit:
-            logging.info("Modification non-constructive détectée (%s)." % str(vand))
+            pywikibot.output("Modification non-constructive détectée (%s)." % str(vand))
         elif vand <= self.limit2:
-            logging.info("Modification suspecte détectée (%s)." % str(vand))
+            pywikibot.output("Modification suspecte détectée (%s)." % str(vand))
         elif vand < 0:
-            logging.info("Modification à vérifier détectée (%s)." % str(vand))
+            pywikibot.output("Modification à vérifier détectée (%s)." % str(vand))
         else:
-            logging.info("Pas de modification suspecte détectée (%s)." % str(vand))
+            pywikibot.output("Pas de modification suspecte détectée (%s)." % str(vand))
         if revert:
             self.revert()
         return vand
@@ -282,20 +282,20 @@ class get_page(pywikibot.Page):
                 replace1_lines, replace2_lines = replace1_file.readlines(), replace2_file.readlines()
                 for replace1 in replace1_lines:
                     replace2 = replace2_lines[n]
-                    logging.info("Remplacement du regex %s par %s..." % (replace1, replace2))
+                    pywikibot.output("Remplacement du regex %s par %s..." % (replace1, replace2))
                     self.text = re.sub(replace1, replace2, text_page)
                     if self.text != text_page:
                         n += 1
                         text_page = self.text
-                        logging.info("Le regex %s a été trouvé et va être remplacé par %s." % (replace1, replace2))
+                        pywikibot.output("Le regex %s a été trouvé et va être remplacé par %s." % (replace1, replace2))
         if n > 0:
             if self.lang_bot == "fr":
                 self.save(str(n) + " recherches-remplacements")
             else:
                 self.save(str(n) + " find-replaces")
-            logging.info(str(n) + " recherches-remplacements effectuées (" + str(self) + ")")
+            pywikibot.output(str(n) + " recherches-remplacements effectuées (" + str(self) + ")")
         else:
-            logging.info("Rien à remplacer.")
+            pywikibot.output("Rien à remplacer.")
         return n
 
     def redirects(self):
@@ -308,24 +308,24 @@ class get_page(pywikibot.Page):
                     self.put("{{User:%s/RedirectDelete}}" % self.user_wiki, "Demande suppression redirection cassée")
                 else:
                     self.put("{{User:%s/RedirectDelete}}" % self.user_wiki, "Delete broken redirect")
-                logging.info("Redirecton cassée demandée à la suppression.")
+                pywikibot.output("Redirecton cassée demandée à la suppression.")
             elif page_redirect.isRedirectPage():
                 type_redirect = "double"
                 if self.lang_bot == "fr":
                     self.put("#REDIRECT[[%s]]" % page_redirect.getRedirectTarget().title(), "Correction redirection")
                 else:
                     self.put("#REDIRECT[[%s]]" % page_redirect.getRedirectTarget().title(), "Correct redirect")
-                logging.info("Double redirection corrigée.")
+                pywikibot.output("Double redirection corrigée.")
             else:
                 type_redirect = "correct"
-                logging.info("Redirection correcte.")
+                pywikibot.output("Redirection correcte.")
         except pywikibot.exceptions.CircularRedirect:
             type_redirect = "circular"
             if self.lang_bot == "fr":
                 self.put("{{User:%s/RedirectDelete|circular=True}}" % self.user_wiki, "Demande suppression redirection en boucle")
             else:
                 self.put("{{User:%s/RedirectDelete|circular=True}}" % self.user_wiki, "Delete circular redirect")
-            logging.info("Redirecton en boucle demandée à la suppression.")
+            pywikibot.output("Redirecton en boucle demandée à la suppression.")
         return type_redirect
 
     def category_page(self, category_name):
