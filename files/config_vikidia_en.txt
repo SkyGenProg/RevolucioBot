@@ -1,1 +1,1 @@
-{"lang_bot": "en", "alert_page": "Vikidia:Requests/Administrators", "disable_del_categories": true}
+{"lang_bot": "en", "alert_page": "Vikidia:Requests/Administrators", "disable_del_categories": true, "trusted_groups": "autopatrol|patroller|sysop|bureaucrat|oversight|developer|bot"}

@@ -11,8 +11,8 @@ if __name__ == "__main__":
     if(not os.path.exists("files")):
        os.mkdir("files")
     os.chdir("files")
-    vikidiafr_site = get_wiki("vikidia", "fr", "RevolucioBot")
-    scores = vikidiafr_site.get_scores(hours=1)
+    site = get_wiki("vikidia", "fr", "RevolucioBot")
+    scores = site.get_scores(hours=24)
     print(scores)
     scores_n = {}
     scores_n_reverted = {}
