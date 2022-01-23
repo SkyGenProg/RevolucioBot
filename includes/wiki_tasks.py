@@ -149,11 +149,8 @@ class wiki_task:
                 with open("tasks_time_hour_" + wiki + "_" + lang + ".txt", "r") as tasks_time_file:
                     tasks_time = tasks_time_file.read()
                 if datetime.datetime.utcnow().strftime("%Y%m%d%H%M")[:-1] not in tasks_time:
-                    #Taches réalisées une fois par heure
-                    if int(datetime.datetime.utcnow().strftime("%H")) == 0 and int(datetime.datetime.utcnow().strftime("%M")[:-1]) == 0:
-                        time1hour = datetime.datetime.utcnow() - datetime.timedelta(hours = 24)
-                    else:
-                        time1hour = datetime.datetime.utcnow() - datetime.timedelta(minutes = 10)
+                    #Taches réalisées une fois toutes les 10 minutes
+                    time1hour = datetime.datetime.utcnow() - datetime.timedelta(minutes = 10)
                     for page_name in self.site.rc_pages(timestamp=time1hour.strftime("%Y%m%d%H%M%S")):
                         #parcours des modifications récentes
                         if page_name in pages_checked: #passage des pages déjà vérifiées

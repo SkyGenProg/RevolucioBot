@@ -66,9 +66,12 @@ class get_wiki:
                 pages.append(contrib["title"])
         return pages
 
-    def rc_pages(self, n_edits=5000, timestamp=None):
-        pages = []
-        url = "%s//%s%s/api.php?action=query&list=recentchanges&rclimit=%s&rcend=%s&rcprop=timestamp|title|user|ids|comment&rcshow=!bot&format=json" % (self.protocol, self.url, self.scriptpath, str(n_edits), str(timestamp))
+    def rc_pages(self, n_edits=5000, timestamp=None, rctoponly=True, return_type="title"):
+        self.diffs_rc = []
+        page_names = []
+        url = "%s//%s%s/api.php?action=query&list=recentchanges&rclimit=%s&rcend=%s&rcprop=timestamp|title|user|ids|comment&rctype=edit|new|categorize&rcshow=!bot&format=json" % (self.protocol, self.url, self.scriptpath, str(n_edits), str(timestamp))
+        if rctoponly:
+            url += "&rctoponly"
         rccontinue = ""
         while rccontinue != None:
             if rccontinue != "":
@@ -81,14 +84,38 @@ class get_wiki:
             except KeyError:
                 rccontinue = None
             for contrib in contribs:
-                pages.append(contrib["title"])
-        return pages
+                self.diffs_rc.append(contrib)
+                if return_type and contrib[return_type] not in page_names:
+                    page_names.append(contrib[return_type])
+        return page_names
 
     def page(self, page_wiki):
         return get_page(self, page_wiki)
 
     def category(self, page_wiki):
         return get_category(self, page_wiki)
+
+    def get_scores(self, hours=24):
+        scores = {}
+        time1hour = datetime.datetime.utcnow() - datetime.timedelta(hours=hours)
+        self.rc_pages(timestamp=time1hour.strftime("%Y%m%d%H%M%S"), rctoponly=False)
+        for page_info in self.diffs_rc:
+            page = self.page(page_info["title"])
+            try:
+                vandalism_score = page.vandalism_score(page_info["revid"], page_info["old_revid"])
+                if page_info["revid"] not in scores:
+                    scores[page_info["revid"]] = {"reverted": False}
+                scores[page_info["revid"]]["score"] = vandalism_score
+                scores[page_info["revid"]]["anon"] = "anon" in page_info
+                if page_info["old_revid"] != 0 and page_info["old_revid"] != -1:
+                    scores[page_info["old_revid"]] = {"reverted": False}
+                    if "comment" in page_info:
+                        scores[page_info["old_revid"]]["reverted"] = "revert" in page_info["comment"].lower() or "révoc" in page_info["comment"].lower() or "cancel" in page_info["comment"].lower() or "annul" in page_info["comment"].lower()
+                pywikibot.output(scores[page_info["revid"]])
+            except Exception as e:
+                pywikibot.error(e)
+        return scores
+
 
 class get_page(pywikibot.Page):
     def __init__(self, source, title):
@@ -217,7 +244,7 @@ class get_page(pywikibot.Page):
                 if revision.user != self.contributor_name and (revision_oldid is None or revision.revid <= revision_oldid):
                     oldid = revision.revid
                     break
-        if oldid != -1:
+        if oldid != -1 and oldid != 0:
             text_page_oldid2 = self.getOldVersion(oldid = oldid)
         else:
             text_page_oldid2 = "{{subst:User:%s/VandalismDelete}}" % self.user_wiki
