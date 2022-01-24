@@ -88,7 +88,7 @@ class get_wiki:
                 pages.append(contrib["title"])
         return pages
 
-    def rc_pages(self, n_edits=5000, timestamp=None, rctoponly=True, show_trusted=False, return_type="title"):
+    def rc_pages(self, n_edits=5000, timestamp=None, rctoponly=True, show_trusted=False):
         self.diffs_rc = []
         page_names = []
         url = "%s//%s%s/api.php?action=query&list=recentchanges&rclimit=%s&rcend=%s&rcprop=timestamp|title|user|ids|comment&rctype=edit|new|categorize&rcshow=!bot&format=json" % (self.protocol, self.url, self.scriptpath, str(n_edits), str(timestamp))
@@ -108,38 +108,12 @@ class get_wiki:
             for contrib in contribs:
                 if show_trusted or contrib["user"] not in self.trusted:
                     self.diffs_rc.append(contrib)
-                    if return_type and contrib[return_type] not in page_names:
-                        page_names.append(contrib[return_type])
-        return page_names
 
     def page(self, page_wiki):
         return get_page(self, page_wiki)
 
     def category(self, page_wiki):
         return get_category(self, page_wiki)
-
-    def get_scores(self, hours=24):
-        scores = {}
-        time1hour = datetime.datetime.utcnow() - datetime.timedelta(hours=hours)
-        self.rc_pages(timestamp=time1hour.strftime("%Y%m%d%H%M%S"), rctoponly=False)
-        for page_info in self.diffs_rc:
-            page = self.page(page_info["title"])
-            try:
-                vandalism_score = page.vandalism_score(page_info["revid"], page_info["old_revid"])
-                if page_info["revid"] not in scores:
-                    scores[page_info["revid"]] = {"reverted": False}
-                scores[page_info["revid"]]["score"] = vandalism_score
-                scores[page_info["revid"]]["anon"] = "anon" in page_info
-                scores[page_info["revid"]]["user"] = page_info["user"]
-                scores[page_info["revid"]]["page"] = page_info["title"]
-                if page_info["old_revid"] != 0 and page_info["old_revid"] != -1:
-                    scores[page_info["old_revid"]] = {"reverted": False}
-                    if "comment" in page_info:
-                        scores[page_info["old_revid"]]["reverted"] = "revert" in page_info["comment"].lower() or "révoc" in page_info["comment"].lower() or "cancel" in page_info["comment"].lower() or "annul" in page_info["comment"].lower()
-                pywikibot.output(scores[page_info["revid"]])
-            except Exception as e:
-                pywikibot.error(e)
-        return scores
 
 
 class get_page(pywikibot.Page):

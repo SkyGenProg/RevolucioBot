@@ -2,7 +2,7 @@
 
 import pywikibot
 from pywikibot import pagegenerators, textlib
-import base64, datetime, json, logging, os, random, re, socket, traceback, time, urllib.request, urllib.error, urllib.parse, zlib
+import base64, csv, datetime, json, logging, os, random, re, socket, traceback, time, urllib.request, urllib.error, urllib.parse, zlib
 from config import *
 from includes.wiki import *
 
@@ -150,15 +150,43 @@ class wiki_task:
                     tasks_time = tasks_time_file.read()
                 if datetime.datetime.utcnow().strftime("%Y%m%d%H%M")[:-1] not in tasks_time:
                     #Taches réalisées une fois toutes les 10 minutes
-                    time1hour = datetime.datetime.utcnow() - datetime.timedelta(minutes = 10)
-                    for page_name in self.site.rc_pages(timestamp=time1hour.strftime("%Y%m%d%H%M%S")):
+                    scores = {}
+                    if True or (int(datetime.datetime.utcnow().strftime("%H")) == 0 and int(datetime.datetime.utcnow().strftime("%M"))//10 == 0):
+                        time1hour = datetime.datetime.utcnow() - datetime.timedelta(hours = 24)
+                        self.site.rc_pages(timestamp=time1hour.strftime("%Y%m%d%H%M%S"), rctoponly=False, show_trusted=True)
+                        task_day = True
+                    else:
+                        time1hour = datetime.datetime.utcnow() - datetime.timedelta(minutes = 10)
+                        self.site.rc_pages(timestamp=time1hour.strftime("%Y%m%d%H%M%S"))
+                        task_day = False
+                    for page_info in self.site.diffs_rc:
                         #parcours des modifications récentes
-                        if page_name in pages_checked: #passage des pages déjà vérifiées
-                            continue
+                        page_name = page_info["title"]
                         page = self.site.page(page_name)
                         if page.special or not page.exists(): #passage des pages spéciales ou inexistantes
                             continue
                         pywikibot.output("Page : " + str(page))
+                        if task_day: #Ajout de la modif dans les stats
+                            try:
+                                vandalism_score = page.vandalism_score(page_info["revid"], page_info["old_revid"])
+                                if page_info["revid"] not in scores:
+                                    scores[page_info["revid"]] = {"reverted": False, "next_revid": -1}
+                                scores[page_info["revid"]]["score"] = vandalism_score
+                                scores[page_info["revid"]]["anon"] = "anon" in page_info
+                                scores[page_info["revid"]]["trusted"] = page_info["user"] in self.site.trusted
+                                scores[page_info["revid"]]["user"] = page_info["user"]
+                                scores[page_info["revid"]]["page"] = page_info["title"]
+                                if not scores[page_info["revid"]]["reverted"]:
+                                    scores[page_info["revid"]]["reverted"] = scores[page_info["revid"]]["next_revid"] > 0 and not scores[page_info["revid"]]["trusted"] and scores[scores[page_info["revid"]]["next_revid"]]["reverted"] and scores[scores[page_info["revid"]]["next_revid"]]["user"] == page_info["user"]
+                                if page_info["old_revid"] != 0 and page_info["old_revid"] != -1:
+                                    scores[page_info["old_revid"]] = {"reverted": False, "next_revid": page_info["revid"]}
+                                    if "comment" in page_info:
+                                        scores[page_info["old_revid"]]["reverted"] = "revert" in page_info["comment"].lower() or "révoc" in page_info["comment"].lower() or "cancel" in page_info["comment"].lower() or "annul" in page_info["comment"].lower()
+                                pywikibot.output(scores[page_info["revid"]])
+                            except Exception as e:
+                                pywikibot.error(e)
+                        if page_name in pages_checked: #passage des pages déjà vérifiées
+                            continue
                         if page.isRedirectPage():
                             pywikibot.output("Correction de redirection sur la page " + str(page))
                             redirect = page.redirects() #Correction redirections
@@ -195,6 +223,8 @@ class wiki_task:
                                             description = "This edit is maybe unconstructive"
                                         color = 12161032
                                     if lang_bot == "fr":
+                                        if task_day:
+                                            title = title + " (rappel)"
                                         fields = [
                                                 {
                                                   "name": "Score",
@@ -208,6 +238,8 @@ class wiki_task:
                                                 }
                                             ]
                                     else:
+                                        if task_day:
+                                            title = title + " (reminder)"
                                         fields = [
                                                 {
                                                   "name": "Score",
@@ -267,6 +299,97 @@ class wiki_task:
                                 else:
                                     pywikibot.output("Aucune catégorie à retirer.")
                             pages_checked.append(page_name)
+                    if task_day:
+                        print(scores)
+                        #Stats
+                        scores_n = {}
+                        scores_n_reverted = {}
+                        n_ip_contribs = 0
+                        n_users_contribs = 0
+                        n_ip_contribs_reverted = 0
+                        n_users_contribs_reverted = 0
+                        for diff in scores: #Calcul du nombre de modifs révoquées par score
+                            if "score" in scores[diff] and not scores[diff]["trusted"]:
+                                if scores[diff]["score"] not in scores_n:
+                                    scores_n[scores[diff]["score"]] = 1
+                                    scores_n_reverted[scores[diff]["score"]] = 0
+                                else:
+                                    scores_n[scores[diff]["score"]] += 1
+                                if scores[diff]["anon"]:
+                                    n_ip_contribs += 1
+                                else:
+                                    n_users_contribs += 1
+                                if scores[diff]["reverted"]:
+                                    scores_n_reverted[scores[diff]["score"]] += 1
+                                    if scores[diff]["anon"]:
+                                        n_ip_contribs_reverted += 1
+                                    else:
+                                        n_users_contribs_reverted += 1
+                        print(scores_n)
+                        print(scores_n_reverted)
+                        scores_n_prop_modifs = []
+                        for score_n in scores_n:
+                            scores_n_prop_modifs.append([score_n, scores_n_reverted[score_n]/scores_n[score_n]])
+                        print(scores_n_prop_modifs)
+                        with open("vand_" + wiki + "_" + lang + ".csv", "w") as file:
+                            writer = csv.writer(file)
+                            for line in scores_n_prop_modifs:
+                                writer.writerow(line)
+                        if lang_bot == "fr":
+                            fields = [
+                                    {
+                                      "name": "Révocations/Moditications totales",
+                                      "value": str(n_users_contribs_reverted+n_ip_contribs_reverted) + "/" + str(n_users_contribs+n_ip_contribs) + " (" + str(round((n_users_contribs_reverted+n_ip_contribs_reverted)/(n_users_contribs+n_ip_contribs), 2)) + " %)",
+                                      "inline": True
+                                    },
+                                    {
+                                      "name": "Révocations/Moditications IP",
+                                      "value": str(n_ip_contribs_reverted) + "/" + str(n_ip_contribs) + " (" + str(round((n_ip_contribs_reverted)/(n_ip_contribs), 2)) + " %)",
+                                      "inline": True
+                                    },
+                                    {
+                                      "name": "Révocations/Moditications utilisateurs inscrits",
+                                      "value": str(n_users_contribs_reverted) + "/" + str(n_users_contribs) + " (" + str(round((n_users_contribs_reverted)/(n_users_contribs), 2)) + " %)",
+                                      "inline": True
+                                    }
+                                ]
+                            discord_msg = {'embeds': [
+                                        {
+                                              'title': "Statistiques sur " + wiki + " " + lang,
+                                              'description': "Statistiques sur la patrouille :",
+                                              'color': 13371938,
+                                              'fields': fields
+                                        }
+                                    ]
+                                }
+                        else:
+                            fields = [
+                                    {
+                                      "name": "Reverts/Total edits",
+                                      "value": str(n_users_contribs_reverted+n_ip_contribs_reverted) + "/" + str(n_users_contribs+n_ip_contribs) + " (" + str(round((n_users_contribs_reverted+n_ip_contribs_reverted)/(n_users_contribs+n_ip_contribs), 2)) + " %)",
+                                      "inline": True
+                                    },
+                                    {
+                                      "name": "Reverts/IP edits",
+                                      "value": str(n_ip_contribs_reverted) + "/" + str(n_ip_contribs) + " (" + str(round((n_ip_contribs_reverted)/(n_ip_contribs), 2)) + " %)",
+                                      "inline": True
+                                    },
+                                    {
+                                      "name": "Reverts/User edits",
+                                      "value": str(n_users_contribs_reverted) + "/" + str(n_users_contribs) + " (" + str(round((n_users_contribs_reverted)/(n_users_contribs), 2)) + " %)",
+                                      "inline": True
+                                    }
+                                ]
+                            discord_msg = {'embeds': [
+                                        {
+                                              'title': "Statistics about " + wiki + " " + lang,
+                                              'description': "Statistics about patrol:",
+                                              'color': 13371938,
+                                              'fields': fields
+                                        }
+                                    ]
+                                }
+                        request_site(webhooks_url[wiki], headers, json.dumps(discord_msg).encode("utf-8"), "POST")
                     if wiki == "dicoado":
                         #spécifiques aux Dico des Ados
                         #remise à 0 du BàS du Dico des Ados
