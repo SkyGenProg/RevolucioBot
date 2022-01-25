@@ -26,7 +26,7 @@ class get_wiki:
         if "trusted_groups" in self.config:
             self.trusted_groups = self.config["trusted_groups"]
         else:
-            self.trusted_groups = "sysop|bureaucrat"
+            self.trusted_groups = "sysop|bureaucrat|bot"
         self.site = pywikibot.Site(lang, family, self.user_wiki)
         self.fullurl = self.site.siteinfo["general"]["server"]
         self.protocol = self.fullurl.split("/")[0]

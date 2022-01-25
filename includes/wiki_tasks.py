@@ -5,8 +5,12 @@ from pywikibot import pagegenerators, textlib
 import base64, csv, datetime, json, logging, os, random, re, socket, traceback, time, urllib.request, urllib.error, urllib.parse, zlib
 from config import *
 from includes.wiki import *
+from scipy.optimize import curve_fit
 
 vand_f = lambda x: 101.2391 + (5.57778 - 101.2391) / (1 + (x / 9.042732)**1.931107)
+
+def curve(x, a, b, c, d):
+    return d+(a-d)/(1+(x/c)**b)
 
 class wiki_task:
     def __init__(self, site):
@@ -299,9 +303,9 @@ class wiki_task:
                                 else:
                                     pywikibot.output("Aucune catégorie à retirer.")
                             pages_checked.append(page_name)
-                    if task_day:
+                    if task_day: #Tâches journalières (après passage des RC)
                         print(scores)
-                        #Stats
+                        #Statistiques journalières
                         scores_n = {}
                         scores_n_reverted = {}
                         n_ip_contribs = 0
@@ -325,6 +329,20 @@ class wiki_task:
                                         n_ip_contribs_reverted += 1
                                     else:
                                         n_users_contribs_reverted += 1
+                        n_contribs = n_users_contribs+n_ip_contribs
+                        n_contribs_reverted = n_users_contribs_reverted+n_ip_contribs_reverted
+                        if n_ip_contribs != 0:
+                            prop_ip_contribs = n_ip_contribs_reverted/n_ip_contribs
+                        else:
+                            prop_ip_contribs = 0
+                        if n_users_contribs != 0:
+                            prop_user_contribs = n_users_contribs_reverted/n_users_contribs
+                        else:
+                            prop_user_contribs = 0
+                        if n_contribs != 0:
+                            prop_contribs = n_contribs_reverted/n_contribs
+                        else:
+                            prop_contribs = 0
                         print(scores_n)
                         print(scores_n_reverted)
                         scores_n_prop_modifs = []
@@ -335,61 +353,62 @@ class wiki_task:
                             writer = csv.writer(file)
                             for line in scores_n_prop_modifs:
                                 writer.writerow(line)
-                        if lang_bot == "fr":
-                            fields = [
-                                    {
-                                      "name": "Révocations/Moditications totales",
-                                      "value": str(n_users_contribs_reverted+n_ip_contribs_reverted) + "/" + str(n_users_contribs+n_ip_contribs) + " (" + str(round((n_users_contribs_reverted+n_ip_contribs_reverted)/(n_users_contribs+n_ip_contribs), 2)) + " %)",
-                                      "inline": True
-                                    },
-                                    {
-                                      "name": "Révocations/Moditications IP",
-                                      "value": str(n_ip_contribs_reverted) + "/" + str(n_ip_contribs) + " (" + str(round((n_ip_contribs_reverted)/(n_ip_contribs), 2)) + " %)",
-                                      "inline": True
-                                    },
-                                    {
-                                      "name": "Révocations/Moditications utilisateurs inscrits",
-                                      "value": str(n_users_contribs_reverted) + "/" + str(n_users_contribs) + " (" + str(round((n_users_contribs_reverted)/(n_users_contribs), 2)) + " %)",
-                                      "inline": True
-                                    }
-                                ]
-                            discord_msg = {'embeds': [
+                        if webhooks_url[wiki] != None:
+                            if lang_bot == "fr":
+                                fields = [
                                         {
-                                              'title': "Statistiques sur " + wiki + " " + lang,
-                                              'description': "Statistiques sur la patrouille :",
-                                              'color': 13371938,
-                                              'fields': fields
+                                          "name": "Révocations/Modifications totales des nouveaux",
+                                          "value": str(n_contribs_reverted) + "/" + str(n_contribs) + " (" + str(round(prop_contribs*100, 2)) + " %)",
+                                          "inline": True
+                                        },
+                                        {
+                                          "name": "Révocations/Modifications IP",
+                                          "value": str(n_ip_contribs_reverted) + "/" + str(n_ip_contribs) + " (" + str(round(prop_ip_contribs*100, 2)) + " %)",
+                                          "inline": True
+                                        },
+                                        {
+                                          "name": "Révocations/Modifications nouveaux utilisateurs inscrits",
+                                          "value": str(n_users_contribs_reverted) + "/" + str(n_users_contribs) + " (" + str(round(prop_user_contribs*100, 2)) + " %)",
+                                          "inline": True
                                         }
                                     ]
-                                }
-                        else:
-                            fields = [
-                                    {
-                                      "name": "Reverts/Total edits",
-                                      "value": str(n_users_contribs_reverted+n_ip_contribs_reverted) + "/" + str(n_users_contribs+n_ip_contribs) + " (" + str(round((n_users_contribs_reverted+n_ip_contribs_reverted)/(n_users_contribs+n_ip_contribs), 2)) + " %)",
-                                      "inline": True
-                                    },
-                                    {
-                                      "name": "Reverts/IP edits",
-                                      "value": str(n_ip_contribs_reverted) + "/" + str(n_ip_contribs) + " (" + str(round((n_ip_contribs_reverted)/(n_ip_contribs), 2)) + " %)",
-                                      "inline": True
-                                    },
-                                    {
-                                      "name": "Reverts/User edits",
-                                      "value": str(n_users_contribs_reverted) + "/" + str(n_users_contribs) + " (" + str(round((n_users_contribs_reverted)/(n_users_contribs), 2)) + " %)",
-                                      "inline": True
+                                discord_msg = {'embeds': [
+                                            {
+                                                  'title': "Statistiques sur " + wiki + " " + lang + " (dernières 24 h)",
+                                                  'description': "Statistiques sur la patrouille :",
+                                                  'color': 65535,
+                                                  'fields': fields
+                                            }
+                                        ]
                                     }
-                                ]
-                            discord_msg = {'embeds': [
+                            else:
+                                fields = [
                                         {
-                                              'title': "Statistics about " + wiki + " " + lang,
-                                              'description': "Statistics about patrol:",
-                                              'color': 13371938,
-                                              'fields': fields
+                                          "name": "Reverts/Total new users and IP edits",
+                                          "value": str(n_contribs_reverted) + "/" + str(n_contribs) + " (" + str(round(prop_contribs*100, 2)) + " %)",
+                                          "inline": True
+                                        },
+                                        {
+                                          "name": "Reverts/IP edits",
+                                          "value": str(n_ip_contribs_reverted) + "/" + str(n_ip_contribs) + " (" + str(round(prop_ip_contribs*100, 2)) + " %)",
+                                          "inline": True
+                                        },
+                                        {
+                                          "name": "Reverts/New user edits",
+                                          "value": str(n_users_contribs_reverted) + "/" + str(n_users_contribs) + " (" + str(round(prop_user_contribs*100, 2)) + " %)",
+                                          "inline": True
                                         }
                                     ]
-                                }
-                        request_site(webhooks_url[wiki], headers, json.dumps(discord_msg).encode("utf-8"), "POST")
+                                discord_msg = {'embeds': [
+                                            {
+                                                  'title': "Statistics about " + wiki + " " + lang + " (last 24 h)",
+                                                  'description': "Statistics about patrol:",
+                                                  'color': 65535,
+                                                  'fields': fields
+                                            }
+                                        ]
+                                    }
+                            request_site(webhooks_url[wiki], headers, json.dumps(discord_msg).encode("utf-8"), "POST")
                     if wiki == "dicoado":
                         #spécifiques aux Dico des Ados
                         #remise à 0 du BàS du Dico des Ados
