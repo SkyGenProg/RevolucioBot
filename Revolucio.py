@@ -8,7 +8,7 @@ from config import *
 
 if __name__ == "__main__":
     print("Revolució %s" % ver)
-    os.path.abspath(os.getcwd())
+    print(os.path.abspath(os.getcwd()))
     if(not os.path.exists("files")):
        os.mkdir("files")
     os.chdir("files")
