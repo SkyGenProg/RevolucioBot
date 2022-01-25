@@ -153,7 +153,7 @@ class wiki_task:
                 if datetime.datetime.utcnow().strftime("%Y%m%d%H%M")[:-1] not in tasks_time:
                     #Taches réalisées une fois toutes les 10 minutes
                     scores = {}
-                    if True or int(datetime.datetime.utcnow().strftime("%H")) == 0 and int(datetime.datetime.utcnow().strftime("%M"))//10 == 0:
+                    if int(datetime.datetime.utcnow().strftime("%H")) == 0 and int(datetime.datetime.utcnow().strftime("%M"))//10 == 0:
                         time1hour = datetime.datetime.utcnow() - datetime.timedelta(hours = 24)
                         self.site.rc_pages(timestamp=time1hour.strftime("%Y%m%d%H%M%S"), rctoponly=False, show_trusted=True)
                         task_day = True
