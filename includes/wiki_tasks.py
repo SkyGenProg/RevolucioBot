@@ -2,7 +2,7 @@
 
 import pywikibot
 from pywikibot import pagegenerators, textlib
-import base64, csv, datetime, json, logging, os, random, re, socket, traceback, time, urllib.request, urllib.error, urllib.parse, zlib
+import base64, csv, datetime, json, os, random, re, socket, traceback, time, urllib.request, urllib.error, urllib.parse, zlib
 from config import *
 from includes.wiki import *
 from scipy.optimize import curve_fit
@@ -20,8 +20,6 @@ class wiki_task:
         wiki = self.site.family
         lang = self.site.lang
         lang_bot = self.site.lang_bot
-        logging.basicConfig(filename=wiki + "_" + lang + ".log", encoding="utf-8", level=logging.DEBUG, format="%(asctime)s %(levelname)s:%(message)s")
-        logging.getLogger().addHandler(logging.StreamHandler())
         while True:
             try:
                 pages_checked = [] #pages vérifiées (pour éviter de revérifier la page)
@@ -304,7 +302,6 @@ class wiki_task:
                                     pywikibot.output("Aucune catégorie à retirer.")
                             pages_checked.append(page_name)
                     if task_day: #Tâches journalières (après passage des RC)
-                        print(scores)
                         #Statistiques journalières
                         scores_n = {}
                         scores_n_reverted = {}
@@ -343,12 +340,9 @@ class wiki_task:
                             prop_contribs = n_contribs_reverted/n_contribs
                         else:
                             prop_contribs = 0
-                        print(scores_n)
-                        print(scores_n_reverted)
                         scores_n_prop_modifs = []
                         for score_n in scores_n:
                             scores_n_prop_modifs.append([score_n, scores_n_reverted[score_n]/scores_n[score_n]])
-                        print(scores_n_prop_modifs)
                         with open("vand_" + wiki + "_" + lang + ".csv", "w") as file:
                             writer = csv.writer(file)
                             for line in scores_n_prop_modifs:

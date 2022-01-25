@@ -6,6 +6,9 @@ from includes.wiki import *
 from includes.wiki_tasks import *
 from config import *
 
+logging.basicConfig(filename="logs.log", encoding="utf-8", level=logging.DEBUG, format="%(asctime)s %(thread)d %(levelname)s:%(message)s")
+logging.getLogger().addHandler(logging.StreamHandler())
+
 if __name__ == "__main__":
     print("Revolució %s" % ver)
     if(not os.path.exists("files")):
