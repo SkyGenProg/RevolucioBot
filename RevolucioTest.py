@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-import os, threading
+import os, logging, threading
 
 from includes.wiki import *
 from includes.wiki_tasks import *
