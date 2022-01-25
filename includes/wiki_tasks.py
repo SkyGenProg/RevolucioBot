@@ -2,7 +2,7 @@
 
 import pywikibot
 from pywikibot import pagegenerators, textlib
-import base64, csv, datetime, json, os, random, re, socket, traceback, time, urllib.request, urllib.error, urllib.parse, zlib
+import base64, datetime, json, os, random, re, socket, traceback, time, urllib.request, urllib.error, urllib.parse, zlib
 from config import *
 from includes.wiki import *
 from scipy.optimize import curve_fit
@@ -153,7 +153,7 @@ class wiki_task:
                 if datetime.datetime.utcnow().strftime("%Y%m%d%H%M")[:-1] not in tasks_time:
                     #Taches réalisées une fois toutes les 10 minutes
                     scores = {}
-                    if int(datetime.datetime.utcnow().strftime("%H")) == 0 and int(datetime.datetime.utcnow().strftime("%M"))//10 == 0:
+                    if True or int(datetime.datetime.utcnow().strftime("%H")) == 0 and int(datetime.datetime.utcnow().strftime("%M"))//10 == 0:
                         time1hour = datetime.datetime.utcnow() - datetime.timedelta(hours = 24)
                         self.site.rc_pages(timestamp=time1hour.strftime("%Y%m%d%H%M%S"), rctoponly=False, show_trusted=True)
                         task_day = True
@@ -326,6 +326,10 @@ class wiki_task:
                                         n_ip_contribs_reverted += 1
                                     else:
                                         n_users_contribs_reverted += 1
+                        pywikibot.output("Sauvegarde des modifications récentes du jour.")
+                        with open("rc_" + wiki + "_" + lang + "_" + time1hour.strftime("%Y%m%d") + ".json", "w") as file:
+                            file.write(json.dumps(scores))
+                        pywikibot.output("Calcul des statistiques.")
                         n_contribs = n_users_contribs+n_ip_contribs
                         n_contribs_reverted = n_users_contribs_reverted+n_ip_contribs_reverted
                         if n_ip_contribs != 0:
@@ -340,13 +344,27 @@ class wiki_task:
                             prop_contribs = n_contribs_reverted/n_contribs
                         else:
                             prop_contribs = 0
-                        scores_n_prop_modifs = []
+                        scores_x = []
+                        scores_y = []
                         for score_n in scores_n:
-                            scores_n_prop_modifs.append([score_n, scores_n_reverted[score_n]/scores_n[score_n]])
-                        with open("vand_" + wiki + "_" + lang + ".csv", "w") as file:
-                            writer = csv.writer(file)
-                            for line in scores_n_prop_modifs:
-                                writer.writerow(line)
+                            if score_n <= 0:
+                                scores_x.append(abs(score_n))
+                                scores_y.append(scores_n_reverted[score_n]/scores_n[score_n])
+                        if len(scores_x) >= 4 and len(scores_y) >= 4:
+                            try:
+                                coeffs_curve, _ = curve_fit(curve, scores_x, scores_y)
+                                no_coeffs = False
+                            except Exception as e:
+                                pywikibot.error(e)
+                                no_coeffs = True
+                        else:
+                            pywikibot.output("Pas assez de scores pour générer la fonction.")
+                            no_coeffs = True
+                        with open("vand_f_" + wiki + "_" + lang + ".txt", "w") as file:
+                            if not no_coeffs:
+                                file.write(str(coeffs_curve))
+                            else:
+                                file.write("erreur")
                         if webhooks_url[wiki] != None:
                             if lang_bot == "fr":
                                 fields = [
