@@ -153,7 +153,7 @@ class wiki_task:
                 if datetime.datetime.utcnow().strftime("%Y%m%d%H%M")[:-1] not in tasks_time:
                     #Taches réalisées une fois toutes les 10 minutes
                     scores = {}
-                    if int(datetime.datetime.utcnow().strftime("%H")) == 0 and int(datetime.datetime.utcnow().strftime("%M"))//10 == 0:
+                    if True or int(datetime.datetime.utcnow().strftime("%H")) == 0 and int(datetime.datetime.utcnow().strftime("%M"))//10 == 0:
                         time1hour = datetime.datetime.utcnow() - datetime.timedelta(hours = 24)
                         self.site.rc_pages(timestamp=time1hour.strftime("%Y%m%d%H%M%S"), rctoponly=False, show_trusted=True)
                         task_day = True
@@ -184,7 +184,6 @@ class wiki_task:
                                     scores[page_info["old_revid"]] = {"reverted": False, "next_revid": page_info["revid"]}
                                     if "comment" in page_info:
                                         scores[page_info["old_revid"]]["reverted"] = "revert" in page_info["comment"].lower() or "révoc" in page_info["comment"].lower() or "cancel" in page_info["comment"].lower() or "annul" in page_info["comment"].lower()
-                                pywikibot.output(scores[page_info["revid"]])
                             except Exception as e:
                                 pywikibot.error(e)
                         if page_name in pages_checked: #passage des pages déjà vérifiées
@@ -350,9 +349,12 @@ class wiki_task:
                             if score_n <= 0:
                                 scores_x.append(abs(score_n))
                                 scores_y.append(scores_n_reverted[score_n]/scores_n[score_n])
+                        with open("vand_" + wiki + "_" + lang + ".txt", "w") as file:
+                            for i in range(len(scores_x)):
+                                file.write(str(scores_x[i]) + ":" + str(scores_y[i]))
                         if len(scores_x) >= 4 and len(scores_y) >= 4:
                             try:
-                                coeffs_curve, _ = curve_fit(curve, scores_x, scores_y)
+                                coeffs_curve, _ = curve_fit(curve, scores_x, scores_y, maxfev=1000000)
                                 no_coeffs = False
                             except Exception as e:
                                 pywikibot.error(e)
