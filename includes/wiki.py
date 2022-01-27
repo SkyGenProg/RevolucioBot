@@ -35,6 +35,9 @@ class get_wiki:
         self.url = self.fullurl.split("/")[2]
         self.articlepath = self.site.siteinfo["general"]["articlepath"].replace("$1", "")
         self.scriptpath = self.site.siteinfo["general"]["scriptpath"]
+        self.get_trusted()
+
+    def get_trusted(self):
         url = "%s//%s%s/api.php?action=query&list=allusers&augroup=%s&aulimit=500&format=json" % (self.protocol, self.url, self.scriptpath, self.trusted_groups)
         self.trusted = []
         aufrom = ""
@@ -53,9 +56,6 @@ class get_wiki:
                 aufrom = None
             for user_trusted in trusted_query:
                 self.trusted.append(user_trusted["name"])
-
-    def site_info(self, prop, info):
-        return self.site.siteinfo["general"][prop][info]
 
     def all_pages(self, n_pages=5000, ns=0, start=None, end=None, apfilterredir=None, apprefix=None, urladd=None):
         pages = []

@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
-ver = "5.2.0-beta.4"
-release_date = "25/01/2022"
+ver = "5.2.0-beta.5"
+release_date = "27/01/2022"
 
 webhooks_url = {'localhost': "https://discord.com/api/webhooks/922633624912814120/Rx1F2e81k9IbBYd32f9txntk_yMVEirVlTVfqMKGdKGcLPM_sZfoFoPxa1C2JbBbFlQz",
                 'vikidia': "REMOVED",

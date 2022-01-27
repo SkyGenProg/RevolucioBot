@@ -115,6 +115,7 @@ class wiki_task:
                             except Exception as e:
                                 pywikibot.error(e)
                 if datetime.datetime.utcnow().strftime("%Y%m") not in tasks_time: #taches mensuelles
+                    self.site.get_trusted() #récupération des utilisateurs ignorés par le bot
                     #Nettoyage des PDDs d'IPs (créer Modèle:Avertissement effacé)
                     for page_name in self.site.all_pages(ns=3, start="1", end="A"):
                         pywikibot.output("Page : " + page_name)
@@ -153,7 +154,7 @@ class wiki_task:
                 if datetime.datetime.utcnow().strftime("%Y%m%d%H%M")[:-1] not in tasks_time:
                     #Taches réalisées une fois toutes les 10 minutes
                     scores = {}
-                    if int(datetime.datetime.utcnow().strftime("%H")) == 0 and int(datetime.datetime.utcnow().strftime("%M"))//10 == 0:
+                    if True or int(datetime.datetime.utcnow().strftime("%H")) == 0 and int(datetime.datetime.utcnow().strftime("%M"))//10 == 0:
                         time1hour = datetime.datetime.utcnow() - datetime.timedelta(hours = 24)
                         self.site.rc_pages(timestamp=time1hour.strftime("%Y%m%d%H%M%S"), rctoponly=False, show_trusted=True)
                         task_day = True
@@ -308,6 +309,10 @@ class wiki_task:
                         n_users_contribs = 0
                         n_ip_contribs_reverted = 0
                         n_users_contribs_reverted = 0
+                        ip_list = []
+                        users_list = []
+                        ip_list_reverted = []
+                        users_list_reverted = []
                         for diff in scores: #Calcul du nombre de modifs révoquées par score
                             if "score" in scores[diff] and not scores[diff]["trusted"]:
                                 if scores[diff]["score"] not in scores_n:
@@ -317,18 +322,26 @@ class wiki_task:
                                     scores_n[scores[diff]["score"]] += 1
                                 if scores[diff]["anon"]:
                                     n_ip_contribs += 1
+                                    if scores[diff]["user"] not in ip_list:
+                                        ip_list.append(scores[diff]["user"])
                                 else:
                                     n_users_contribs += 1
+                                    if scores[diff]["user"] not in users_list:
+                                        users_list.append(scores[diff]["user"])
                                 if scores[diff]["reverted"]:
                                     scores_n_reverted[scores[diff]["score"]] += 1
                                     if scores[diff]["anon"]:
                                         n_ip_contribs_reverted += 1
+                                        if scores[diff]["user"] not in ip_list_reverted:
+                                            ip_list_reverted.append(scores[diff]["user"])
                                     else:
                                         n_users_contribs_reverted += 1
+                                        if scores[diff]["user"] not in users_list_reverted:
+                                            users_list_reverted.append(scores[diff]["user"])
                         pywikibot.output("Sauvegarde des modifications récentes du jour.")
                         with open("rc_" + wiki + "_" + lang + "_" + time1hour.strftime("%Y%m%d") + ".json", "w") as file:
                             file.write(json.dumps(scores))
-                        pywikibot.output("Calcul des statistiques.")
+                        pywikibot.output("Calcul des statistiques (contributions).")
                         n_contribs = n_users_contribs+n_ip_contribs
                         n_contribs_reverted = n_users_contribs_reverted+n_ip_contribs_reverted
                         if n_ip_contribs != 0:
@@ -343,6 +356,25 @@ class wiki_task:
                             prop_contribs = n_contribs_reverted/n_contribs
                         else:
                             prop_contribs = 0
+                        pywikibot.output("Calcul des statistiques (utilisateurs).")
+                        n_users_reverted = len(users_list_reverted)
+                        n_ip_reverted = len(ip_list_reverted)
+                        n_users = len(users_list)
+                        n_ip = len(ip_list)
+                        n_users_ip = n_users+n_ip
+                        n_users_ip_reverted = n_users_reverted+n_ip_reverted
+                        if n_ip != 0:
+                            prop_ip = n_ip_reverted/n_ip
+                        else:
+                            prop_ip = 0
+                        if n_users != 0:
+                            prop_user = n_users_reverted/n_users
+                        else:
+                            prop_user = 0
+                        if n_users_ip != 0:
+                            prop_users_ip = n_users_ip_reverted/n_users_ip
+                        else:
+                            prop_users_ip = 0
                         scores_x = []
                         scores_y = []
                         for score_n in scores_n:
@@ -371,17 +403,32 @@ class wiki_task:
                             if lang_bot == "fr":
                                 fields = [
                                         {
-                                          "name": "Révocations/Modifications totales des nouveaux",
-                                          "value": str(n_contribs_reverted) + "/" + str(n_contribs) + " (" + str(round(prop_contribs*100, 2)) + " %)",
+                                          "name": "IP et nouveaux révoqués/Nombre total d'IP et nouveaux (non-Autopatrol) actifs",
+                                          "value": str(n_ip_reverted+n_users_reverted) + "/" + str(n_users_ip) + " (" + str(round(prop_users_ip*100, 2)) + " %)",
+                                          "inline": False
+                                        },
+                                        {
+                                          "name": "IP révoquées/Nombre total d'IPs",
+                                          "value": str(n_ip_reverted) + "/" + str(n_ip) + " (" + str(round(prop_ip*100, 2)) + " %)",
                                           "inline": True
                                         },
                                         {
-                                          "name": "Révocations/Modifications IP",
+                                          "name": "Nouveaux inscrits révoqués/Nouveaux inscrits (non-Autopatrol) actifs",
+                                          "value": str(n_users_reverted) + "/" + str(n_users) + " (" + str(round(prop_user*100, 2)) + " %)",
+                                          "inline": True
+                                        },
+                                        {
+                                          "name": "Modifications révoquées/Modifications totales des nouveaux (IP + utilisateurs non-Autopatrol)",
+                                          "value": str(n_contribs_reverted) + "/" + str(n_contribs) + " (" + str(round(prop_contribs*100, 2)) + " %)",
+                                          "inline": False
+                                        },
+                                        {
+                                          "name": "Modifications révoquées/Modifications IP",
                                           "value": str(n_ip_contribs_reverted) + "/" + str(n_ip_contribs) + " (" + str(round(prop_ip_contribs*100, 2)) + " %)",
                                           "inline": True
                                         },
                                         {
-                                          "name": "Révocations/Modifications nouveaux utilisateurs inscrits",
+                                          "name": "Modifications révoquées/Modifications nouveaux utilisateurs inscrits (non-Autopatrol)",
                                           "value": str(n_users_contribs_reverted) + "/" + str(n_users_contribs) + " (" + str(round(prop_user_contribs*100, 2)) + " %)",
                                           "inline": True
                                         }
@@ -398,17 +445,32 @@ class wiki_task:
                             else:
                                 fields = [
                                         {
-                                          "name": "Reverts/Total new users and IP edits",
-                                          "value": str(n_contribs_reverted) + "/" + str(n_contribs) + " (" + str(round(prop_contribs*100, 2)) + " %)",
+                                          "name": "Reverted users/Total new users (no Autopatrol) and IP number",
+                                          "value": str(n_ip_reverted+n_users_reverted) + "/" + str(n_users_ip) + " (" + str(round(prop_users_ip*100, 2)) + " %)",
+                                          "inline": False
+                                        },
+                                        {
+                                          "name": "Reverted IP/Total IP number",
+                                          "value": str(n_ip_reverted) + "/" + str(n_ip) + " (" + str(round(prop_ip*100, 2)) + " %)",
                                           "inline": True
                                         },
                                         {
-                                          "name": "Reverts/IP edits",
+                                          "name": "Reverted users/Total users number",
+                                          "value": str(n_users_reverted) + "/" + str(n_users) + " (" + str(round(prop_user*100, 2)) + " %)",
+                                          "inline": True
+                                        },
+                                        {
+                                          "name": "Reverted edits/Total new users (no Autopatrol) and IP edits",
+                                          "value": str(n_contribs_reverted) + "/" + str(n_contribs) + " (" + str(round(prop_contribs*100, 2)) + " %)",
+                                          "inline": False
+                                        },
+                                        {
+                                          "name": "Reverted edits/IP edits",
                                           "value": str(n_ip_contribs_reverted) + "/" + str(n_ip_contribs) + " (" + str(round(prop_ip_contribs*100, 2)) + " %)",
                                           "inline": True
                                         },
                                         {
-                                          "name": "Reverts/New user edits",
+                                          "name": "Reverted edits/New users (no Autopatrol) edits",
                                           "value": str(n_users_contribs_reverted) + "/" + str(n_users_contribs) + " (" + str(round(prop_user_contribs*100, 2)) + " %)",
                                           "inline": True
                                         }
