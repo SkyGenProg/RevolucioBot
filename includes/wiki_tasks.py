@@ -351,7 +351,7 @@ class wiki_task:
                                 scores_y.append(scores_n_reverted[score_n]/scores_n[score_n])
                         with open("vand_" + wiki + "_" + lang + ".txt", "w") as file:
                             for i in range(len(scores_x)):
-                                file.write(str(scores_x[i]) + ":" + str(scores_y[i]))
+                                file.write(str(scores_x[i]) + ":" + str(scores_y[i]) + "\r\n")
                         if len(scores_x) >= 4 and len(scores_y) >= 4:
                             try:
                                 coeffs_curve, _ = curve_fit(curve, scores_x, scores_y, maxfev=1000000)
