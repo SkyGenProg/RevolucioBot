@@ -7,10 +7,10 @@ from config import *
 from includes.wiki import *
 from scipy.optimize import curve_fit
 
-vand_f = lambda x: 101.2391 + (5.57778 - 101.2391) / (1 + (x / 9.042732)**1.931107)
-
 def curve(x, a, b, c, d):
     return d+(a-d)/(1+(x/c)**b)
+
+vand_f = lambda x: curve(x, 5.57778, 1.931107, 9.042732, 101.2391)
 
 class wiki_task:
     def __init__(self, site):
@@ -22,12 +22,13 @@ class wiki_task:
         lang_bot = self.site.lang_bot
         while True:
             try:
+                datetime_utcnow = datetime.datetime.utcnow()
                 pages_checked = [] #pages vérifiées (pour éviter de revérifier la page)
                 #Mise en mémoire du mois
                 open("tasks_time_month_" + wiki + "_" + lang + ".txt", "a").close()
                 with open("tasks_time_month_" + wiki + "_" + lang + ".txt", "r") as tasks_time_file:
                     tasks_time = tasks_time_file.read()
-                if datetime.datetime.now().strftime("%Y%m") not in tasks_time: #taches mensuelles
+                if datetime_utcnow.strftime("%Y%m") not in tasks_time: #taches mensuelles
                     #spécifiques au Dico des Ados
                     if wiki == "dicoado":
                         for page_name in self.site.all_pages(ns=0):
@@ -114,7 +115,7 @@ class wiki_task:
                                         page.save("maintenance")
                             except Exception as e:
                                 pywikibot.error(e)
-                if datetime.datetime.utcnow().strftime("%Y%m") not in tasks_time: #taches mensuelles
+                if datetime_utcnow.strftime("%Y%m") not in tasks_time: #taches mensuelles
                     self.site.get_trusted() #récupération des utilisateurs ignorés par le bot
                     #Nettoyage des PDDs d'IPs (créer Modèle:Avertissement effacé)
                     for page_name in self.site.all_pages(ns=3, start="1", end="A"):
@@ -124,7 +125,7 @@ class wiki_task:
                             if user_talk.isAnonymous():
                                 page = self.site.page(page_name)
                                 pywikibot.output("PDD d'IP")
-                                if page.page_ns == 3 and ("=" in page.text or "averto" in page.text.lower()) and abs((datetime.datetime.utcnow() - page.editTime()).days) > 365:
+                                if page.page_ns == 3 and ("=" in page.text or "averto" in page.text.lower()) and abs((datetime_utcnow - page.editTime()).days) > 365:
                                     pywikibot.output("Suppression des avertissements de la page " + page_name)
                                     try:
                                         if lang_bot == "fr":
@@ -144,22 +145,22 @@ class wiki_task:
                         else:
                             pywikibot.output("Pas une PDD d'IP")
                     with open("tasks_time_month_" + wiki + "_" + lang + ".txt", "w") as tasks_time_file:
-                        tasks_time_file.write(datetime.datetime.utcnow().strftime("%Y%m"))
+                        tasks_time_file.write(datetime_utcnow.strftime("%Y%m"))
 
 
                 #Mise en mémoire de l'heure
                 open("tasks_time_hour_" + wiki + "_" + lang + ".txt", "a").close()
                 with open("tasks_time_hour_" + wiki + "_" + lang + ".txt", "r") as tasks_time_file:
                     tasks_time = tasks_time_file.read()
-                if datetime.datetime.utcnow().strftime("%Y%m%d%H%M")[:-1] not in tasks_time:
+                if datetime_utcnow.strftime("%Y%m%d%H%M")[:-1] not in tasks_time:
                     #Taches réalisées une fois toutes les 10 minutes
                     scores = {}
-                    if int(datetime.datetime.utcnow().strftime("%H")) == 0 and int(datetime.datetime.utcnow().strftime("%M"))//10 == 0:
-                        time1hour = datetime.datetime.utcnow() - datetime.timedelta(hours = 24)
+                    if int(datetime_utcnow.strftime("%H")) == 0 and int(datetime_utcnow.strftime("%M"))//10 == 0:
+                        time1hour = datetime_utcnow - datetime.timedelta(hours = 24)
                         self.site.rc_pages(timestamp=time1hour.strftime("%Y%m%d%H%M%S"), rctoponly=False, show_trusted=True)
                         task_day = True
                     else:
-                        time1hour = datetime.datetime.utcnow() - datetime.timedelta(minutes = 10)
+                        time1hour = datetime_utcnow - datetime.timedelta(minutes = 10)
                         self.site.rc_pages(timestamp=time1hour.strftime("%Y%m%d%H%M%S"))
                         task_day = False
                     for page_info in self.site.diffs_rc:
@@ -293,7 +294,7 @@ class wiki_task:
                             if page.page_ns == 0:
                                 edit_replace = page.edit_replace() #Recherches-remplacements
                                 pywikibot.output(str(edit_replace) + " recherche(s)-remplacement(s) sur la page " + str(page) + ".")
-                            if not ("disable_del_categories" in self.site.config and self.site.config["disable_del_categories"]) and int(datetime.datetime.utcnow().strftime("%H")) == 0 and page.page_ns != 2:
+                            if not ("disable_del_categories" in self.site.config and self.site.config["disable_del_categories"]) and int(datetime_utcnow.strftime("%H")) == 0 and page.page_ns != 2:
                                 pywikibot.output("Suppression des catégories inexistantes sur la page " + str(page))
                                 del_categories_no_exists = page.del_categories_no_exists() #Suppression 
                                 if del_categories_no_exists != []:
@@ -377,13 +378,17 @@ class wiki_task:
                             prop_users_ip = 0
                         scores_x = []
                         scores_y = []
+                        scores_n_reverted_2 = []
+                        scores_n_2 = []
                         for score_n in scores_n:
-                            if score_n <= 0:
+                            if score_n < 0:
                                 scores_x.append(abs(score_n))
                                 scores_y.append(scores_n_reverted[score_n]/scores_n[score_n])
-                        with open("vand_" + wiki + "_" + lang + ".txt", "w") as file:
+                                scores_n_reverted_2.append(scores_n_reverted[score_n])
+                                scores_n_2.append(scores_n[score_n])
+                        with open("vand_" + wiki + "_" + lang + "_" + time1hour.strftime("%Y%m%d") + ".txt", "w") as file:
                             for i in range(len(scores_x)):
-                                file.write(str(scores_x[i]) + ":" + str(scores_y[i]) + "\r\n")
+                                file.write(str(scores_x[i]) + ":" + str(scores_n_reverted_2[i]) + "/" + str(scores_n_2[i]) + "\r\n")
                         if len(scores_x) >= 4 and len(scores_y) >= 4:
                             try:
                                 coeffs_curve, _ = curve_fit(curve, scores_x, scores_y, maxfev=1000000)
@@ -394,7 +399,7 @@ class wiki_task:
                         else:
                             pywikibot.output("Pas assez de scores pour générer la fonction.")
                             no_coeffs = True
-                        with open("vand_f_" + wiki + "_" + lang + ".txt", "w") as file:
+                        with open("vand_f_" + wiki + "_" + lang + "_" + time1hour.strftime("%Y%m%d") + ".txt", "w") as file:
                             if not no_coeffs:
                                 file.write(str(coeffs_curve))
                             else:
@@ -490,13 +495,13 @@ class wiki_task:
                         #remise à 0 du BàS du Dico des Ados
                         bas = self.site.page("Dico:Bac à sable")
                         bas_zero = self.site.page("Dico:Bac à sable/Zéro")
-                        if abs((datetime.datetime.utcnow() - bas.editTime()).seconds) > 3600 and bas.text != bas_zero.text:
+                        if abs((datetime_utcnow - bas.editTime()).seconds) > 3600 and bas.text != bas_zero.text:
                             pywikibot.output("Remise à zéro du bac à sable")
                             bas.put(bas_zero.text, "Remise à zéro du bac à sable")
                         for page_name in self.site.all_pages(ns=4, apprefix="Bac à sable/Test/"):
                             if page_name != "Dico:Bac à sable/Zéro":
                                 bas_page = self.site.page(page_name)
-                                if abs((datetime.datetime.utcnow() - bas_page.editTime()).seconds) > 7200 and "{{SI" not in bas_page.text:
+                                if abs((datetime_utcnow - bas_page.editTime()).seconds) > 7200 and "{{SI" not in bas_page.text:
                                     pywikibot.output("SI de " + page_name)
                                     bas_page.text = "{{SI|Remise à zéro du bac à sable}}\n" + bas_page.text
                                     bas_page.save("Remise à zéro du bac à sable")
@@ -511,7 +516,7 @@ class wiki_task:
 ##                            else:
 ##                                pywikibot.output("Aucun fichier à retirer.")
                     with open("tasks_time_hour_" + wiki + "_" + lang + ".txt", "w") as tasks_time_file:
-                        tasks_time_file.write(datetime.datetime.utcnow().strftime("%Y%m%d%H%M"))
+                        tasks_time_file.write(datetime_utcnow.strftime("%Y%m%d%H%M"))
             except Exception as e:
                 try:
                     bt = traceback.format_exc()
