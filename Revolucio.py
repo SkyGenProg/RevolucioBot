@@ -11,7 +11,6 @@ logging.getLogger().addHandler(logging.StreamHandler())
 
 if __name__ == "__main__":
     print("Revolució %s" % ver)
-    print(os.path.abspath(os.getcwd()))
     if(not os.path.exists("files")):
        os.mkdir("files")
     os.chdir("files")

@@ -5,7 +5,6 @@
 /files/tasks_time_hour_*.txt
 /files/*.pickle
 throttle.ctrl
-*.csv
 *.log
 pywikibot.lwp
 *localhost_localhost*
