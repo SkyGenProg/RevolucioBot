@@ -389,107 +389,108 @@ class wiki_task:
                         with open("vand_" + wiki + "_" + lang + "_" + time1hour.strftime("%Y%m%d") + ".txt", "w") as file:
                             for i in range(len(scores_x)):
                                 file.write(str(scores_x[i]) + ":" + str(scores_n_reverted_2[i]) + "/" + str(scores_n_2[i]) + "\r\n")
-                        if len(scores_x) >= 4 and len(scores_y) >= 4:
-                            try:
-                                coeffs_curve, _ = curve_fit(curve, scores_x, scores_y, maxfev=1000000)
-                                no_coeffs = False
-                            except Exception as e:
-                                pywikibot.error(e)
+                        if prop_users_ip > 0:
+                            if len(scores_x) >= 4 and len(scores_y) >= 4:
+                                try:
+                                    coeffs_curve, _ = curve_fit(curve, scores_x, scores_y, maxfev=1000000)
+                                    no_coeffs = False
+                                except Exception as e:
+                                    pywikibot.error(e)
+                                    no_coeffs = True
+                            else:
+                                pywikibot.output("Pas assez de scores pour générer la fonction.")
                                 no_coeffs = True
-                        else:
-                            pywikibot.output("Pas assez de scores pour générer la fonction.")
-                            no_coeffs = True
-                        with open("vand_f_" + wiki + "_" + lang + "_" + time1hour.strftime("%Y%m%d") + ".txt", "w") as file:
-                            if not no_coeffs:
-                                file.write(str(coeffs_curve))
-                            else:
-                                file.write("erreur")
-                        if webhooks_url[wiki] != None:
-                            if lang_bot == "fr":
-                                fields = [
-                                        {
-                                          "name": "IP et nouveaux révoqués/Nombre total d'IP et nouveaux (non-Autopatrol) actifs",
-                                          "value": str(n_ip_reverted+n_users_reverted) + "/" + str(n_users_ip) + " (" + str(round(prop_users_ip*100, 2)) + " %)",
-                                          "inline": False
-                                        },
-                                        {
-                                          "name": "IP révoquées/Nombre total d'IPs",
-                                          "value": str(n_ip_reverted) + "/" + str(n_ip) + " (" + str(round(prop_ip*100, 2)) + " %)",
-                                          "inline": True
-                                        },
-                                        {
-                                          "name": "Nouveaux inscrits révoqués/Nouveaux inscrits (non-Autopatrol) actifs",
-                                          "value": str(n_users_reverted) + "/" + str(n_users) + " (" + str(round(prop_user*100, 2)) + " %)",
-                                          "inline": True
-                                        },
-                                        {
-                                          "name": "Modifications révoquées/Modifications totales des nouveaux (IP + utilisateurs non-Autopatrol)",
-                                          "value": str(n_contribs_reverted) + "/" + str(n_contribs) + " (" + str(round(prop_contribs*100, 2)) + " %)",
-                                          "inline": False
-                                        },
-                                        {
-                                          "name": "Modifications révoquées/Modifications IP",
-                                          "value": str(n_ip_contribs_reverted) + "/" + str(n_ip_contribs) + " (" + str(round(prop_ip_contribs*100, 2)) + " %)",
-                                          "inline": True
-                                        },
-                                        {
-                                          "name": "Modifications révoquées/Modifications nouveaux utilisateurs inscrits (non-Autopatrol)",
-                                          "value": str(n_users_contribs_reverted) + "/" + str(n_users_contribs) + " (" + str(round(prop_user_contribs*100, 2)) + " %)",
-                                          "inline": True
-                                        }
-                                    ]
-                                discord_msg = {'embeds': [
+                            with open("vand_f_" + wiki + "_" + lang + "_" + time1hour.strftime("%Y%m%d") + ".txt", "w") as file:
+                                if not no_coeffs:
+                                    file.write(str(coeffs_curve))
+                                else:
+                                    file.write("erreur")
+                            if webhooks_url[wiki] != None:
+                                if lang_bot == "fr":
+                                    fields = [
                                             {
-                                                  'title': "Statistiques sur " + wiki + " " + lang + " (dernières 24 h)",
-                                                  'description': "Statistiques sur la patrouille :",
-                                                  'color': 65535,
-                                                  'fields': fields
+                                              "name": "IP et nouveaux révoqués/Nombre total d'IP et nouveaux (non-Autopatrol) actifs",
+                                              "value": str(n_ip_reverted+n_users_reverted) + "/" + str(n_users_ip) + " (" + str(round(prop_users_ip*100, 2)) + " %)",
+                                              "inline": False
+                                            },
+                                            {
+                                              "name": "IP révoquées/Nombre total d'IPs",
+                                              "value": str(n_ip_reverted) + "/" + str(n_ip) + " (" + str(round(prop_ip*100, 2)) + " %)",
+                                              "inline": True
+                                            },
+                                            {
+                                              "name": "Nouveaux inscrits révoqués/Nouveaux inscrits (non-Autopatrol) actifs",
+                                              "value": str(n_users_reverted) + "/" + str(n_users) + " (" + str(round(prop_user*100, 2)) + " %)",
+                                              "inline": True
+                                            },
+                                            {
+                                              "name": "Modifications révoquées/Modifications totales des nouveaux (IP + utilisateurs non-Autopatrol)",
+                                              "value": str(n_contribs_reverted) + "/" + str(n_contribs) + " (" + str(round(prop_contribs*100, 2)) + " %)",
+                                              "inline": False
+                                            },
+                                            {
+                                              "name": "Modifications révoquées/Modifications IP",
+                                              "value": str(n_ip_contribs_reverted) + "/" + str(n_ip_contribs) + " (" + str(round(prop_ip_contribs*100, 2)) + " %)",
+                                              "inline": True
+                                            },
+                                            {
+                                              "name": "Modifications révoquées/Modifications nouveaux utilisateurs inscrits (non-Autopatrol)",
+                                              "value": str(n_users_contribs_reverted) + "/" + str(n_users_contribs) + " (" + str(round(prop_user_contribs*100, 2)) + " %)",
+                                              "inline": True
                                             }
                                         ]
-                                    }
-                            else:
-                                fields = [
-                                        {
-                                          "name": "Reverted users/Total new users (no Autopatrol) and IP number",
-                                          "value": str(n_ip_reverted+n_users_reverted) + "/" + str(n_users_ip) + " (" + str(round(prop_users_ip*100, 2)) + " %)",
-                                          "inline": False
-                                        },
-                                        {
-                                          "name": "Reverted IP/Total IP number",
-                                          "value": str(n_ip_reverted) + "/" + str(n_ip) + " (" + str(round(prop_ip*100, 2)) + " %)",
-                                          "inline": True
-                                        },
-                                        {
-                                          "name": "Reverted users/Total users number",
-                                          "value": str(n_users_reverted) + "/" + str(n_users) + " (" + str(round(prop_user*100, 2)) + " %)",
-                                          "inline": True
-                                        },
-                                        {
-                                          "name": "Reverted edits/Total new users (no Autopatrol) and IP edits",
-                                          "value": str(n_contribs_reverted) + "/" + str(n_contribs) + " (" + str(round(prop_contribs*100, 2)) + " %)",
-                                          "inline": False
-                                        },
-                                        {
-                                          "name": "Reverted edits/IP edits",
-                                          "value": str(n_ip_contribs_reverted) + "/" + str(n_ip_contribs) + " (" + str(round(prop_ip_contribs*100, 2)) + " %)",
-                                          "inline": True
-                                        },
-                                        {
-                                          "name": "Reverted edits/New users (no Autopatrol) edits",
-                                          "value": str(n_users_contribs_reverted) + "/" + str(n_users_contribs) + " (" + str(round(prop_user_contribs*100, 2)) + " %)",
-                                          "inline": True
+                                    discord_msg = {'embeds': [
+                                                {
+                                                      'title': "Statistiques sur " + wiki + " " + lang + " (dernières 24 h)",
+                                                      'description': "Statistiques sur la patrouille :",
+                                                      'color': 65535,
+                                                      'fields': fields
+                                                }
+                                            ]
                                         }
-                                    ]
-                                discord_msg = {'embeds': [
+                                else:
+                                    fields = [
                                             {
-                                                  'title': "Statistics about " + wiki + " " + lang + " (last 24 h)",
-                                                  'description': "Statistics about patrol:",
-                                                  'color': 65535,
-                                                  'fields': fields
+                                              "name": "Reverted users/Total new users (no Autopatrol) and IP number",
+                                              "value": str(n_ip_reverted+n_users_reverted) + "/" + str(n_users_ip) + " (" + str(round(prop_users_ip*100, 2)) + " %)",
+                                              "inline": False
+                                            },
+                                            {
+                                              "name": "Reverted IP/Total IP number",
+                                              "value": str(n_ip_reverted) + "/" + str(n_ip) + " (" + str(round(prop_ip*100, 2)) + " %)",
+                                              "inline": True
+                                            },
+                                            {
+                                              "name": "Reverted users/Total users number",
+                                              "value": str(n_users_reverted) + "/" + str(n_users) + " (" + str(round(prop_user*100, 2)) + " %)",
+                                              "inline": True
+                                            },
+                                            {
+                                              "name": "Reverted edits/Total new users (no Autopatrol) and IP edits",
+                                              "value": str(n_contribs_reverted) + "/" + str(n_contribs) + " (" + str(round(prop_contribs*100, 2)) + " %)",
+                                              "inline": False
+                                            },
+                                            {
+                                              "name": "Reverted edits/IP edits",
+                                              "value": str(n_ip_contribs_reverted) + "/" + str(n_ip_contribs) + " (" + str(round(prop_ip_contribs*100, 2)) + " %)",
+                                              "inline": True
+                                            },
+                                            {
+                                              "name": "Reverted edits/New users (no Autopatrol) edits",
+                                              "value": str(n_users_contribs_reverted) + "/" + str(n_users_contribs) + " (" + str(round(prop_user_contribs*100, 2)) + " %)",
+                                              "inline": True
                                             }
                                         ]
-                                    }
-                            request_site(webhooks_url[wiki], headers, json.dumps(discord_msg).encode("utf-8"), "POST")
+                                    discord_msg = {'embeds': [
+                                                {
+                                                      'title': "Statistics about " + wiki + " " + lang + " (last 24 h)",
+                                                      'description': "Statistics about patrol:",
+                                                      'color': 65535,
+                                                      'fields': fields
+                                                }
+                                            ]
+                                        }
+                                request_site(webhooks_url[wiki], headers, json.dumps(discord_msg).encode("utf-8"), "POST")
                     if wiki == "dicoado":
                         #spécifiques aux Dico des Ados
                         #remise à 0 du BàS du Dico des Ados
