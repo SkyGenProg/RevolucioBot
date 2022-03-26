@@ -130,9 +130,6 @@ class get_page(pywikibot.Page):
             pywikibot.Page.__init__(self, self.source.site, self.page_name)
         self.text_page_oldid = None
         self.text_page_oldid2 = None
-        self.init_page()
-
-    def init_page(self):
         self.fullurl = self.source.site.siteinfo["general"]["server"] + self.source.site.siteinfo["general"]["articlepath"].replace("$1", self.page_name)
         self.protocol = self.fullurl.split("/")[0]
         if self.protocol == "":
@@ -145,10 +142,12 @@ class get_page(pywikibot.Page):
                 self.contributor_name = self.userName()
                 self.page_ns = self.namespace()
                 self.oldid = self.latest_revision_id
+                self.size = len(self.text)
             except:
                 self.contributor_name = ""
                 self.page_ns = -1
                 self.oldid = None
+                self.size = None
 
         self.limit = -50
         self.limit2 = -30
@@ -379,10 +378,8 @@ class get_page(pywikibot.Page):
 
 class get_category(get_page, pywikibot.Category):
     def __init__(self, source, title):
-        self.source = source
-        self.page_name = title
-        pywikibot.Category.__init__(self, self.source.site, title)
-        get_page.init_page(self)
+        pywikibot.Category.__init__(self, source.site, title)
+        get_page.__init__(self)
 
     def cat_pages(self):
         gen = pagegenerators.CategorizedPageGenerator(self)

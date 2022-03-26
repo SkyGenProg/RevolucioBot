@@ -201,6 +201,21 @@ class wiki_task:
                                     vand_prob = vand_f(abs(vandalism_revert))
                                     if vand_prob > 100:
                                         vand_prob = 100
+                                    detected = ""
+                                    for vandalism_score_detect in page.vandalism_score_detect:
+                                        if vandalism_score_detect[0] == "add_regex":
+                                            detected += str(vandalism_score_detect[1]) + " - + " + str(vandalism_score_detect[2].group()) + "\n"
+                                        elif vandalism_score_detect[0] == "size":
+                                            detected += str(vandalism_score_detect[1]) + " - size = " + str(page.size) + " < " + vandalism_score_detect[2] + "\n"
+                                        elif vandalism_score_detect[0] == "diff":
+                                            if int(vandalism_score_detect[2]) > 0:
+                                                detected += str(vandalism_score_detect[1]) + " - diff > " + vandalism_score_detect[2] + "\n"
+                                            else:
+                                                detected += str(vandalism_score_detect[1]) + " - diff < " + vandalism_score_detect[2] + "\n"
+                                        elif vandalism_score_detect[0] == "del_regex":
+                                            detected += str(vandalism_score_detect[1]) + " - - " + str(vandalism_score_detect[2].group()) + "\n"
+                                        else:
+                                            detected += str(vandalism_score_detect[1]) + " - + " + str(vandalism_score_detect[2].group()) + "\n"
                                     if vandalism_revert <= page.limit:
                                         if lang_bot == "fr":
                                             title = "Modification non-constructive révoquée sur " + lang + ":" + page_name
@@ -238,6 +253,11 @@ class wiki_task:
                                                   "name": "Probabilité qu'il s'agisse d'une modification non-constructive",
                                                   "value": str(round(vand_prob, 2)) + " %",
                                                   "inline": True
+                                                },
+                                                {
+                                                  "name": "Détection",
+                                                  "value": detected,
+                                                  "inline": False
                                                 }
                                             ]
                                     else:
@@ -253,6 +273,11 @@ class wiki_task:
                                                   "name": "Probability it's an unconstructive edit",
                                                   "value": str(round(vand_prob, 2)) + " %",
                                                   "inline": True
+                                                },
+                                                {
+                                                  "name": "Detecting",
+                                                  "value": detected,
+                                                  "inline": False
                                                 }
                                             ]
                                     discord_msg = {'embeds': [
