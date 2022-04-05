@@ -61,7 +61,6 @@
 [\.\?,;:|\(\)\"«»]{7,9}:-30
 [\.\?,;:|\(\)\"«»]{10,20}:-50
 [\.\?,;:|\(\)\"«»]{20,}:-100
-\bok\b:-5
 \boui\b:-5
 \bnon\b:-5
 \bnon-\b:+5
@@ -69,12 +68,12 @@
 \bTexte en italique\b:-10
 \bp[eé]nis\b:-10
 \bje\b:-10
-\bok\b:-10
 \b(m[ae]s?|mon)\b:-10
 \bmoi\b:-10
 \bidiot(s)?\b:-10
 \bcon(s)?\b:-10
 \beuh\b:-15
+\bok\b:-15
 \bsex(e)?(s)?\b:-15
 \bta m[eéè]re\b:-30
 \bfdp\b:-30
