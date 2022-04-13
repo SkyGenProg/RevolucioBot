@@ -7,12 +7,13 @@ from includes.wiki_tasks import *
 from config import *
 
 arg = argparse.ArgumentParser()
-arg.add_argument("--wiki")
-arg.add_argument("--lang")
+required_arg = arg.add_argument_group("required arguments")
+required_arg.add_argument("--wiki", required=True)
+required_arg.add_argument("--lang", required=True)
 arg.add_argument("--user")
-arg.add_argument("--page")
-arg.add_argument("--diff")
-arg.add_argument("--oldid")
+required_arg.add_argument("--page", required=True)
+required_arg.add_argument("--diff", required=True)
+required_arg.add_argument("--oldid", required=True)
 args = arg.parse_args()
 
 if __name__ == "__main__":
@@ -42,4 +43,4 @@ if __name__ == "__main__":
         else:
             detected += str(vandalism_score_detect[1]) + " - + " + str(vandalism_score_detect[2].group()) + "\n"
     print(detected)
-    print(vandalism_score)
+    print("Score : " + str(vandalism_score))
