@@ -1,8 +1,9 @@
-﻿\{\{ébauche:-10
+﻿\{\{ébauche:-15
 ''':-5
 '':-2
-\{\{Article:-20
+\{\{article:-20
 \=\=:-5
-\{\{Boîte:-15
-\{\{Infobox:-15
-\{\{Portail:-10
+\{\{boîte:-20
+\{\{infobox:-20
+\{\{portail:-20
+\<ref:-15

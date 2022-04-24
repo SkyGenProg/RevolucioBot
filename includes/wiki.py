@@ -405,14 +405,10 @@ def regex_vandalism(regex, text_page1, text_page2, ignorecase=True):
     if ignorecase:
         re1 = re.search(regex, text_page1, re.IGNORECASE)
         re2 = re.search(regex, text_page2, re.IGNORECASE)
-        if re1 and not re2:
-            return re1
-        else:
-            return None
     else:
         re1 = re.search(regex, text_page1)
         re2 = re.search(regex, text_page2)
-        if re1 and not re2:
-            return re1
-        else:
-            return None
+    if re1 and not re2:
+        return re1
+    else:
+        return None
