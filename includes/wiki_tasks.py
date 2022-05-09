@@ -467,7 +467,7 @@ class wiki_task:
                                     discord_msg = {'embeds': [
                                                 {
                                                       'title': "Statistiques sur " + wiki + " " + lang + " (dernières 24 h)",
-                                                      'description': "Statistiques sur la patrouille :",
+                                                      'description': "Statistiques sur la patrouille (humains et bot):",
                                                       'color': 65535,
                                                       'fields': fields
                                                 }
@@ -509,7 +509,7 @@ class wiki_task:
                                     discord_msg = {'embeds': [
                                                 {
                                                       'title': "Statistics about " + wiki + " " + lang + " (last 24 h)",
-                                                      'description': "Statistics about patrol:",
+                                                      'description': "Statistics about patrolling (humans and bot):",
                                                       'color': 65535,
                                                       'fields': fields
                                                 }
