@@ -1,1 +1,1 @@
-{"lang_bot": "fr", "alert_page": "Project:Alerte/18", "trusted_groups": "autopatrol|patroller|sysop|bureaucrat|oversight|developer|bot"}
+{"lang_bot": "fr", "alert_page": "Project:Alerte/19", "trusted_groups": "autopatrol|patroller|sysop|bureaucrat|oversight|developer|bot"}
