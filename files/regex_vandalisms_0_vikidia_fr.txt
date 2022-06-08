@@ -32,6 +32,7 @@
 \bsodo-.*\b:-35
 \bchatte\b:-40
 [\u1F600-\u1F64F]:-40
+\bbite(s)?\b:-45
 \bchiasse\b:-50
 \bgros con(s)?\b:-50
 \bpipi(s)?\b:-50
@@ -41,7 +42,6 @@
 \bpute(s)?\b:-50
 \bputain\b:-50
 \bmerde(s)?\b:-50
-\bbite(s)?\b:-50
 \bcul(s)?\b:-50
 \benculé(s)?\b:-50
 \bfuck\b:-50
