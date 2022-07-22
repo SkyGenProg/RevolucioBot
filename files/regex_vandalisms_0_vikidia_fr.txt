@@ -12,27 +12,27 @@
 \beuh\b:-15
 \bok\b:-15
 \bsex(e)?(s)?\b:-15
-\bta m[eéè]re\b:-30
-\bfdp\b:-30
+\bta m[eéèê]re\b:-20
+\bbonjour\b:-20
+\bbonsoir\b:-20
+\bsalut\b:-20
+\bcoucou\b:-20
+\bslt\b:-30
+\bwesh\b:-30
 \bpk\b:-30
-\bbonjour\b:-30
-\bbonsoir\b:-30
-\bsalut\b:-30
-\bslt\b:-35
-\bcoucou\b:-33
-\bwesh\b:-33
 \bnul(s)?\b:-30
-\blol\b:-37
-\bmdr\b:-36
-\bptdr\b:-36
-\bcool\b:-31
+\bcool\b:-30
 \bb[aâ]tard(s)?\b:-30
-\bporno?\b:-34
+\bporno?\b:-30
 \bsodomie\b:-35
 \bsodo-.*\b:-35
+\blol\b:-40
+\bmdr\b:-40
+\bptdr\b:-40
 \bchatte\b:-40
 [\u1F600-\u1F64F]:-40
 \bbite(s)?\b:-45
+\bfdp\b:-45
 \bchiasse\b:-50
 \bgros con(s)?\b:-50
 \bpipi(s)?\b:-50
@@ -47,8 +47,10 @@
 \bfuck\b:-50
 \bfoutre\b:-50
 \bcouill(e|on)(s)?\b:-50
-\{\{article:+20
 \{\{ébauche:+15
+''':+15
+==:+15
+\{\{article:+20
 \{\{boîte:+20
 \{\{infobox:+20
 \{\{portail:+20
