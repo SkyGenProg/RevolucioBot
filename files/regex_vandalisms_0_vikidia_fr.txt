@@ -1,22 +1,22 @@
 ﻿\boui\b:-5
 \bnon\b:-5
 \bnon-\b:+5
+\bje\b:-5
+\b(m[ae]s?|mon)\b:-5
+\bmoi\b:-5
+\bbonjour\b:-5
+\bbonsoir\b:-5
+\bsalut\b:-5
+\bcoucou\b:-5
 \bTexte en gras\b:-10
 \bTexte en italique\b:-10
 \bp[eé]nis\b:-10
-\bje\b:-10
-\b(m[ae]s?|mon)\b:-10
-\bmoi\b:-10
 \bidiot(s)?\b:-10
 \bcon(s)?\b:-10
 \beuh\b:-15
 \bok\b:-15
 \bsex(e)?(s)?\b:-15
-\bta m[eéèê]re\b:-20
-\bbonjour\b:-20
-\bbonsoir\b:-20
-\bsalut\b:-20
-\bcoucou\b:-20
+\bta m[eéèê]re\b:-15
 \bslt\b:-30
 \bwesh\b:-30
 \bpk\b:-30
