@@ -434,7 +434,7 @@ class wiki_task:
                                 if lang_bot == "fr":
                                     fields = [
                                             {
-                                              "name": "IP et nouveaux révoqués/Nombre total d'IP et nouveaux (non-Autopatrol) actifs",
+                                              "name": "IP et nouveaux révoqués/Nombre total d'IP et nouveaux (non-Autoconfirmed) actifs",
                                               "value": str(n_ip_reverted+n_users_reverted) + "/" + str(n_users_ip) + " (" + str(round(prop_users_ip*100, 2)) + " %)",
                                               "inline": False
                                             },
@@ -444,12 +444,12 @@ class wiki_task:
                                               "inline": True
                                             },
                                             {
-                                              "name": "Nouveaux inscrits révoqués/Nouveaux inscrits (non-Autopatrol) actifs",
+                                              "name": "Nouveaux inscrits révoqués/Nouveaux inscrits (non-Autoconfirmed) actifs",
                                               "value": str(n_users_reverted) + "/" + str(n_users) + " (" + str(round(prop_user*100, 2)) + " %)",
                                               "inline": True
                                             },
                                             {
-                                              "name": "Modifications révoquées/Modifications totales des nouveaux (IP + utilisateurs non-Autopatrol)",
+                                              "name": "Modifications révoquées/Modifications totales des nouveaux (IP + utilisateurs non-Autoconfirmed)",
                                               "value": str(n_contribs_reverted) + "/" + str(n_contribs) + " (" + str(round(prop_contribs*100, 2)) + " %)",
                                               "inline": False
                                             },
@@ -459,7 +459,7 @@ class wiki_task:
                                               "inline": True
                                             },
                                             {
-                                              "name": "Modifications révoquées/Modifications nouveaux utilisateurs inscrits (non-Autopatrol)",
+                                              "name": "Modifications révoquées/Modifications nouveaux utilisateurs inscrits (non-Autoconfirmed)",
                                               "value": str(n_users_contribs_reverted) + "/" + str(n_users_contribs) + " (" + str(round(prop_user_contribs*100, 2)) + " %)",
                                               "inline": True
                                             }
@@ -476,7 +476,7 @@ class wiki_task:
                                 else:
                                     fields = [
                                             {
-                                              "name": "Reverted users/Total new users (no Autopatrol) and IP number",
+                                              "name": "Reverted users/Total new users (no Autoconfirmed) and IP number",
                                               "value": str(n_ip_reverted+n_users_reverted) + "/" + str(n_users_ip) + " (" + str(round(prop_users_ip*100, 2)) + " %)",
                                               "inline": False
                                             },
@@ -491,7 +491,7 @@ class wiki_task:
                                               "inline": True
                                             },
                                             {
-                                              "name": "Reverted edits/Total new users (no Autopatrol) and IP edits",
+                                              "name": "Reverted edits/Total new users (no Autoconfirmed) and IP edits",
                                               "value": str(n_contribs_reverted) + "/" + str(n_contribs) + " (" + str(round(prop_contribs*100, 2)) + " %)",
                                               "inline": False
                                             },
@@ -501,7 +501,7 @@ class wiki_task:
                                               "inline": True
                                             },
                                             {
-                                              "name": "Reverted edits/New users (no Autopatrol) edits",
+                                              "name": "Reverted edits/New users (no Autoconfirmed) edits",
                                               "value": str(n_users_contribs_reverted) + "/" + str(n_users_contribs) + " (" + str(round(prop_user_contribs*100, 2)) + " %)",
                                               "inline": True
                                             }
