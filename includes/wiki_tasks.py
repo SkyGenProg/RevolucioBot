@@ -328,15 +328,6 @@ class wiki_task:
                                     pywikibot.output("Aucune catégorie à retirer.")
                             pages_checked.append(page_name)
                     if task_day: #Tâches journalières (après passage des RC)
-                        #Anti-spam
-                        if "anti-spam_filters" in self.site.config:
-                            request_block = []
-                            for item in self.site.af_log(self.site.config["anti-spam_filters"], timestamp=(datetime_utcnow - datetime.timedelta(hours = 24)).strftime("%Y%m%d%H%M%S")):
-                                user_filter = pywikibot.User(self.site.site, item["user"])
-                                if item["user"] not in request_block and not user_filter.isBlocked():
-                                    request_block.append(item["user"])
-                            if len(request_block) > 0:
-                                self.site.alert("* " + "\r\n* ".join(request_block), "spam", "AlertSpam")
                         #Statistiques journalières
                         scores_n = {}
                         scores_n_reverted = {}
