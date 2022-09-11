@@ -85,26 +85,66 @@ class get_wiki:
                 pages.append(contrib["title"])
         return pages
 
-    def rc_pages(self, n_edits=5000, timestamp=None, rctoponly=True, show_trusted=False):
-        self.diffs_rc = []
-        page_names = []
-        url = "%s//%s%s/api.php?action=query&list=recentchanges&rclimit=%s&rcend=%s&rcprop=timestamp|title|user|ids|comment&rctype=edit|new|categorize&rcshow=!bot&format=json" % (self.protocol, self.url, self.scriptpath, str(n_edits), str(timestamp))
+    def rc(self, n_edits=5000, timestamp=None, rctoponly=True):
+        if timestamp is None:
+            url = "%s//%s%s/api.php?action=query&list=recentchanges&rclimit=%s&rcprop=timestamp|title|user|ids|comment&rctype=edit|new|categorize&rcshow=!bot&format=json" % (self.protocol, self.url, self.scriptpath, str(n_edits))
+        else:
+            url = "%s//%s%s/api.php?action=query&list=recentchanges&rclimit=%s&rcend=%s&rcprop=timestamp|title|user|ids|comment&rctype=edit|new|categorize&rcshow=!bot&format=json" % (self.protocol, self.url, self.scriptpath, str(n_edits), str(timestamp))
         if rctoponly:
             url += "&rctoponly"
         rccontinue = ""
+        rc = []
         while rccontinue != None:
             if rccontinue != "":
                 j = json.loads(request_site(url + "&rccontinue=" + rccontinue))
             else:
                 j = json.loads(request_site(url))
-            contribs = j["query"]["recentchanges"]
+            if "query" in j:
+                rc += j["query"]["recentchanges"]
             try:
                 rccontinue = j["continue"]["rccontinue"]
             except KeyError:
                 rccontinue = None
-            for contrib in contribs:
-                if show_trusted or contrib["user"] not in self.trusted:
-                    self.diffs_rc.append(contrib)
+        return rc
+
+    def rc_pages(self, n_edits=5000, timestamp=None, rctoponly=True, show_trusted=False):
+        self.diffs_rc = []
+        rc_list = self.rc(n_edits, timestamp, rctoponly)
+        for contrib in rc_list:
+            if show_trusted or contrib["user"] not in self.trusted:
+                self.diffs_rc.append(contrib)
+
+    def af_log(self, filters, n_items=5000, timestamp=None):
+        if timestamp is None:
+            url = "%s//%s%s/api.php?action=query&list=abuselog&afllimit=%s&aflfilter=%s&format=json" % (self.protocol, self.url, self.scriptpath, str(n_items), filters)
+        else:
+            url = "%s//%s%s/api.php?action=query&list=abuselog&afllimit=%s&aflend=%s&aflfilter=%s&format=json" % (self.protocol, self.url, self.scriptpath, str(n_items), str(timestamp), filters)
+        aflstart = ""
+        abuselog = []
+        while aflstart != None:
+            if aflstart != "":
+                j = json.loads(request_site(url + "&aflstart=" + aflstart))
+            else:
+                j = json.loads(request_site(url))
+            if "query" in j:
+                abuselog += j["query"]["abuselog"]
+            try:
+                aflstart = j["continue"]["aflstart"]
+            except KeyError:
+                aflstart = None
+        return abuselog
+
+    def alert(self, users, summary, template_alert="Alert"):
+        if "alert_page" in self.config:
+            self.alert_page = datetime.datetime.now().strftime(self.source.config["alert_page"].replace("\r", "").replace("\n", ""))
+        else:
+            if self.lang_bot == "fr":
+                self.alert_page = "Project:Alerte"
+            else:
+                self.alert_page = "Project:Alert"
+        alert = pywikibot.Page(self.site, self.alert_page)
+        alert.text = alert.text + "\n{{subst:User:%s/%s|%s}}" % (self.user_wiki, template_alert, users)
+        alert.save(summary, botflag=False, minor=False)
 
     def page(self, page_wiki):
         return get_page(self, page_wiki)
@@ -148,14 +188,6 @@ class get_page(pywikibot.Page):
 
         self.limit = -50
         self.limit2 = -30
-        #Page d'alerte
-        if "alert_page" in self.source.config:
-            self.alert_page = datetime.datetime.now().strftime(self.source.config["alert_page"].replace("\r", "").replace("\n", ""))
-        else:
-            if self.lang_bot == "fr":
-                self.alert_page = "Project:Alerte"
-            else:
-                self.alert_page = "Project:Alert"
         self.alert_request = False
 
     def revert(self):
@@ -168,12 +200,10 @@ class get_page(pywikibot.Page):
             self.save("Revert", botflag=False, minor=False)
         talk = pywikibot.Page(self.source.site, "User Talk:%s" % self.contributor_name)
         if ("averto-1" in talk.text.lower() or "niveau=1" in talk.text.lower() or "level=1" in talk.text.lower()) and "averto-2" not in talk.text.lower() and "niveau=2" not in talk.text.lower() and "level=2" not in talk.text.lower(): #averti 2 fois
-            alert = pywikibot.Page(self.source.site, self.alert_page)
-            alert.text = alert.text + "\n{{subst:User:%s/Alert|%s}}" % (self.user_wiki, self.contributor_name)
             if self.lang_bot == "fr":
-                alert.save("Alerte vandalisme", botflag=False, minor=False)
+                self.source.alert(self.contributor_name, "alerte vandalisme")
             else:
-                alert.save("Vandalism alert", botflag=False, minor=False)
+                self.source.alert(self.contributor_name, "vandalism alert")
             talk.text = talk.text + "\n{{subst:User:%s/Vandalism2|%s}} <!-- level=2 -->" % (self.user_wiki, self.page_name)
             if self.lang_bot == "fr":
                 talk.save("Avertissement 2", botflag=False, minor=False)
