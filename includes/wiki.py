@@ -23,10 +23,6 @@ class get_wiki:
             self.lang_bot = self.config["lang_bot"]
         else:
             self.lang_bot = "en"
-        if "trusted_groups" in self.config:
-            self.trusted_groups = self.config["trusted_groups"]
-        else:
-            self.trusted_groups = "sysop|bureaucrat|bot"
         self.site = pywikibot.Site(lang, family, self.user_wiki)
         self.fullurl = self.site.siteinfo["general"]["server"]
         self.protocol = self.fullurl.split("/")[0]
@@ -38,7 +34,7 @@ class get_wiki:
         self.get_trusted()
 
     def get_trusted(self):
-        url = "%s//%s%s/api.php?action=query&list=allusers&augroup=%s&aulimit=500&format=json" % (self.protocol, self.url, self.scriptpath, self.trusted_groups)
+        url = "%s//%s%s/api.php?action=query&list=allusers&auwitheditsonly&auactiveusers&auprop=rights&aulimit=500&format=json" % (self.protocol, self.url, self.scriptpath)
         self.trusted = []
         aufrom = ""
         while aufrom != None:
@@ -55,7 +51,8 @@ class get_wiki:
             except KeyError:
                 aufrom = None
             for user_trusted in trusted_query:
-                self.trusted.append(user_trusted["name"])
+                if "autoconfirmed" in user_trusted["rights"] and user_trusted["name"] not in self.trusted:
+                    self.trusted.append(user_trusted["name"])
 
     def all_pages(self, n_pages=5000, ns=0, start=None, end=None, apfilterredir=None, apprefix=None, urladd=None):
         pages = []
