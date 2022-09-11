@@ -327,7 +327,7 @@ class wiki_task:
                                 else:
                                     pywikibot.output("Aucune catégorie à retirer.")
                             pages_checked.append(page_name)
-                    if True or task_day: #Tâches journalières (après passage des RC)
+                    if task_day: #Tâches journalières (après passage des RC)
                         #Anti-spam
                         if "anti-spam_filters" in self.site.config:
                             request_block = []
