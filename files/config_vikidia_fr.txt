@@ -1,1 +1,1 @@
-{"lang_bot": "fr", "alert_page": "Project:Alerte/19"}
+{"lang_bot": "fr", "alert_page": "Project:Alerte/20"}
