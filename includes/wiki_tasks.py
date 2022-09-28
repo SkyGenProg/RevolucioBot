@@ -125,7 +125,7 @@ class wiki_task:
                             if user_talk.isAnonymous():
                                 page = self.site.page(page_name)
                                 pywikibot.output("PDD d'IP")
-                                if page.page_ns == 3 and page.contributor_name != self.site.user_wiki and abs((datetime_utcnow - page.editTime()).days) > 365:
+                                if page.page_ns == 3 and (page.contributor_name != self.site.user_wiki or "<!-- level" in page.text) and abs((datetime_utcnow - page.editTime()).days) > 365:
                                     pywikibot.output("Suppression des avertissements de la page " + page_name)
                                     try:
                                         if lang_bot == "fr":
