@@ -23,6 +23,10 @@ class get_wiki:
             self.lang_bot = self.config["lang_bot"]
         else:
             self.lang_bot = "en"
+        if "days_clean_warnings" in self.config:
+            self.days_clean_warnings = self.config["days_clean_warnings"]
+        else:
+            self.days_clean_warnings = 365
         self.site = pywikibot.Site(lang, family, self.user_wiki)
         self.fullurl = self.site.siteinfo["general"]["server"]
         self.protocol = self.fullurl.split("/")[0]
