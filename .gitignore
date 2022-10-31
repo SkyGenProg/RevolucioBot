@@ -2,7 +2,7 @@
 *pycache*
 *.pyc
 *.sqlite3
-/files/tasks_time_hour_*.txt
+/files/tasks_time_*.txt
 /files/*.pickle
 throttle.ctrl
 *.log
