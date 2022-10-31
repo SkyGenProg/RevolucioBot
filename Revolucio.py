@@ -15,7 +15,7 @@ if __name__ == "__main__":
        os.mkdir("files")
     os.chdir("files")
     vikidiafr_site = get_wiki("vikidia", "fr", "RevolucioBot")
-    vikidiaen_site = get_wiki("vikidia", "en", "Revolucio")
+    vikidiaen_site = get_wiki("vikidia", "en", "RevolucioBot")
     dicoado_site = get_wiki("dicoado", "dicoado", "RevolucioBot")
     #nomwiki_site = get_wiki("nomwiki", "langue", "utilisateur")
     vikidiafr_task = wiki_task(vikidiafr_site)
