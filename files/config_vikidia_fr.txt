@@ -1,1 +1,1 @@
-{"lang_bot": "fr", "alert_page": "Project:Alerte/20"}
+{"lang_bot": "fr", "alert_page": "Project:Alerte/20", "check_WP": true}

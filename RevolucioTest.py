@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-import os, logging, threading
+import argparse, os, logging, threading
 
 from includes.wiki import *
 from includes.wiki_tasks import *
@@ -8,6 +8,10 @@ from config import *
 
 logging.basicConfig(filename="logs.log", encoding="utf-8", level=logging.DEBUG, format="%(asctime)s %(thread)d %(levelname)s:%(message)s")
 logging.getLogger().addHandler(logging.StreamHandler())
+
+arg = argparse.ArgumentParser()
+arg.add_argument("--start_task_day")
+args = arg.parse_args()
 
 if __name__ == "__main__":
     print("Revolució %s" % ver)
