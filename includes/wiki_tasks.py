@@ -521,13 +521,13 @@ class wiki_task:
                         #remise à 0 du BàS du Dico des Ados
                         bas = self.site.page("Dico:Bac à sable")
                         bas_zero = self.site.page("Dico:Bac à sable/Zéro")
-                        if abs((datetime_utcnow - bas.editTime()).seconds) > 3600 and bas.text != bas_zero.text:
+                        if abs((datetime_utcnow - bas.latest_revision.timestamp).seconds) > 3600 and bas.text != bas_zero.text:
                             pywikibot.output("Remise à zéro du bac à sable")
                             bas.put(bas_zero.text, "Remise à zéro du bac à sable")
                         for page_name in self.site.all_pages(ns=4, apprefix="Bac à sable/Test/"):
                             if page_name != "Dico:Bac à sable/Zéro":
                                 bas_page = self.site.page(page_name)
-                                if abs((datetime_utcnow - bas_page.editTime()).seconds) > 7200 and "{{SI" not in bas_page.text:
+                                if abs((datetime_utcnow - bas_page.latest_revision.timestamp).seconds) > 7200 and "{{SI" not in bas_page.text:
                                     pywikibot.output("SI de " + page_name)
                                     bas_page.text = "{{SI|Remise à zéro du bac à sable}}\n" + bas_page.text
                                     bas_page.save("Remise à zéro du bac à sable")
