@@ -321,7 +321,88 @@ class wiki_task:
                             if page.page_ns == 0:
                                 if "check_WP" in self.site.config and self.site.config["check_WP"]:
                                     score_check_WP = page.check_WP()
-                                    pywikibot.output("Probabilité de copie de Wikipédia de la page " + str(page) + " : " + str(round(score_check_WP/len(page.text.strip())*100, 2)) + " % (" + str(score_check_WP) + " octets en commun/" + str(len(page.text.strip())) + " octets))")
+                                    prob_WP = score_check_WP/len(page.text.strip())*100
+                                    pywikibot.output("Probabilité de copie de Wikipédia de la page " + str(page) + " : " + str(prob_WP) + " % (" + str(score_check_WP) + " octets en commun/" + str(len(page.text.strip())) + " octets))")
+                                    if prob_WP >= 90:
+                                        if lang_bot == "fr":
+                                            fields = [
+                                                    {
+                                                      "name": "Probabilité de copie",
+                                                      "value": str(round(prob_WP, 2)) + " %",
+                                                      "inline": True
+                                                    }
+                                                ]
+                                            discord_msg = {'embeds': [
+                                                        {
+                                                              'title': "Très probable copie de Wikipédia sur " + lang + ":" + page_name,
+                                                              'description': "Cette page copie très probablement Wikipédia.",
+                                                              'url': page.protocol + "//" + page.url + page.articlepath + "index.php?diff=prev&oldid=" + str(page.oldid),
+                                                              'author': {'name': page.contributor_name},
+                                                              'color': 13371938,
+                                                              'fields': fields
+                                                        }
+                                                    ]
+                                                }
+                                        else:
+                                            fields = [
+                                                    {
+                                                      "name": "Probability of copy",
+                                                      "value": str(round(prob_WP, 2)) + " %",
+                                                      "inline": True
+                                                    }
+                                                ]
+                                            discord_msg = {'embeds': [
+                                                        {
+                                                              'title': "Most likely copy from Wikipedia on " + lang + ":" + page_name,
+                                                              'description': "This page most likely copies Wikipedia.",
+                                                              'url': page.protocol + "//" + page.url + page.articlepath + "index.php?diff=prev&oldid=" + str(page.oldid),
+                                                              'author': {'name': page.contributor_name},
+                                                              'color': 13371938,
+                                                              'fields': fields
+                                                        }
+                                                    ]
+                                                }
+                                        request_site(webhooks_url[wiki], headers, json.dumps(discord_msg).encode("utf-8"), "POST")
+                                    elif prob_WP >= 50:
+                                        if lang_bot == "fr":
+                                            fields = [
+                                                    {
+                                                      "name": "Probabilité de copie",
+                                                      "value": str(round(prob_WP, 2)) + " %",
+                                                      "inline": True
+                                                    }
+                                                ]
+                                            discord_msg = {'embeds': [
+                                                        {
+                                                              'title': "Possible copie de Wikipédia sur " + lang + ":" + page_name,
+                                                              'description': "Cette page copie possiblement Wikipédia.",
+                                                              'url': page.protocol + "//" + page.url + page.articlepath + "index.php?diff=prev&oldid=" + str(page.oldid),
+                                                              'author': {'name': page.contributor_name},
+                                                              'color': 12161032,
+                                                              'fields': fields
+                                                        }
+                                                    ]
+                                                }
+                                        else:
+                                            fields = [
+                                                    {
+                                                      "name": "Probability of copy",
+                                                      "value": str(round(prob_WP, 2)) + " %",
+                                                      "inline": True
+                                                    }
+                                                ]
+                                            discord_msg = {'embeds': [
+                                                        {
+                                                              'title': "Likely copy from Wikipedia on " + lang + ":" + page_name,
+                                                              'description': "This page likely copies Wikipedia.",
+                                                              'url': page.protocol + "//" + page.url + page.articlepath + "index.php?diff=prev&oldid=" + str(page.oldid),
+                                                              'author': {'name': page.contributor_name},
+                                                              'color': 12161032,
+                                                              'fields': fields
+                                                        }
+                                                    ]
+                                                }
+                                        request_site(webhooks_url[wiki], headers, json.dumps(discord_msg).encode("utf-8"), "POST")
                                 edit_replace = page.edit_replace() #Recherches-remplacements
                                 pywikibot.output(str(edit_replace) + " recherche(s)-remplacement(s) sur la page " + str(page) + ".")
                             if not ("disable_del_categories" in self.site.config and self.site.config["disable_del_categories"]) and int(datetime_utcnow.strftime("%H")) == 0 and page.page_ns != 2:
