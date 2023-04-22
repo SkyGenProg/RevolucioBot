@@ -2,7 +2,9 @@
 *pycache*
 *.pyc
 *.sqlite3
+/files/rc_*.txt
 /files/tasks_time_*.txt
+/files/vand_*.txt
 /files/*.pickle
 throttle.ctrl
 *.log
