@@ -13,9 +13,12 @@ def curve(x, a, b, c, d):
 vand_f = lambda x: curve(x, 5.57778, 1.931107, 9.042732, 101.2391)
 
 class wiki_task:
-    def __init__(self, site, start_task_day=False):
+    def __init__(self, site, start_task_day=False, ignore_task_month=False):
         self.site = site
         self.start_task_day = start_task_day
+        if ignore_task_month:
+            with open("tasks_time_month_" + self.site.family + "_" + self.site.lang + ".txt", "w") as tasks_time_file:
+                tasks_time_file.write(datetime.datetime.utcnow().strftime("%Y%m"))
 
     def execute(self):
         wiki = self.site.family

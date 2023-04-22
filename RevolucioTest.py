@@ -10,7 +10,8 @@ logging.basicConfig(filename="logs.log", encoding="utf-8", level=logging.DEBUG, 
 logging.getLogger().addHandler(logging.StreamHandler())
 
 arg = argparse.ArgumentParser()
-arg.add_argument("--start_task_day")
+arg.add_argument("--start_task_day", action="count")
+arg.add_argument("--ignore_task_month", action="count")
 args = arg.parse_args()
 
 if __name__ == "__main__":
@@ -19,5 +20,5 @@ if __name__ == "__main__":
        os.mkdir("files")
     os.chdir("files")
     localhost_site = get_wiki("localhost", "localhost", "RevolucioBot")
-    localhost_task = wiki_task(localhost_site)
+    localhost_task = wiki_task(localhost_site, args.start_task_day, args.ignore_task_month)
     threading.Thread(target=localhost_task.execute).start()
