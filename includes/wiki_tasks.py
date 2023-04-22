@@ -13,8 +13,9 @@ def curve(x, a, b, c, d):
 vand_f = lambda x: curve(x, 5.57778, 1.931107, 9.042732, 101.2391)
 
 class wiki_task:
-    def __init__(self, site):
+    def __init__(self, site, start_task_day=False):
         self.site = site
+        self.start_task_day = start_task_day
 
     def execute(self):
         wiki = self.site.family
@@ -155,11 +156,12 @@ class wiki_task:
                 if datetime_utcnow.strftime("%Y%m%d%H%M")[:-1] not in tasks_time:
                     #Taches réalisées une fois toutes les 10 minutes
                     scores = {}
-                    if int(datetime_utcnow.strftime("%H")) == 0 and int(datetime_utcnow.strftime("%M"))//10 == 0:
+                    if (int(datetime_utcnow.strftime("%H")) == 0 and int(datetime_utcnow.strftime("%M"))//10 == 0) or self.start_task_day: #Une fois par jour, parcours de toutes les RC du jour
                         time1hour = datetime_utcnow - datetime.timedelta(hours = 24)
                         self.site.rc_pages(timestamp=time1hour.strftime("%Y%m%d%H%M%S"), rctoponly=False, show_trusted=True)
                         task_day = True
-                    else:
+                        self.start_task_day = False
+                    else: #Sinon, parcours des RC des 10 dernières minutes
                         time1hour = datetime_utcnow - datetime.timedelta(minutes = 10)
                         self.site.rc_pages(timestamp=time1hour.strftime("%Y%m%d%H%M%S"))
                         task_day = False
@@ -317,6 +319,9 @@ class wiki_task:
                                                 }
                                         request_site(webhooks_url[wiki], headers, json.dumps(discord_msg).encode("utf-8"), "POST")
                             if page.page_ns == 0:
+                                if "check_WP" in self.site.config and self.site.config["check_WP"]:
+                                    score_check_WP = page.check_WP()
+                                    pywikibot.output("Probabilité de copie de Wikipédia de la page " + str(page) + " : " + str(round(score_check_WP/len(page.text.strip())*100, 2)) + " % (" + str(score_check_WP) + " octets en commun/" + str(len(page.text.strip())) + " octets))")
                                 edit_replace = page.edit_replace() #Recherches-remplacements
                                 pywikibot.output(str(edit_replace) + " recherche(s)-remplacement(s) sur la page " + str(page) + ".")
                             if not ("disable_del_categories" in self.site.config and self.site.config["disable_del_categories"]) and int(datetime_utcnow.strftime("%H")) == 0 and page.page_ns != 2:

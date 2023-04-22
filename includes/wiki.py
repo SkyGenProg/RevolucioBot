@@ -2,7 +2,7 @@
 
 import pywikibot
 from pywikibot import pagegenerators, textlib
-import base64, datetime, json, os, random, re, socket, time, urllib.request, urllib.error, urllib.parse, zlib
+import base64, datetime, difflib, json, os, random, re, socket, time, urllib.request, urllib.error, urllib.parse, zlib
 from config import *
 
 class get_wiki:
@@ -306,6 +306,24 @@ class get_page(pywikibot.Page):
                         self.vandalism_score_detect.append(["del_regex", score, regex_detect])
                         vand += score
         return vand
+
+    def check_WP(self, page_name_WP=None, diff=None):
+        if page_name_WP == None:
+            page_name_WP = self.page_name
+        if diff == None:
+            text_to_check = self.text.strip()
+        else:
+            text_to_check = self.getOldVersion(oldid = diff)
+        url = "%s//%s%s/api.php?action=query&prop=revisions&rvprop=content&rvslots=*&titles=%s&formatversion=2&format=json" % ("https:", self.lang + ".wikipedia.org", "/w", urllib.parse.quote(page_name_WP))
+        j = json.loads(request_site(url))
+        if "missing" in j["query"]["pages"][0]:
+            return 0
+        page_text_WP = j["query"]["pages"][0]["revisions"][0]["slots"]["main"]["content"]
+        score = 0
+        matcher = difflib.SequenceMatcher(a=text_to_check, b=page_text_WP)
+        for match in matcher.get_matching_blocks():
+            score += match.size
+        return score
 
     def edit_replace(self):
         file1 = "replace1_" + self.source.family + "_" + self.lang + ".txt"
