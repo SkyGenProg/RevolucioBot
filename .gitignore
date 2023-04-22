@@ -2,7 +2,7 @@
 *pycache*
 *.pyc
 *.sqlite3
-/files/rc_*.txt
+/files/rc_*.json
 /files/tasks_time_*.txt
 /files/vand_*.txt
 /files/*.pickle
