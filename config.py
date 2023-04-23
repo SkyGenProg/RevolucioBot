@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-ver = "5.7.0-beta.2"
+ver = "5.7.0"
 release_date = "23/04/2023"
 
 webhooks_url = {'localhost': "https://discord.com/api/webhooks/922633624912814120/Rx1F2e81k9IbBYd32f9txntk_yMVEirVlTVfqMKGdKGcLPM_sZfoFoPxa1C2JbBbFlQz",
