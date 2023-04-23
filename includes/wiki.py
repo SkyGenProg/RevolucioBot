@@ -11,8 +11,9 @@ class get_wiki:
         self.family = family
         self.lang = lang
         self.config = {}
-        open("config_" + family + "_" + lang + ".txt", "a").close()
-        with open("config_" + family + "_" + lang + ".txt", "r") as config_wiki:
+        config_filename = "config_" + family + "_" + lang + ".txt"
+        open(config_filename, "a").close()
+        with open(config_filename, "r") as config_wiki:
             config_file_content = config_wiki.read()
             if config_file_content != "":
                 try:
@@ -251,15 +252,21 @@ class get_page(pywikibot.Page):
     def vandalism_score(self, revision_oldid=None, revision_oldid2=None):
         self.vandalism_score_detect = []
         self.get_text_page_old(revision_oldid, revision_oldid2)
-        open("regex_vandalisms_0.txt", "a").close()
-        open("regex_vandalisms_0_" + self.source.family + "_" + self.lang + ".txt", "a").close()
-        open("size_vandalisms_0.txt", "a").close()
-        open("diff_vandalisms_0.txt", "a").close()
-        open("regex_vandalisms_del_0.txt", "a").close()
-        open("regex_vandalisms_del_0_" + self.source.family + "_" + self.lang + ".txt", "a").close()
+        regex_vandalisms_0_filename = "regex_vandalisms_0.txt"
+        regex_vandalisms_0_local_filename = "regex_vandalisms_0_" + self.source.family + "_" + self.lang + ".txt"
+        size_vandalisms_0_filename = "size_vandalisms_0.txt"
+        diff_vandalisms_0_filename = "diff_vandalisms_0.txt"
+        regex_vandalisms_del_0_filename = "regex_vandalisms_del_0.txt"
+        regex_vandalisms_del_0_local_filename = "regex_vandalisms_del_0_" + self.source.family + "_" + self.lang + ".txt"
+        open(regex_vandalisms_0_filename, "a").close()
+        open(regex_vandalisms_0_local_filename, "a").close()
+        open(size_vandalisms_0_filename, "a").close()
+        open(diff_vandalisms_0_filename, "a").close()
+        open(regex_vandalisms_del_0_filename, "a").close()
+        open(regex_vandalisms_del_0_local_filename, "a").close()
         vand = 0
         if self.page_ns == 0:
-            with open("regex_vandalisms_0.txt", "r") as regex_vandalisms_file:
+            with open(regex_vandalisms_0_filename, "r") as regex_vandalisms_file:
                 for regex_vandalisms in regex_vandalisms_file.readlines():
                     regex = regex_vandalisms[0:len(regex_vandalisms)-len(regex_vandalisms.split(":")[-1])-1]
                     regex_detect = regex_vandalism(regex, self.text_page_oldid, self.text_page_oldid2)
@@ -267,7 +274,7 @@ class get_page(pywikibot.Page):
                         score = int(regex_vandalisms.split(":")[-1])
                         self.vandalism_score_detect.append(["add_regex", score, regex_detect])
                         vand += score
-            with open("regex_vandalisms_0_" + self.source.family + "_" + self.lang + ".txt", "r") as regex_vandalisms_file:
+            with open(regex_vandalisms_0_local_filename, "r") as regex_vandalisms_file:
                 for regex_vandalisms in regex_vandalisms_file.readlines():
                     regex = regex_vandalisms[0:len(regex_vandalisms)-len(regex_vandalisms.split(":")[-1])-1]
                     regex_detect = regex_vandalism(regex, self.text_page_oldid, self.text_page_oldid2)
@@ -275,21 +282,21 @@ class get_page(pywikibot.Page):
                         score = int(regex_vandalisms.split(":")[-1])
                         self.vandalism_score_detect.append(["add_regex", score, regex_detect])
                         vand += score
-            with open("size_vandalisms_0.txt", "r") as regex_vandalisms_file:
+            with open(size_vandalisms_0_filename, "r") as regex_vandalisms_file:
                 for regex_vandalisms in regex_vandalisms_file.readlines():
                     size = regex_vandalisms[0:len(regex_vandalisms)-len(regex_vandalisms.split(":")[-1])-1]
                     if len(self.text_page_oldid) < int(size):
                         score = int(regex_vandalisms.split(":")[-1])
                         self.vandalism_score_detect.append(["size", score, size])
                         vand += score
-            with open("diff_vandalisms_0.txt", "r") as regex_vandalisms_file:
+            with open(diff_vandalisms_0_filename, "r") as regex_vandalisms_file:
                 for regex_vandalisms in regex_vandalisms_file.readlines():
                     diff = regex_vandalisms[0:len(regex_vandalisms)-len(regex_vandalisms.split(":")[-1])-1]
                     if (int(diff) < 0 and len(self.text_page_oldid) - len(self.text_page_oldid2) <= int(diff)) or (int(diff) >= 0 and len(self.text_page_oldid) - len(self.text_page_oldid2) >= int(diff)):
                         score = int(regex_vandalisms.split(":")[-1])
                         self.vandalism_score_detect.append(["diff", score, diff])
                         vand += score
-            with open("regex_vandalisms_del_0.txt", "r") as regex_vandalisms_file:
+            with open(regex_vandalisms_del_0_filename, "r") as regex_vandalisms_file:
                 for regex_vandalisms in regex_vandalisms_file.readlines():
                     regex = regex_vandalisms[0:len(regex_vandalisms)-len(regex_vandalisms.split(":")[-1])-1]
                     regex_detect = regex_vandalism(regex, self.text_page_oldid2, self.text_page_oldid)
@@ -297,7 +304,7 @@ class get_page(pywikibot.Page):
                         score = int(regex_vandalisms.split(":")[-1])
                         self.vandalism_score_detect.append(["del_regex", score, regex_detect])
                         vand += score
-            with open("regex_vandalisms_del_0_" + self.source.family + "_" + self.lang + ".txt", "r") as regex_vandalisms_file:
+            with open(regex_vandalisms_del_0_local_filename, "r") as regex_vandalisms_file:
                 for regex_vandalisms in regex_vandalisms_file.readlines():
                     regex = regex_vandalisms[0:len(regex_vandalisms)-len(regex_vandalisms.split(":")[-1])-1]
                     regex_detect = regex_vandalism(regex, self.text_page_oldid2, self.text_page_oldid)

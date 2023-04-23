@@ -16,8 +16,10 @@ class wiki_task:
     def __init__(self, site, start_task_day=False, ignore_task_month=False):
         self.site = site
         self.start_task_day = start_task_day
+        self.tasks_time_hour_filename = "tasks_time_hour_" + self.site.family + "_" + self.site.lang + ".txt"
+        self.tasks_time_month_filename = "tasks_time_month_" + self.site.family + "_" + self.site.lang + ".txt"
         if ignore_task_month:
-            with open("tasks_time_month_" + self.site.family + "_" + self.site.lang + ".txt", "w") as tasks_time_file:
+            with open(self.tasks_time_month_filename, "w") as tasks_time_file:
                 tasks_time_file.write(datetime.datetime.utcnow().strftime("%Y%m"))
 
     def execute(self):
@@ -29,8 +31,8 @@ class wiki_task:
                 datetime_utcnow = datetime.datetime.utcnow()
                 pages_checked = [] #pages vérifiées (pour éviter de revérifier la page)
                 #Mise en mémoire du mois
-                open("tasks_time_month_" + wiki + "_" + lang + ".txt", "a").close()
-                with open("tasks_time_month_" + wiki + "_" + lang + ".txt", "r") as tasks_time_file:
+                open(self.tasks_time_month_filename, "a").close()
+                with open(self.tasks_time_month_filename, "r") as tasks_time_file:
                     tasks_time = tasks_time_file.read()
                 if datetime_utcnow.strftime("%Y%m") not in tasks_time: #taches mensuelles
                     #spécifiques au Dico des Ados
@@ -119,7 +121,6 @@ class wiki_task:
                                         page.save("maintenance")
                             except Exception as e:
                                 pywikibot.error(e)
-                if datetime_utcnow.strftime("%Y%m") not in tasks_time: #taches mensuelles
                     self.site.get_trusted() #récupération des utilisateurs ignorés par le bot
                     #Nettoyage des PDDs d'IPs (créer Modèle:Avertissement effacé)
                     for page_name in self.site.all_pages(ns=3, start="1", end="A"):
@@ -148,13 +149,13 @@ class wiki_task:
                                 pywikibot.output("Pas une PDD d'IP")
                         else:
                             pywikibot.output("Pas une PDD d'IP")
-                    with open("tasks_time_month_" + wiki + "_" + lang + ".txt", "w") as tasks_time_file:
+                    with open(self.tasks_time_month_filename, "w") as tasks_time_file:
                         tasks_time_file.write(datetime_utcnow.strftime("%Y%m"))
 
 
                 #Mise en mémoire de l'heure
-                open("tasks_time_hour_" + wiki + "_" + lang + ".txt", "a").close()
-                with open("tasks_time_hour_" + wiki + "_" + lang + ".txt", "r") as tasks_time_file:
+                open(self.tasks_time_hour_filename, "a").close()
+                with open(self.tasks_time_hour_filename, "r") as tasks_time_file:
                     tasks_time = tasks_time_file.read()
                 if datetime_utcnow.strftime("%Y%m%d%H%M")[:-1] not in tasks_time:
                     #Taches réalisées une fois toutes les 10 minutes
@@ -630,7 +631,7 @@ class wiki_task:
 ##                                pywikibot.output("Fichiers retirés " + ", ".join(del_files_no_exists))
 ##                            else:
 ##                                pywikibot.output("Aucun fichier à retirer.")
-                    with open("tasks_time_hour_" + wiki + "_" + lang + ".txt", "w") as tasks_time_file:
+                    with open(self.tasks_time_hour_filename, "w") as tasks_time_file:
                         tasks_time_file.write(datetime_utcnow.strftime("%Y%m%d%H%M"))
             except Exception as e:
                 try:
