@@ -13,24 +13,26 @@ def curve(x, a, b, c, d):
 vand_f = lambda x: curve(x, 5.57778, 1.931107, 9.042732, 101.2391)
 
 class wiki_task:
-    def __init__(self, site):
+    def __init__(self, site, start_task_day=False, ignore_task_month=False):
         self.site = site
+        self.start_task_day = start_task_day
+        self.tasks_time_hour_filename = "tasks_time_hour_" + self.site.family + "_" + self.site.lang + ".txt"
+        self.tasks_time_month_filename = "tasks_time_month_" + self.site.family + "_" + self.site.lang + ".txt"
+        if ignore_task_month:
+            with open(self.tasks_time_month_filename, "w") as tasks_time_file:
+                tasks_time_file.write(datetime.datetime.utcnow().strftime("%Y%m"))
 
     def execute(self):
-        wiki = self.site.family
-        lang = self.site.lang
-        lang_bot = self.site.lang_bot
         while True:
             try:
-                datetime_utcnow = datetime.datetime.utcnow()
-                pages_checked = [] #pages vérifiées (pour éviter de revérifier la page)
+                self.datetime_utcnow = datetime.datetime.utcnow()
                 #Mise en mémoire du mois
-                open("tasks_time_month_" + wiki + "_" + lang + ".txt", "a").close()
-                with open("tasks_time_month_" + wiki + "_" + lang + ".txt", "r") as tasks_time_file:
+                open(self.tasks_time_month_filename, "a").close()
+                with open(self.tasks_time_month_filename, "r") as tasks_time_file:
                     tasks_time = tasks_time_file.read()
-                if datetime_utcnow.strftime("%Y%m") not in tasks_time: #taches mensuelles
+                if self.datetime_utcnow.strftime("%Y%m") not in tasks_time: #taches mensuelles
                     #spécifiques au Dico des Ados
-                    if wiki == "dicoado":
+                    if self.site.family == "dicoado":
                         for page_name in self.site.all_pages(ns=0):
                             page = self.site.page(page_name)
                             pywikibot.output("Page : " + str(page))
@@ -115,7 +117,6 @@ class wiki_task:
                                         page.save("maintenance")
                             except Exception as e:
                                 pywikibot.error(e)
-                if datetime_utcnow.strftime("%Y%m") not in tasks_time: #taches mensuelles
                     self.site.get_trusted() #récupération des utilisateurs ignorés par le bot
                     #Nettoyage des PDDs d'IPs (créer Modèle:Avertissement effacé)
                     for page_name in self.site.all_pages(ns=3, start="1", end="A"):
@@ -125,10 +126,10 @@ class wiki_task:
                             if user_talk.isAnonymous():
                                 page = self.site.page(page_name)
                                 pywikibot.output("PDD d'IP")
-                                if page.page_ns == 3 and (page.contributor_name != self.site.user_wiki or "<!-- level" in page.text) and abs((datetime_utcnow - page.editTime()).days) > self.site.days_clean_warnings:
+                                if page.page_ns == 3 and (page.contributor_name != self.site.user_wiki or "<!-- level" in page.text) and abs((self.datetime_utcnow - page.editTime()).days) > self.site.days_clean_warnings:
                                     pywikibot.output("Suppression des avertissements de la page " + page_name)
                                     try:
-                                        if lang_bot == "fr":
+                                        if self.site.lang_bot == "fr":
                                             page.put("{{Avertissement effacé|{{subst:#time: j F Y}}}}", "Anciens messages effacés", minor=False, botflag=True)
                                         else:
                                             page.put("{{Warning cleared|{{subst:#time: j F Y}}}}", "Old messages cleared", minor=False, botflag=True)
@@ -144,25 +145,28 @@ class wiki_task:
                                 pywikibot.output("Pas une PDD d'IP")
                         else:
                             pywikibot.output("Pas une PDD d'IP")
-                    with open("tasks_time_month_" + wiki + "_" + lang + ".txt", "w") as tasks_time_file:
-                        tasks_time_file.write(datetime_utcnow.strftime("%Y%m"))
-
+                    with open(self.tasks_time_month_filename, "w") as tasks_time_file:
+                        tasks_time_file.write(self.datetime_utcnow.strftime("%Y%m"))
 
                 #Mise en mémoire de l'heure
-                open("tasks_time_hour_" + wiki + "_" + lang + ".txt", "a").close()
-                with open("tasks_time_hour_" + wiki + "_" + lang + ".txt", "r") as tasks_time_file:
+                open(self.tasks_time_hour_filename, "a").close()
+                with open(self.tasks_time_hour_filename, "r") as tasks_time_file:
                     tasks_time = tasks_time_file.read()
-                if datetime_utcnow.strftime("%Y%m%d%H%M")[:-1] not in tasks_time:
+                if self.datetime_utcnow.strftime("%Y%m%d%H%M")[:-1] not in tasks_time:
                     #Taches réalisées une fois toutes les 10 minutes
                     scores = {}
-                    if int(datetime_utcnow.strftime("%H")) == 0 and int(datetime_utcnow.strftime("%M"))//10 == 0:
-                        time1hour = datetime_utcnow - datetime.timedelta(hours = 24)
+                    if (int(self.datetime_utcnow.strftime("%H")) == 0 and int(self.datetime_utcnow.strftime("%M"))//10 == 0) or self.start_task_day: #Une fois par jour, parcours de toutes les RC du jour
+                        time1hour = self.datetime_utcnow - datetime.timedelta(hours = 24)
+                        pywikibot.output("Récupération des RC des 24 dernières heures sur " + self.site.family + " " + self.site.lang + "...")
                         self.site.rc_pages(timestamp=time1hour.strftime("%Y%m%d%H%M%S"), rctoponly=False, show_trusted=True)
                         task_day = True
-                    else:
-                        time1hour = datetime_utcnow - datetime.timedelta(minutes = 10)
+                        self.start_task_day = False
+                    else: #Sinon, parcours des RC des 10 dernières minutes
+                        time1hour = self.datetime_utcnow - datetime.timedelta(minutes = 10)
+                        pywikibot.output("Récupération des RC des 10 dernières minutes sur " + self.site.family + " " + self.site.lang + "...")
                         self.site.rc_pages(timestamp=time1hour.strftime("%Y%m%d%H%M%S"))
                         task_day = False
+                    pages_checked = [] #pages vérifiées (pour éviter de revérifier la page)
                     for page_info in self.site.diffs_rc:
                         #parcours des modifications récentes
                         page_name = page_info["title"]
@@ -197,7 +201,7 @@ class wiki_task:
                             #détection vandalismes
                             vandalism_revert = page.vandalism_revert()
                             if vandalism_revert < 0: #Webhook d'avertissement
-                                if webhooks_url[wiki] != None:
+                                if webhooks_url[self.site.family] != None:
                                     vand_prob = vand_f(abs(vandalism_revert))
                                     if vand_prob > 100:
                                         vand_prob = 100
@@ -217,30 +221,30 @@ class wiki_task:
                                         else:
                                             detected += str(vandalism_score_detect[1]) + " - + " + str(vandalism_score_detect[2].group()) + "\n"
                                     if vandalism_revert <= page.limit:
-                                        if lang_bot == "fr":
-                                            title = "Modification non-constructive révoquée sur " + lang + ":" + page_name
+                                        if self.site.lang_bot == "fr":
+                                            title = "Modification non-constructive révoquée sur " + self.site.lang + ":" + page_name
                                             description = "Cette modification a été détectée comme non-constructive"
                                         else:
-                                            title = "Unconstructive edit reverted on " + lang + ":" + page_name
+                                            title = "Unconstructive edit reverted on " + self.site.lang + ":" + page_name
                                             description = "This edit has been detected as unconstructive"
                                         color = 13371938
                                     elif vandalism_revert <= page.limit2:
-                                        if lang_bot == "fr":
-                                            title = "Modification suspecte sur " + lang + ":" + page_name
+                                        if self.site.lang_bot == "fr":
+                                            title = "Modification suspecte sur " + self.site.lang + ":" + page_name
                                             description = "Cette modification est probablement non-constructive"
                                         else:
-                                            title = "Edit maybe unconstructive on " + lang + ":" + page_name
+                                            title = "Edit maybe unconstructive on " + self.site.lang + ":" + page_name
                                             description = "This edit is probably unconstructive"
                                         color = 12138760
                                     else:
-                                        if lang_bot == "fr":
-                                            title = "Modification à vérifier sur " + lang + ":" + page_name
+                                        if self.site.lang_bot == "fr":
+                                            title = "Modification à vérifier sur " + self.site.lang + ":" + page_name
                                             description = "Cette modification est peut-être non-constructive"
                                         else:
-                                            title = "Edit to verify on " + lang + ":" + page_name
+                                            title = "Edit to verify on " + self.site.lang + ":" + page_name
                                             description = "This edit is maybe unconstructive"
                                         color = 12161032
-                                    if lang_bot == "fr":
+                                    if self.site.lang_bot == "fr":
                                         if task_day:
                                             title = title + " (rappel)"
                                         fields = [
@@ -291,9 +295,9 @@ class wiki_task:
                                                     }
                                                 ]
                                             }
-                                    request_site(webhooks_url[wiki], headers, json.dumps(discord_msg).encode("utf-8"), "POST")
+                                    request_site(webhooks_url[self.site.family], headers, json.dumps(discord_msg).encode("utf-8"), "POST")
                                     if page.alert_request:
-                                        if lang_bot == "fr":
+                                        if self.site.lang_bot == "fr":
                                             discord_msg = {'embeds': [
                                                         {
                                                               'title': "Demande de blocage de " + page.contributor_name,
@@ -315,11 +319,103 @@ class wiki_task:
                                                         }
                                                     ]
                                                 }
-                                        request_site(webhooks_url[wiki], headers, json.dumps(discord_msg).encode("utf-8"), "POST")
+                                        request_site(webhooks_url[self.site.family], headers, json.dumps(discord_msg).encode("utf-8"), "POST")
                             if page.page_ns == 0:
+                                #détection copies de Wikipédia
+                                if "check_WP" in self.site.config and self.site.config["check_WP"]:
+                                    score_check_WP = page.check_WP()
+                                    prob_WP = score_check_WP/len(page.text.strip())*100
+                                    template_WP = "User:" + page.user_wiki + "/CopyWP"
+                                    pywikibot.output("Probabilité de copie de Wikipédia de la page " + str(page) + " : " + str(prob_WP) + " % (" + str(score_check_WP) + " octets en commun/" + str(len(page.text.strip())) + " octets))")
+                                    if prob_WP >= 90:
+                                        if self.site.lang_bot == "fr":
+                                            if template_WP not in page.text:
+                                                page.text = "{{" + template_WP + "|" + page.page_name + "|" + str(prob_WP) + "}}\n" + page.text
+                                                page.save("copie de WP")
+                                            fields = [
+                                                    {
+                                                      "name": "Probabilité de copie",
+                                                      "value": str(round(prob_WP, 2)) + " %",
+                                                      "inline": True
+                                                    }
+                                                ]
+                                            discord_msg = {'embeds': [
+                                                        {
+                                                              'title': "Très probable copie de Wikipédia sur " + self.site.lang + ":" + page_name,
+                                                              'description': "Cette page copie très probablement Wikipédia.",
+                                                              'url': page.protocol + "//" + page.url + page.articlepath + "index.php?diff=prev&oldid=" + str(page.oldid),
+                                                              'author': {'name': page.contributor_name},
+                                                              'color': 13371938,
+                                                              'fields': fields
+                                                        }
+                                                    ]
+                                                }
+                                        else:
+                                            if template_WP not in page.text:
+                                                page.text = "{{" + template_WP + "|" + page.page_name + "|" + str(prob_WP) + "}}\n" + page.text
+                                                page.save("copy of WP")
+                                            fields = [
+                                                    {
+                                                      "name": "Probability of copy",
+                                                      "value": str(round(prob_WP, 2)) + " %",
+                                                      "inline": True
+                                                    }
+                                                ]
+                                            discord_msg = {'embeds': [
+                                                        {
+                                                              'title': "Most likely copy from Wikipedia on " + self.site.lang + ":" + page_name,
+                                                              'description': "This page most likely copies Wikipedia.",
+                                                              'url': page.protocol + "//" + page.url + page.articlepath + "index.php?diff=prev&oldid=" + str(page.oldid),
+                                                              'author': {'name': page.contributor_name},
+                                                              'color': 13371938,
+                                                              'fields': fields
+                                                        }
+                                                    ]
+                                                }
+                                        request_site(webhooks_url[self.site.family], headers, json.dumps(discord_msg).encode("utf-8"), "POST")
+                                    elif prob_WP >= 50:
+                                        if self.site.lang_bot == "fr":
+                                            fields = [
+                                                    {
+                                                      "name": "Probabilité de copie",
+                                                      "value": str(round(prob_WP, 2)) + " %",
+                                                      "inline": True
+                                                    }
+                                                ]
+                                            discord_msg = {'embeds': [
+                                                        {
+                                                              'title': "Possible copie de Wikipédia sur " + self.site.lang + ":" + page_name,
+                                                              'description': "Cette page copie possiblement Wikipédia.",
+                                                              'url': page.protocol + "//" + page.url + page.articlepath + "index.php?diff=prev&oldid=" + str(page.oldid),
+                                                              'author': {'name': page.contributor_name},
+                                                              'color': 12161032,
+                                                              'fields': fields
+                                                        }
+                                                    ]
+                                                }
+                                        else:
+                                            fields = [
+                                                    {
+                                                      "name": "Probability of copy",
+                                                      "value": str(round(prob_WP, 2)) + " %",
+                                                      "inline": True
+                                                    }
+                                                ]
+                                            discord_msg = {'embeds': [
+                                                        {
+                                                              'title': "Likely copy from Wikipedia on " + self.site.lang + ":" + page_name,
+                                                              'description': "This page likely copies Wikipedia.",
+                                                              'url': page.protocol + "//" + page.url + page.articlepath + "index.php?diff=prev&oldid=" + str(page.oldid),
+                                                              'author': {'name': page.contributor_name},
+                                                              'color': 12161032,
+                                                              'fields': fields
+                                                        }
+                                                    ]
+                                                }
+                                        request_site(webhooks_url[self.site.family], headers, json.dumps(discord_msg).encode("utf-8"), "POST")
                                 edit_replace = page.edit_replace() #Recherches-remplacements
                                 pywikibot.output(str(edit_replace) + " recherche(s)-remplacement(s) sur la page " + str(page) + ".")
-                            if not ("disable_del_categories" in self.site.config and self.site.config["disable_del_categories"]) and int(datetime_utcnow.strftime("%H")) == 0 and page.page_ns != 2:
+                            if not ("disable_del_categories" in self.site.config and self.site.config["disable_del_categories"]) and int(self.datetime_utcnow.strftime("%H")) == 0 and page.page_ns != 2:
                                 pywikibot.output("Suppression des catégories inexistantes sur la page " + str(page))
                                 del_categories_no_exists = page.del_categories_no_exists() #Suppression 
                                 if del_categories_no_exists != []:
@@ -365,7 +461,7 @@ class wiki_task:
                                         if scores[diff]["user"] not in users_list_reverted:
                                             users_list_reverted.append(scores[diff]["user"])
                         pywikibot.output("Sauvegarde des modifications récentes du jour.")
-                        with open("rc_" + wiki + "_" + lang + "_" + time1hour.strftime("%Y%m%d") + ".json", "w") as file:
+                        with open("rc_" + self.site.family + "_" + self.site.lang + "_" + time1hour.strftime("%Y%m%d") + ".json", "w") as file:
                             file.write(json.dumps(scores))
                         pywikibot.output("Calcul des statistiques (contributions).")
                         n_contribs = n_users_contribs+n_ip_contribs
@@ -411,7 +507,7 @@ class wiki_task:
                                 scores_y.append(scores_n_reverted[score_n]/scores_n[score_n])
                                 scores_n_reverted_2.append(scores_n_reverted[score_n])
                                 scores_n_2.append(scores_n[score_n])
-                        with open("vand_" + wiki + "_" + lang + "_" + time1hour.strftime("%Y%m%d") + ".txt", "w") as file:
+                        with open("vand_" + self.site.family + "_" + self.site.lang + "_" + time1hour.strftime("%Y%m%d") + ".txt", "w") as file:
                             for i in range(len(scores_x)):
                                 file.write(str(scores_x[i]) + ":" + str(scores_n_reverted_2[i]) + "/" + str(scores_n_2[i]) + "\r\n")
                         if prop_users_ip > 0:
@@ -425,13 +521,13 @@ class wiki_task:
                             else:
                                 pywikibot.output("Pas assez de scores pour générer la fonction.")
                                 no_coeffs = True
-                            with open("vand_f_" + wiki + "_" + lang + "_" + time1hour.strftime("%Y%m%d") + ".txt", "w") as file:
+                            with open("vand_f_" + self.site.family + "_" + self.site.lang + "_" + time1hour.strftime("%Y%m%d") + ".txt", "w") as file:
                                 if not no_coeffs:
                                     file.write(str(coeffs_curve))
                                 else:
                                     file.write("erreur")
-                            if webhooks_url[wiki] != None:
-                                if lang_bot == "fr":
+                            if webhooks_url[self.site.family] != None:
+                                if self.site.lang_bot == "fr":
                                     fields = [
                                             {
                                               "name": "IP et nouveaux révoqués/Nombre total d'IP et nouveaux (non-Autoconfirmed) actifs",
@@ -466,7 +562,7 @@ class wiki_task:
                                         ]
                                     discord_msg = {'embeds': [
                                                 {
-                                                      'title': "Statistiques sur " + wiki + " " + lang + " (dernières 24 h)",
+                                                      'title': "Statistiques sur " + self.site.family + " " + self.site.lang + " (dernières 24 h)",
                                                       'description': "Statistiques sur la patrouille (humains et bot):",
                                                       'color': 65535,
                                                       'fields': fields
@@ -508,30 +604,30 @@ class wiki_task:
                                         ]
                                     discord_msg = {'embeds': [
                                                 {
-                                                      'title': "Statistics about " + wiki + " " + lang + " (last 24 h)",
+                                                      'title': "Statistics about " + self.site.family + " " + self.site.lang + " (last 24 h)",
                                                       'description': "Statistics about patrolling (humans and bot):",
                                                       'color': 65535,
                                                       'fields': fields
                                                 }
                                             ]
                                         }
-                                request_site(webhooks_url[wiki], headers, json.dumps(discord_msg).encode("utf-8"), "POST")
-                    if wiki == "dicoado":
+                                request_site(webhooks_url[self.site.family], headers, json.dumps(discord_msg).encode("utf-8"), "POST")
+                    if self.site.family == "dicoado":
                         #spécifiques aux Dico des Ados
                         #remise à 0 du BàS du Dico des Ados
                         bas = self.site.page("Dico:Bac à sable")
                         bas_zero = self.site.page("Dico:Bac à sable/Zéro")
-                        if abs((datetime_utcnow - bas.latest_revision.timestamp).seconds) > 3600 and bas.text != bas_zero.text:
+                        if abs((self.datetime_utcnow - bas.latest_revision.timestamp).seconds) > 3600 and bas.text != bas_zero.text:
                             pywikibot.output("Remise à zéro du bac à sable")
                             bas.put(bas_zero.text, "Remise à zéro du bac à sable")
                         for page_name in self.site.all_pages(ns=4, apprefix="Bac à sable/Test/"):
                             if page_name != "Dico:Bac à sable/Zéro":
                                 bas_page = self.site.page(page_name)
-                                if abs((datetime_utcnow - bas_page.latest_revision.timestamp).seconds) > 7200 and "{{SI" not in bas_page.text:
+                                if abs((self.datetime_utcnow - bas_page.latest_revision.timestamp).seconds) > 7200 and "{{SI" not in bas_page.text:
                                     pywikibot.output("SI de " + page_name)
                                     bas_page.text = "{{SI|Remise à zéro du bac à sable}}\n" + bas_page.text
                                     bas_page.save("Remise à zéro du bac à sable")
-##                    if lang_bot == "fr":
+##                    if self.site.lang_bot == "fr":
 ##                        cat_files_no_exists = self.site.category("Category:Pages avec des liens de fichiers brisés")
 ##                        for page_cat in cat_files_no_exists.get_pages(ns=0):
 ##                            pywikibot.output("Suppression des fichiers inexistantes sur la page " + page_cat)
@@ -541,8 +637,8 @@ class wiki_task:
 ##                                pywikibot.output("Fichiers retirés " + ", ".join(del_files_no_exists))
 ##                            else:
 ##                                pywikibot.output("Aucun fichier à retirer.")
-                    with open("tasks_time_hour_" + wiki + "_" + lang + ".txt", "w") as tasks_time_file:
-                        tasks_time_file.write(datetime_utcnow.strftime("%Y%m%d%H%M"))
+                    with open(self.tasks_time_hour_filename, "w") as tasks_time_file:
+                        tasks_time_file.write(self.datetime_utcnow.strftime("%Y%m%d%H%M"))
             except Exception as e:
                 try:
                     bt = traceback.format_exc()

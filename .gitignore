@@ -8,5 +8,4 @@
 /files/*.pickle
 throttle.ctrl
 *.log
-pywikibot.lwp
-*localhost_localhost*
+*.lwp

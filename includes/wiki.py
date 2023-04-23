@@ -2,7 +2,7 @@
 
 import pywikibot
 from pywikibot import pagegenerators, textlib
-import base64, datetime, json, os, random, re, socket, time, urllib.request, urllib.error, urllib.parse, zlib
+import base64, datetime, difflib, json, os, random, re, socket, time, urllib.request, urllib.error, urllib.parse, zlib
 from config import *
 
 class get_wiki:
@@ -11,8 +11,9 @@ class get_wiki:
         self.family = family
         self.lang = lang
         self.config = {}
-        open("config_" + family + "_" + lang + ".txt", "a").close()
-        with open("config_" + family + "_" + lang + ".txt", "r") as config_wiki:
+        config_filename = "config_" + family + "_" + lang + ".txt"
+        open(config_filename, "a").close()
+        with open(config_filename, "r") as config_wiki:
             config_file_content = config_wiki.read()
             if config_file_content != "":
                 try:
@@ -251,15 +252,21 @@ class get_page(pywikibot.Page):
     def vandalism_score(self, revision_oldid=None, revision_oldid2=None):
         self.vandalism_score_detect = []
         self.get_text_page_old(revision_oldid, revision_oldid2)
-        open("regex_vandalisms_0.txt", "a").close()
-        open("regex_vandalisms_0_" + self.source.family + "_" + self.lang + ".txt", "a").close()
-        open("size_vandalisms_0.txt", "a").close()
-        open("diff_vandalisms_0.txt", "a").close()
-        open("regex_vandalisms_del_0.txt", "a").close()
-        open("regex_vandalisms_del_0_" + self.source.family + "_" + self.lang + ".txt", "a").close()
+        regex_vandalisms_0_filename = "regex_vandalisms_0.txt"
+        regex_vandalisms_0_local_filename = "regex_vandalisms_0_" + self.source.family + "_" + self.lang + ".txt"
+        size_vandalisms_0_filename = "size_vandalisms_0.txt"
+        diff_vandalisms_0_filename = "diff_vandalisms_0.txt"
+        regex_vandalisms_del_0_filename = "regex_vandalisms_del_0.txt"
+        regex_vandalisms_del_0_local_filename = "regex_vandalisms_del_0_" + self.source.family + "_" + self.lang + ".txt"
+        open(regex_vandalisms_0_filename, "a").close()
+        open(regex_vandalisms_0_local_filename, "a").close()
+        open(size_vandalisms_0_filename, "a").close()
+        open(diff_vandalisms_0_filename, "a").close()
+        open(regex_vandalisms_del_0_filename, "a").close()
+        open(regex_vandalisms_del_0_local_filename, "a").close()
         vand = 0
         if self.page_ns == 0:
-            with open("regex_vandalisms_0.txt", "r") as regex_vandalisms_file:
+            with open(regex_vandalisms_0_filename, "r") as regex_vandalisms_file:
                 for regex_vandalisms in regex_vandalisms_file.readlines():
                     regex = regex_vandalisms[0:len(regex_vandalisms)-len(regex_vandalisms.split(":")[-1])-1]
                     regex_detect = regex_vandalism(regex, self.text_page_oldid, self.text_page_oldid2)
@@ -267,7 +274,7 @@ class get_page(pywikibot.Page):
                         score = int(regex_vandalisms.split(":")[-1])
                         self.vandalism_score_detect.append(["add_regex", score, regex_detect])
                         vand += score
-            with open("regex_vandalisms_0_" + self.source.family + "_" + self.lang + ".txt", "r") as regex_vandalisms_file:
+            with open(regex_vandalisms_0_local_filename, "r") as regex_vandalisms_file:
                 for regex_vandalisms in regex_vandalisms_file.readlines():
                     regex = regex_vandalisms[0:len(regex_vandalisms)-len(regex_vandalisms.split(":")[-1])-1]
                     regex_detect = regex_vandalism(regex, self.text_page_oldid, self.text_page_oldid2)
@@ -275,21 +282,21 @@ class get_page(pywikibot.Page):
                         score = int(regex_vandalisms.split(":")[-1])
                         self.vandalism_score_detect.append(["add_regex", score, regex_detect])
                         vand += score
-            with open("size_vandalisms_0.txt", "r") as regex_vandalisms_file:
+            with open(size_vandalisms_0_filename, "r") as regex_vandalisms_file:
                 for regex_vandalisms in regex_vandalisms_file.readlines():
                     size = regex_vandalisms[0:len(regex_vandalisms)-len(regex_vandalisms.split(":")[-1])-1]
                     if len(self.text_page_oldid) < int(size):
                         score = int(regex_vandalisms.split(":")[-1])
                         self.vandalism_score_detect.append(["size", score, size])
                         vand += score
-            with open("diff_vandalisms_0.txt", "r") as regex_vandalisms_file:
+            with open(diff_vandalisms_0_filename, "r") as regex_vandalisms_file:
                 for regex_vandalisms in regex_vandalisms_file.readlines():
                     diff = regex_vandalisms[0:len(regex_vandalisms)-len(regex_vandalisms.split(":")[-1])-1]
                     if (int(diff) < 0 and len(self.text_page_oldid) - len(self.text_page_oldid2) <= int(diff)) or (int(diff) >= 0 and len(self.text_page_oldid) - len(self.text_page_oldid2) >= int(diff)):
                         score = int(regex_vandalisms.split(":")[-1])
                         self.vandalism_score_detect.append(["diff", score, diff])
                         vand += score
-            with open("regex_vandalisms_del_0.txt", "r") as regex_vandalisms_file:
+            with open(regex_vandalisms_del_0_filename, "r") as regex_vandalisms_file:
                 for regex_vandalisms in regex_vandalisms_file.readlines():
                     regex = regex_vandalisms[0:len(regex_vandalisms)-len(regex_vandalisms.split(":")[-1])-1]
                     regex_detect = regex_vandalism(regex, self.text_page_oldid2, self.text_page_oldid)
@@ -297,7 +304,7 @@ class get_page(pywikibot.Page):
                         score = int(regex_vandalisms.split(":")[-1])
                         self.vandalism_score_detect.append(["del_regex", score, regex_detect])
                         vand += score
-            with open("regex_vandalisms_del_0_" + self.source.family + "_" + self.lang + ".txt", "r") as regex_vandalisms_file:
+            with open(regex_vandalisms_del_0_local_filename, "r") as regex_vandalisms_file:
                 for regex_vandalisms in regex_vandalisms_file.readlines():
                     regex = regex_vandalisms[0:len(regex_vandalisms)-len(regex_vandalisms.split(":")[-1])-1]
                     regex_detect = regex_vandalism(regex, self.text_page_oldid2, self.text_page_oldid)
@@ -306,6 +313,24 @@ class get_page(pywikibot.Page):
                         self.vandalism_score_detect.append(["del_regex", score, regex_detect])
                         vand += score
         return vand
+
+    def check_WP(self, page_name_WP=None, diff=None):
+        if page_name_WP == None:
+            page_name_WP = self.page_name
+        if diff == None:
+            text_to_check = self.text.strip()
+        else:
+            text_to_check = self.getOldVersion(oldid = diff)
+        url = "%s//%s%s/api.php?action=query&prop=revisions&rvprop=content&rvslots=*&titles=%s&formatversion=2&format=json" % ("https:", self.lang_bot + ".wikipedia.org", "/w", urllib.parse.quote(page_name_WP))
+        j = json.loads(request_site(url))
+        if "missing" in j["query"]["pages"][0]:
+            return 0
+        page_text_WP = j["query"]["pages"][0]["revisions"][0]["slots"]["main"]["content"]
+        score = 0
+        matcher = difflib.SequenceMatcher(a=text_to_check, b=page_text_WP)
+        for match in matcher.get_matching_blocks():
+            score += match.size
+        return score
 
     def edit_replace(self):
         file1 = "replace1_" + self.source.family + "_" + self.lang + ".txt"

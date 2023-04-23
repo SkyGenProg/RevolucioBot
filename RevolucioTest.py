@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-import os, logging, threading
+import argparse, os, logging, threading
 
 from includes.wiki import *
 from includes.wiki_tasks import *
@@ -9,11 +9,16 @@ from config import *
 logging.basicConfig(filename="logs.log", encoding="utf-8", level=logging.DEBUG, format="%(asctime)s %(thread)d %(levelname)s:%(message)s")
 logging.getLogger().addHandler(logging.StreamHandler())
 
+arg = argparse.ArgumentParser()
+arg.add_argument("--start_task_day", action="count")
+arg.add_argument("--ignore_task_month", action="count")
+args = arg.parse_args()
+
 if __name__ == "__main__":
     print("Revolució %s" % ver)
     if(not os.path.exists("files")):
        os.mkdir("files")
     os.chdir("files")
     localhost_site = get_wiki("localhost", "localhost", "RevolucioBot")
-    localhost_task = wiki_task(localhost_site)
+    localhost_task = wiki_task(localhost_site, args.start_task_day, args.ignore_task_month)
     threading.Thread(target=localhost_task.execute).start()
