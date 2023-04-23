@@ -321,7 +321,7 @@ class get_page(pywikibot.Page):
             text_to_check = self.text.strip()
         else:
             text_to_check = self.getOldVersion(oldid = diff)
-        url = "%s//%s%s/api.php?action=query&prop=revisions&rvprop=content&rvslots=*&titles=%s&formatversion=2&format=json" % ("https:", self.lang + ".wikipedia.org", "/w", urllib.parse.quote(page_name_WP))
+        url = "%s//%s%s/api.php?action=query&prop=revisions&rvprop=content&rvslots=*&titles=%s&formatversion=2&format=json" % ("https:", self.lang_bot + ".wikipedia.org", "/w", urllib.parse.quote(page_name_WP))
         j = json.loads(request_site(url))
         if "missing" in j["query"]["pages"][0]:
             return 0

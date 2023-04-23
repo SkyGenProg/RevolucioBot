@@ -321,12 +321,17 @@ class wiki_task:
                                                 }
                                         request_site(webhooks_url[self.site.family], headers, json.dumps(discord_msg).encode("utf-8"), "POST")
                             if page.page_ns == 0:
+                                #détection copies de Wikipédia
                                 if "check_WP" in self.site.config and self.site.config["check_WP"]:
                                     score_check_WP = page.check_WP()
                                     prob_WP = score_check_WP/len(page.text.strip())*100
+                                    template_WP = "User:" + page.user_wiki + "/CopyWP"
                                     pywikibot.output("Probabilité de copie de Wikipédia de la page " + str(page) + " : " + str(prob_WP) + " % (" + str(score_check_WP) + " octets en commun/" + str(len(page.text.strip())) + " octets))")
                                     if prob_WP >= 90:
                                         if self.site.lang_bot == "fr":
+                                            if template_WP not in page.text:
+                                                page.text = "{{" + template_WP + "|" + page.page_name + "|" + str(prob_WP) + "}}\n" + page.text
+                                                page.save("copie de WP")
                                             fields = [
                                                     {
                                                       "name": "Probabilité de copie",
@@ -346,6 +351,9 @@ class wiki_task:
                                                     ]
                                                 }
                                         else:
+                                            if template_WP not in page.text:
+                                                page.text = "{{" + template_WP + "|" + page.page_name + "|" + str(prob_WP) + "}}\n" + page.text
+                                                page.save("copy of WP")
                                             fields = [
                                                     {
                                                       "name": "Probability of copy",
