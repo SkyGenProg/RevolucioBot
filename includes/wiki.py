@@ -164,6 +164,10 @@ class get_page(pywikibot.Page):
         self.alert_request = False
 
     def revert(self):
+        self.only_revert()
+        self.warn_revert()
+
+    def only_revert(self):
         if self.text_page_oldid == None or self.text_page_oldid2 == None:
             self.get_text_page_old()
         self.text = self.text_page_oldid2
@@ -171,6 +175,8 @@ class get_page(pywikibot.Page):
             self.save("Annulation modification non-constructive", botflag=False, minor=False)
         else:
             self.save("Revert", botflag=False, minor=False)
+
+    def warn_revert(self):
         talk = pywikibot.Page(self.source.site, "User Talk:%s" % self.contributor_name)
         if ("averto-1" in talk.text.lower() or "niveau=1" in talk.text.lower() or "level=1" in talk.text.lower()) and "averto-2" not in talk.text.lower() and "niveau=2" not in talk.text.lower() and "level=2" not in talk.text.lower(): #averti 2 fois
             alert = pywikibot.Page(self.source.site, self.alert_page)
@@ -197,6 +203,14 @@ class get_page(pywikibot.Page):
                 talk.save("Avertissement 0", botflag=False, minor=False)
             else:
                 talk.save("Warning 0", botflag=False, minor=False)
+
+    def warn_WP(self, prob):
+        talk = pywikibot.Page(self.source.site, "User Talk:%s" % self.contributor_name)
+        talk.text = talk.text + "\n{{subst:User:%s/CopyWPUser|%s|%s|%s}}" % (self.user_wiki, self.page_name, self.page_name, str(prob))
+        if self.lang_bot == "fr":
+            talk.save("Avertissement WP", botflag=False, minor=False)
+        else:
+            talk.save("Warning WP", botflag=False, minor=False)
 
     def vandalism_revert(self):
         if self.contributor_name == self.user_wiki:
