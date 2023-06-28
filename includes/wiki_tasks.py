@@ -330,7 +330,7 @@ class wiki_task:
                                     if prob_WP >= 90:
                                         if self.site.lang_bot == "fr":
                                             if template_WP not in page.text:
-                                                page.text = "{{" + template_WP + "|" + page.page_name + "|" + str(prob_WP) + "}}\n" + page.text
+                                                page.text = "{{" + template_WP + "|" + page.page_name + "|" + str(round(prob_WP, 2)) + "}}\n" + page.text
                                                 page.save("copie de WP", botflag=False, minor=False)
                                             fields = [
                                                     {
@@ -352,7 +352,7 @@ class wiki_task:
                                                 }
                                         else:
                                             if template_WP not in page.text:
-                                                page.text = "{{" + template_WP + "|" + page.page_name + "|" + str(prob_WP) + "}}\n" + page.text
+                                                page.text = "{{" + template_WP + "|" + page.page_name + "|" + str(round(prob_WP, 2)) + "}}\n" + page.text
                                                 page.save("copy of WP")
                                             fields = [
                                                     {
@@ -373,7 +373,6 @@ class wiki_task:
                                                     ]
                                                 }
                                         request_site(webhooks_url[self.site.family], headers, json.dumps(discord_msg).encode("utf-8"), "POST")
-                                        page.warn_WP(prob_WP)
                                     elif prob_WP >= 50:
                                         if self.site.lang_bot == "fr":
                                             fields = [
