@@ -204,14 +204,6 @@ class get_page(pywikibot.Page):
             else:
                 talk.save("Warning 0", botflag=False, minor=False)
 
-    def warn_WP(self, prob):
-        talk = pywikibot.Page(self.source.site, "User Talk:%s" % self.contributor_name)
-        talk.text = talk.text + "\n{{subst:User:%s/CopyWPUser|%s|%s|%s}}" % (self.user_wiki, self.page_name, self.page_name, str(prob))
-        if self.lang_bot == "fr":
-            talk.save("Avertissement WP", botflag=False, minor=False)
-        else:
-            talk.save("Warning WP", botflag=False, minor=False)
-
     def vandalism_revert(self):
         if self.contributor_name == self.user_wiki:
             return 0
