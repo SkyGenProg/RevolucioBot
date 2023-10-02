@@ -35,7 +35,7 @@ class wiki_task:
                     if self.site.family == "dicoado":
                         for page_name in self.site.all_pages(ns=0):
                             page = self.site.page(page_name)
-                            pywikibot.output("Page : " + str(page))
+                            pywikibot.output("Page : " + page_name)
                             try:
                                 if not page.isRedirectPage():
                                     page_text_old = page.text
@@ -154,7 +154,7 @@ class wiki_task:
                     tasks_time = tasks_time_file.read()
                 if self.datetime_utcnow.strftime("%Y%m%d%H%M")[:-1] not in tasks_time:
                     #Taches réalisées une fois toutes les 10 minutes
-                    scores = {}
+                    detailed_diff_info = {}
                     if (int(self.datetime_utcnow.strftime("%H")) == 0 and int(self.datetime_utcnow.strftime("%M"))//10 == 0) or self.start_task_day: #Une fois par jour, parcours de toutes les RC du jour
                         time1hour = self.datetime_utcnow - datetime.timedelta(hours = 24)
                         pywikibot.output("Récupération des RC des 24 dernières heures sur " + self.site.family + " " + self.site.lang + "...")
@@ -173,23 +173,11 @@ class wiki_task:
                         page = self.site.page(page_name)
                         if page.special or not page.exists(): #passage des pages spéciales ou inexistantes
                             continue
-                        pywikibot.output("Page : " + str(page))
+                        pywikibot.output("Page : " + page_name)
                         if task_day: #Ajout de la modif dans les stats
                             try:
                                 vandalism_score = page.vandalism_score(page_info["revid"], page_info["old_revid"])
-                                if page_info["revid"] not in scores:
-                                    scores[page_info["revid"]] = {"reverted": False, "next_revid": -1}
-                                scores[page_info["revid"]]["score"] = vandalism_score
-                                scores[page_info["revid"]]["anon"] = "anon" in page_info
-                                scores[page_info["revid"]]["trusted"] = page_info["user"] in self.site.trusted
-                                scores[page_info["revid"]]["user"] = page_info["user"]
-                                scores[page_info["revid"]]["page"] = page_info["title"]
-                                if not scores[page_info["revid"]]["reverted"]:
-                                    scores[page_info["revid"]]["reverted"] = scores[page_info["revid"]]["next_revid"] > 0 and not scores[page_info["revid"]]["trusted"] and scores[scores[page_info["revid"]]["next_revid"]]["reverted"] and scores[scores[page_info["revid"]]["next_revid"]]["user"] == page_info["user"]
-                                if page_info["old_revid"] != 0 and page_info["old_revid"] != -1:
-                                    scores[page_info["old_revid"]] = {"reverted": False, "next_revid": page_info["revid"]}
-                                    if "comment" in page_info:
-                                        scores[page_info["old_revid"]]["reverted"] = "revert" in page_info["comment"].lower() or "révoc" in page_info["comment"].lower() or "cancel" in page_info["comment"].lower() or "annul" in page_info["comment"].lower()
+                                detailed_diff_info = self.site.add_detailed_diff_info(detailed_diff_info, page_info, page.text_page_oldid, page.text_page_oldid2, vandalism_score)
                             except Exception as e:
                                 pywikibot.error(e)
                         if page_name in pages_checked: #passage des pages déjà vérifiées
@@ -330,7 +318,7 @@ class wiki_task:
                                     if prob_WP >= 90:
                                         if self.site.lang_bot == "fr":
                                             if template_WP not in page.text:
-                                                page.text = "{{" + template_WP + "|" + page.page_name + "|" + str(prob_WP) + "}}\n" + page.text
+                                                page.text = "{{" + template_WP + "|" + page.page_name + "|" + str(round(prob_WP, 2)) + "}}\n" + page.text
                                                 page.save("copie de WP", botflag=False, minor=False)
                                             fields = [
                                                     {
@@ -352,7 +340,7 @@ class wiki_task:
                                                 }
                                         else:
                                             if template_WP not in page.text:
-                                                page.text = "{{" + template_WP + "|" + page.page_name + "|" + str(prob_WP) + "}}\n" + page.text
+                                                page.text = "{{" + template_WP + "|" + page.page_name + "|" + str(round(prob_WP, 2)) + "}}\n" + page.text
                                                 page.save("copy of WP")
                                             fields = [
                                                     {
@@ -373,7 +361,6 @@ class wiki_task:
                                                     ]
                                                 }
                                         request_site(webhooks_url[self.site.family], headers, json.dumps(discord_msg).encode("utf-8"), "POST")
-                                        page.warn_WP(prob_WP)
                                     elif prob_WP >= 50:
                                         if self.site.lang_bot == "fr":
                                             fields = [
@@ -436,34 +423,34 @@ class wiki_task:
                         users_list = []
                         ip_list_reverted = []
                         users_list_reverted = []
-                        for diff in scores: #Calcul du nombre de modifs révoquées par score
-                            if "score" in scores[diff] and not scores[diff]["trusted"]:
-                                if scores[diff]["score"] not in scores_n:
-                                    scores_n[scores[diff]["score"]] = 1
-                                    scores_n_reverted[scores[diff]["score"]] = 0
+                        for diff in detailed_diff_info: #Calcul du nombre de modifs révoquées par score
+                            if "score" in detailed_diff_info[diff] and not detailed_diff_info[diff]["trusted"]:
+                                if detailed_diff_info[diff]["score"] not in scores_n:
+                                    scores_n[detailed_diff_info[diff]["score"]] = 1
+                                    scores_n_reverted[detailed_diff_info[diff]["score"]] = 0
                                 else:
-                                    scores_n[scores[diff]["score"]] += 1
-                                if scores[diff]["anon"]:
+                                    scores_n[detailed_diff_info[diff]["score"]] += 1
+                                if detailed_diff_info[diff]["anon"]:
                                     n_ip_contribs += 1
-                                    if scores[diff]["user"] not in ip_list:
-                                        ip_list.append(scores[diff]["user"])
+                                    if detailed_diff_info[diff]["user"] not in ip_list:
+                                        ip_list.append(detailed_diff_info[diff]["user"])
                                 else:
                                     n_users_contribs += 1
-                                    if scores[diff]["user"] not in users_list:
-                                        users_list.append(scores[diff]["user"])
-                                if scores[diff]["reverted"]:
-                                    scores_n_reverted[scores[diff]["score"]] += 1
-                                    if scores[diff]["anon"]:
+                                    if detailed_diff_info[diff]["user"] not in users_list:
+                                        users_list.append(detailed_diff_info[diff]["user"])
+                                if detailed_diff_info[diff]["reverted"]:
+                                    scores_n_reverted[detailed_diff_info[diff]["score"]] += 1
+                                    if detailed_diff_info[diff]["anon"]:
                                         n_ip_contribs_reverted += 1
-                                        if scores[diff]["user"] not in ip_list_reverted:
-                                            ip_list_reverted.append(scores[diff]["user"])
+                                        if detailed_diff_info[diff]["user"] not in ip_list_reverted:
+                                            ip_list_reverted.append(detailed_diff_info[diff]["user"])
                                     else:
                                         n_users_contribs_reverted += 1
-                                        if scores[diff]["user"] not in users_list_reverted:
-                                            users_list_reverted.append(scores[diff]["user"])
+                                        if detailed_diff_info[diff]["user"] not in users_list_reverted:
+                                            users_list_reverted.append(detailed_diff_info[diff]["user"])
                         pywikibot.output("Sauvegarde des modifications récentes du jour.")
                         with open("rc_" + self.site.family + "_" + self.site.lang + "_" + time1hour.strftime("%Y%m%d") + ".json", "w") as file:
-                            file.write(json.dumps(scores))
+                            file.write(json.dumps(detailed_diff_info))
                         pywikibot.output("Calcul des statistiques (contributions).")
                         n_contribs = n_users_contribs+n_ip_contribs
                         n_contribs_reverted = n_users_contribs_reverted+n_ip_contribs_reverted

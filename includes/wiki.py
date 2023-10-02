@@ -90,12 +90,14 @@ class get_wiki:
                 pages.append(contrib["title"])
         return pages
 
-    def rc_pages(self, n_edits=5000, timestamp=None, rctoponly=True, show_trusted=False):
+    def rc_pages(self, n_edits=5000, timestamp=None, rctoponly=True, show_trusted=False, namespace=None):
         self.diffs_rc = []
         page_names = []
         url = "%s//%s%s/api.php?action=query&list=recentchanges&rclimit=%s&rcend=%s&rcprop=timestamp|title|user|ids|comment&rctype=edit|new|categorize&rcshow=!bot&format=json" % (self.protocol, self.url, self.scriptpath, str(n_edits), str(timestamp))
         if rctoponly:
             url += "&rctoponly"
+        if namespace != None:
+            url += "&rcnamespace=" + namespace
         rccontinue = ""
         while rccontinue != None:
             if rccontinue != "":
@@ -116,6 +118,24 @@ class get_wiki:
 
     def category(self, page_wiki):
         return get_category(self, page_wiki)
+
+    def add_detailed_diff_info(self, diff_info, page_info, old, new, vandalism_score):
+        if page_info["revid"] not in diff_info:
+            diff_info[page_info["revid"]] = {"reverted": False, "next_revid": -1}
+        diff_info[page_info["revid"]]["score"] = vandalism_score
+        diff_info[page_info["revid"]]["anon"] = "anon" in page_info
+        diff_info[page_info["revid"]]["trusted"] = page_info["user"] in self.trusted
+        diff_info[page_info["revid"]]["user"] = page_info["user"]
+        diff_info[page_info["revid"]]["page"] = page_info["title"]
+        diff_info[page_info["revid"]]["old"] = old
+        diff_info[page_info["revid"]]["new"] = new
+        if not diff_info[page_info["revid"]]["reverted"]:
+            diff_info[page_info["revid"]]["reverted"] = diff_info[page_info["revid"]]["next_revid"] > 0 and not diff_info[page_info["revid"]]["trusted"] and diff_info[diff_info[page_info["revid"]]["next_revid"]]["reverted"] and diff_info[diff_info[page_info["revid"]]["next_revid"]]["user"] == page_info["user"]
+        if page_info["old_revid"] != 0 and page_info["old_revid"] != -1:
+            diff_info[page_info["old_revid"]] = {"reverted": False, "next_revid": page_info["revid"]}
+            if "comment" in page_info:
+                diff_info[page_info["old_revid"]]["reverted"] = "revert" in page_info["comment"].lower() or "révoc" in page_info["comment"].lower() or "cancel" in page_info["comment"].lower() or "annul" in page_info["comment"].lower()
+        return diff_info
 
 
 class get_page(pywikibot.Page):
@@ -203,14 +223,6 @@ class get_page(pywikibot.Page):
                 talk.save("Avertissement 0", botflag=False, minor=False)
             else:
                 talk.save("Warning 0", botflag=False, minor=False)
-
-    def warn_WP(self, prob):
-        talk = pywikibot.Page(self.source.site, "User Talk:%s" % self.contributor_name)
-        talk.text = talk.text + "\n{{subst:User:%s/CopyWPUser|%s|%s|%s}}" % (self.user_wiki, self.page_name, self.page_name, str(prob))
-        if self.lang_bot == "fr":
-            talk.save("Avertissement WP", botflag=False, minor=False)
-        else:
-            talk.save("Warning WP", botflag=False, minor=False)
 
     def vandalism_revert(self):
         if self.contributor_name == self.user_wiki:
