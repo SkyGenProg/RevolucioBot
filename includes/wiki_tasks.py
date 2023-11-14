@@ -310,7 +310,7 @@ class wiki_task:
                                         request_site(webhooks_url[self.site.family], headers, json.dumps(discord_msg).encode("utf-8"), "POST")
                             if page.page_ns == 0:
                                 #détection copies de Wikipédia
-                                if "check_WP" in self.site.config and self.site.config["check_WP"]:
+                                if "check_WP" in self.site.config and self.site.config["check_WP"] and len(page.text.strip()) > 0:
                                     score_check_WP = page.check_WP()
                                     prob_WP = score_check_WP/len(page.text.strip())*100
                                     template_WP = "User:" + page.user_wiki + "/CopyWP"
