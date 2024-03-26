@@ -90,10 +90,12 @@ class get_wiki:
                 pages.append(contrib["title"])
         return pages
 
-    def rc_pages(self, n_edits=5000, timestamp=None, rctoponly=True, show_trusted=False, namespace=None):
+    def rc_pages(self, n_edits=5000, timestamp=None, rctoponly=True, show_trusted=False, namespace=None, timestamp_start=None):
         self.diffs_rc = []
         page_names = []
         url = "%s//%s%s/api.php?action=query&list=recentchanges&rclimit=%s&rcend=%s&rcprop=timestamp|title|user|ids|comment&rctype=edit|new|categorize&rcshow=!bot&format=json" % (self.protocol, self.url, self.scriptpath, str(n_edits), str(timestamp))
+        if timestamp_start:
+            url += "&rcstart=" + str(timestamp_start)
         if rctoponly:
             url += "&rctoponly"
         if namespace != None:
@@ -150,8 +152,10 @@ class get_page(pywikibot.Page):
         else:
             self.special = False
             pywikibot.Page.__init__(self, self.source.site, self.page_name)
+        self.new_page = None
         self.text_page_oldid = None
         self.text_page_oldid2 = None
+        self.vand_edit = False
         self.fullurl = self.source.site.siteinfo["general"]["server"] + self.source.site.siteinfo["general"]["articlepath"].replace("$1", self.page_name)
         self.protocol = self.fullurl.split("/")[0]
         if self.protocol == "":
@@ -190,7 +194,10 @@ class get_page(pywikibot.Page):
     def only_revert(self):
         if self.text_page_oldid == None or self.text_page_oldid2 == None:
             self.get_text_page_old()
-        self.text = self.text_page_oldid2
+        if self.new_page:
+            self.text = "{{subst:User:%s/VandalismDelete}}" % self.user_wiki
+        else:
+            self.text = self.text_page_oldid2
         if self.lang_bot == "fr":
             self.save("Annulation modification non-constructive", botflag=False, minor=False)
         else:
@@ -228,7 +235,7 @@ class get_page(pywikibot.Page):
         if self.contributor_name == self.user_wiki:
             return 0
         vand = self.vandalism_score()
-        revert = vand <= self.limit
+        self.vand_edit = vand <= self.limit
         if vand < 0:
             if self.contributor_name in self.source.trusted:
                 return 0
@@ -243,8 +250,6 @@ class get_page(pywikibot.Page):
             pywikibot.output("Modification à vérifier détectée (%s)." % str(vand))
         else:
             pywikibot.output("Pas de modification suspecte détectée (%s)." % str(vand))
-        if revert:
-            self.revert()
         return vand
 
     def get_text_page_old(self, revision_oldid=None, revision_oldid2=None): #revision_oldid : nouvelle version/version à vérifier, revision_oldid2 : ancienne version/version à comparer
@@ -265,15 +270,23 @@ class get_page(pywikibot.Page):
                     oldid = revision.revid
                     break
         if oldid != -1 and oldid != 0:
+            self.new_page = False
             text_page_oldid2 = self.getOldVersion(oldid = oldid)
         else:
-            text_page_oldid2 = "{{subst:User:%s/VandalismDelete}}" % self.user_wiki
+            self.new_page = True
+            text_page_oldid2 = ""
         if text_page_oldid is None:
             text_page_oldid = ""
         if text_page_oldid2 is None:
             text_page_oldid2 = ""
         self.text_page_oldid = text_page_oldid
         self.text_page_oldid2 = text_page_oldid2
+
+    def get_diff(self):
+        differ = difflib.Differ()
+        diff = list(differ.compare(self.text_page_oldid2.splitlines(), self.text_page_oldid.splitlines()))
+        diff_text = '\n'.join(diff)
+        return diff_text
 
     def vandalism_score(self, revision_oldid=None, revision_oldid2=None):
         self.vandalism_score_detect = []
