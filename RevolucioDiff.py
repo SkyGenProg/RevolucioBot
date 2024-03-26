@@ -44,3 +44,5 @@ if __name__ == "__main__":
             detected += str(vandalism_score_detect[1]) + " - + " + str(vandalism_score_detect[2].group()) + "\n"
     print(detected)
     print("Score : " + str(vandalism_score))
+    print("Diff : ")
+    print(page.get_diff())

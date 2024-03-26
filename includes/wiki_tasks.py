@@ -188,6 +188,8 @@ class wiki_task:
                         else:
                             #détection vandalismes
                             vandalism_revert = page.vandalism_revert()
+                            if page.vand_edit: #Révocation si modification inférieure ou égale au score de révocation
+                                page.revert()
                             if vandalism_revert < 0: #Webhook d'avertissement
                                 if webhooks_url[self.site.family] != None:
                                     vand_prob = vand_f(abs(vandalism_revert))
