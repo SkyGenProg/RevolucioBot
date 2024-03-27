@@ -27,7 +27,7 @@ class wiki_task:
             try:
                 self.datetime_utcnow = datetime.datetime.utcnow()
                 if today is None:
-                    today = self.datetime_utcnow.strftime("%d")
+                    today = int(self.datetime_utcnow.strftime("%d"))
                 #Mise en mémoire du mois
                 open(self.tasks_time_month_filename, "a").close()
                 with open(self.tasks_time_month_filename, "r") as tasks_time_file:
@@ -153,7 +153,7 @@ class wiki_task:
                 open(self.tasks_time_hour_filename, "a").close()
                 with open(self.tasks_time_hour_filename, "r") as tasks_time_file:
                     tasks_time = tasks_time_file.read()
-                if self.datetime_utcnow.strftime("%Y%m%d%H%M")[:-1] not in tasks_time:
+                if self.datetime_utcnow.strftime("%Y%m%d%H%M")[:-1] not in tasks_time or self.start_task_day:
                     #Tâches réalisées une fois toutes les 10 minutes
                     detailed_diff_info = {}
                     if int(self.datetime_utcnow.strftime("%d")) != today or self.start_task_day: #Une fois par jour, parcours de toutes les RC du jour
