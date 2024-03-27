@@ -30,7 +30,6 @@
 \bmdr\b:-40
 \bptdr\b:-40
 \bchatte\b:-40
-[\u1F600-\u1F64F]:-40
 \bbite(s)?\b:-45
 \bfdp\b:-45
 \bchiasse\b:-50

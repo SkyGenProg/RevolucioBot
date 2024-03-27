@@ -16,21 +16,23 @@ class wiki_task:
     def __init__(self, site, start_task_day=False, ignore_task_month=False):
         self.site = site
         self.start_task_day = start_task_day
+        self.ignore_task_month = ignore_task_month
         self.tasks_time_hour_filename = "tasks_time_hour_" + self.site.family + "_" + self.site.lang + ".txt"
         self.tasks_time_month_filename = "tasks_time_month_" + self.site.family + "_" + self.site.lang + ".txt"
-        if ignore_task_month:
-            with open(self.tasks_time_month_filename, "w") as tasks_time_file:
-                tasks_time_file.write(datetime.datetime.utcnow().strftime("%Y%m"))
+        self.site.get_trusted() #récupération des utilisateurs ignorés par le bot
 
     def execute(self):
+        today = None
         while True:
             try:
                 self.datetime_utcnow = datetime.datetime.utcnow()
+                if today is None:
+                    today = self.datetime_utcnow.strftime("%d")
                 #Mise en mémoire du mois
                 open(self.tasks_time_month_filename, "a").close()
                 with open(self.tasks_time_month_filename, "r") as tasks_time_file:
                     tasks_time = tasks_time_file.read()
-                if self.datetime_utcnow.strftime("%Y%m") not in tasks_time: #taches mensuelles
+                if not self.ignore_task_month and self.datetime_utcnow.strftime("%Y%m") not in tasks_time: #tâches mensuelles
                     #spécifiques au Dico des Ados
                     if self.site.family == "dicoado":
                         for page_name in self.site.all_pages(ns=0):
@@ -117,7 +119,6 @@ class wiki_task:
                                         page.save("maintenance")
                             except Exception as e:
                                 pywikibot.error(e)
-                    self.site.get_trusted() #récupération des utilisateurs ignorés par le bot
                     #Nettoyage des PDDs d'IPs (créer Modèle:Avertissement effacé)
                     for page_name in self.site.all_pages(ns=3, start="1", end="A"):
                         pywikibot.output("Page : " + page_name)
@@ -153,14 +154,15 @@ class wiki_task:
                 with open(self.tasks_time_hour_filename, "r") as tasks_time_file:
                     tasks_time = tasks_time_file.read()
                 if self.datetime_utcnow.strftime("%Y%m%d%H%M")[:-1] not in tasks_time:
-                    #Taches réalisées une fois toutes les 10 minutes
+                    #Tâches réalisées une fois toutes les 10 minutes
                     detailed_diff_info = {}
-                    if (int(self.datetime_utcnow.strftime("%H")) == 0 and int(self.datetime_utcnow.strftime("%M"))//10 == 0) or self.start_task_day: #Une fois par jour, parcours de toutes les RC du jour
+                    if int(self.datetime_utcnow.strftime("%d")) != today or self.start_task_day: #Une fois par jour, parcours de toutes les RC du jour
                         time1hour = self.datetime_utcnow - datetime.timedelta(hours = 24)
                         pywikibot.output("Récupération des RC des 24 dernières heures sur " + self.site.family + " " + self.site.lang + "...")
                         self.site.rc_pages(timestamp=time1hour.strftime("%Y%m%d%H%M%S"), rctoponly=False, show_trusted=True)
                         task_day = True
                         self.start_task_day = False
+                        today = self.datetime_utcnow.strftime("%d")
                     else: #Sinon, parcours des RC des 10 dernières minutes
                         time1hour = self.datetime_utcnow - datetime.timedelta(minutes = 10)
                         pywikibot.output("Récupération des RC des 10 dernières minutes sur " + self.site.family + " " + self.site.lang + "...")
@@ -414,6 +416,7 @@ class wiki_task:
                                     pywikibot.output("Aucune catégorie à retirer.")
                             pages_checked.append(page_name)
                     if task_day: #Tâches journalières (après passage des RC)
+                        self.site.get_trusted() #récupération des utilisateurs ignorés par le bot
                         #Statistiques journalières
                         scores_n = {}
                         scores_n_reverted = {}
