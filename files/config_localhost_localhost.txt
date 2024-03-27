@@ -1,1 +1,1 @@
-{"lang_bot": "fr", "alert_page": "Project:Alerte/%Y%m%d%H%M%S", "check_WP": true}
+{"lang_bot": "fr", "alert_page": "Project:Alerte/%Y%m%d%H%M%S", "check_all_pages": true, "check_WP": true, "clear_talks": true, "correct_redirects": true}

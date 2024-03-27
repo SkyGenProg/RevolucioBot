@@ -33,119 +33,135 @@ class wiki_task:
                 with open(self.tasks_time_month_filename, "r") as tasks_time_file:
                     tasks_time = tasks_time_file.read()
                 if not self.ignore_task_month and self.datetime_utcnow.strftime("%Y%m") not in tasks_time: #tâches mensuelles
-                    #spécifiques au Dico des Ados
-                    if self.site.family == "dicoado":
-                        for page_name in self.site.all_pages(ns=0):
+                    if "check_all_pages" in self.site.config and self.site.config["check_all_pages"]: #si fonction activée sur le wiki
+                        for page_name in self.site.all_pages(ns=0): #parcours de toutes les pages de l'espace principal
                             page = self.site.page(page_name)
                             pywikibot.output("Page : " + page_name)
-                            try:
-                                if not page.isRedirectPage():
-                                    page_text_old = page.text
-                                    for i in range(1, 5):
-                                        if i == 1:
-                                            n = ""
-                                        else:
-                                            n = str(i)
-                                        if "|ex" + n + "=" in page.text:
-                                            try:
-                                                page_text_split = page.text.split("|ex" + n + "=")
-                                                if "=" in page_text_split[1]:
-                                                    page_text_split2 = page_text_split[1].split("=")
-                                                else:
-                                                    page_text_split2 = page_text_split[1].split("}}")
-                                                page_text_split2[0] = re.sub("(\s|[=#'])(?!'{3,})\b(" + re.escape(page_name) + ")(\w{0,})\b(?!'{3,})", r"'''\2\3'''", page_text_split2[0])
-                                                page_text_split2[0] = re.sub('\B(?!{{\"\|)\"\b([^\"]*)\b\"(?!}})\B', r'{{"|\1}}', page_text_split2[0])
-                                                page_text_split3 = [i for i in page_text_split2[0]]
-                                                page_text_split3[0] = page_text_split3[0].upper()
-                                                page_text_split2[0] = "".join(page_text_split3)
-                                                page_text_split[1] = "=".join(page_text_split2)
-                                                page.text = ("|ex" + n + "=").join(page_text_split)
-                                            except Exception as e:
-                                                pywikibot.error(e)
-                                        if "|contr" + n + "=" in page.text:
-                                            try:
-                                                page_text_split = page.text.split("|contr" + n + "=")
-                                                if "=" in page_text_split[1]:
-                                                    page_text_split2 = page_text_split[1].split("=")
-                                                else:
-                                                    page_text_split2 = page_text_split[1].split("}}")
-                                                page_text_split2[0] = page_text_split2[0].replace("[[", "").replace("]]", "")
-                                                page_text_split[1] = "=".join(page_text_split2)
-                                                page.text = ("|contr" + n + "=").join(page_text_split)
-                                            except Exception as e:
-                                                pywikibot.error(e)
-                                        if "|syn" + n + "=" in page.text:
-                                            try:
-                                                page_text_split = page.text.split("|syn" + n + "=")
-                                                if "=" in page_text_split[1]:
-                                                    page_text_split2 = page_text_split[1].split("=")
-                                                else:
-                                                    page_text_split2 = page_text_split[1].split("}}")
-                                                page_text_split2[0] = page_text_split2[0].replace("[[", "").replace("]]", "")
-                                                page_text_split[1] = "=".join(page_text_split2)
-                                                page.text = ("|syn" + n + "=").join(page_text_split)
-                                            except Exception as e:
-                                                pywikibot.error(e)
-                                        if "|voir" + n + "=" in page.text:
-                                            try:
-                                                page_text_split = page.text.split("|voir" + n + "=")
-                                                if "=" in page_text_split[1]:
-                                                    page_text_split2 = page_text_split[1].split("=")
-                                                else:
-                                                    page_text_split2 = page_text_split[1].split("}}")
-                                                page_text_split2[0] = page_text_split2[0].replace("[[", "").replace("]]", "")
-                                                page_text_split[1] = "=".join(page_text_split2)
-                                                page.text = ("|voir" + n + "=").join(page_text_split)
-                                            except Exception as e:
-                                                pywikibot.error(e)
-                                        if "|def" + n + "=" in page.text:
-                                            try:
-                                                page_text_split = page.text.split("|def" + n + "=")
-                                                if "=" in page_text_split[1]:
-                                                    page_text_split2 = page_text_split[1].split("=")
-                                                else:
-                                                    page_text_split2 = page_text_split[1].split("}}")
-                                                page_text_split3 = [i for i in page_text_split2[0]]
-                                                page_text_split3[0] = page_text_split3[0].lower()
-                                                page_text_split2[0] = "".join(page_text_split3)
-                                                page_text_split2[0] = re.sub('\B(?!{{\"\|)\"\b([^\"]*)\b\"(?!}})\B', r'{{"|\1}}', page_text_split2[0])
-                                                page_text_split[1] = "=".join(page_text_split2)
-                                                page.text = ("|def" + n + "=").join(page_text_split)
-                                            except Exception as e:
-                                                pywikibot.error(e)
-                                    if "|son=LL-Q150" in page.text:
-                                        page.text = page.text.replace("|son=LL-Q150", "|prononciation=LL-Q150")
-                                    if page.text != page_text_old:
-                                        page.save("maintenance")
-                            except Exception as e:
-                                pywikibot.error(e)
-                    #Nettoyage des PDDs d'IPs (créer Modèle:Avertissement effacé)
-                    for page_name in self.site.all_pages(ns=3, start="1", end="A"):
-                        pywikibot.output("Page : " + page_name)
-                        if (page_name.count(".") == 3 or page_name.count(":") == 8):
-                            user_talk = pywikibot.User(self.site.site, ":".join(page_name.split(":")[1:]))
-                            if user_talk.isAnonymous():
-                                page = self.site.page(page_name)
-                                pywikibot.output("PDD d'IP")
-                                if page.page_ns == 3 and (page.contributor_name != self.site.user_wiki or "<!-- level" in page.text) and abs((self.datetime_utcnow - page.editTime()).days) > self.site.days_clean_warnings:
-                                    pywikibot.output("Suppression des avertissements de la page " + page_name)
-                                    try:
-                                        if self.site.lang_bot == "fr":
-                                            page.put("{{Avertissement effacé|{{subst:#time: j F Y}}}}", "Anciens messages effacés", minor=False, botflag=True)
-                                        else:
-                                            page.put("{{Warning cleared|{{subst:#time: j F Y}}}}", "Old messages cleared", minor=False, botflag=True)
-                                    except Exception as e:
-                                        try:
-                                            bt = traceback.format_exc()
-                                            pywikibot.error(bt)
-                                        except UnicodeError:
-                                            pass
+                            if not ("disable_vandalism" in self.site.config and self.site.config["disable_vandalism"]):
+                                #détection vandalismes
+                                self.check_vandalism(page)
+                            if "correct_redirects" in self.site.config and self.site.config["correct_redirects"] and page.isRedirectPage():
+                                pywikibot.output("Correction de redirection sur la page " + str(page))
+                                redirect = page.redirects() #Correction redirections
+                            edit_replace = page.edit_replace() #Recherches-remplacements
+                            pywikibot.output(str(edit_replace) + " recherche(s)-remplacement(s) sur la page " + str(page) + ".")
+                            if not ("disable_del_categories" in self.site.config and self.site.config["disable_del_categories"]) and page.page_ns != 2:
+                                pywikibot.output("Suppression des catégories inexistantes sur la page " + str(page))
+                                del_categories_no_exists = page.del_categories_no_exists() #Suppression 
+                                if del_categories_no_exists != []:
+                                    pywikibot.output("Catégories retirées " + ", ".join(del_categories_no_exists))
                                 else:
-                                    pywikibot.output("Pas d'avertissement à effacer")
+                                    pywikibot.output("Aucune catégorie à retirer.")
+                            if self.site.family == "dicoado": #Dico des Ados
+                                try:
+                                    if not page.isRedirectPage():
+                                        page_text_old = page.text
+                                        for i in range(1, 5):
+                                            if i == 1:
+                                                n = ""
+                                            else:
+                                                n = str(i)
+                                            if "|ex" + n + "=" in page.text:
+                                                try:
+                                                    page_text_split = page.text.split("|ex" + n + "=")
+                                                    if "=" in page_text_split[1]:
+                                                        page_text_split2 = page_text_split[1].split("=")
+                                                    else:
+                                                        page_text_split2 = page_text_split[1].split("}}")
+                                                    page_text_split2[0] = re.sub("(\s|[=#'])(?!'{3,})\b(" + re.escape(page_name) + ")(\w{0,})\b(?!'{3,})", r"'''\2\3'''", page_text_split2[0])
+                                                    page_text_split2[0] = re.sub('\B(?!{{\"\|)\"\b([^\"]*)\b\"(?!}})\B', r'{{"|\1}}', page_text_split2[0])
+                                                    page_text_split3 = [i for i in page_text_split2[0]]
+                                                    page_text_split3[0] = page_text_split3[0].upper()
+                                                    page_text_split2[0] = "".join(page_text_split3)
+                                                    page_text_split[1] = "=".join(page_text_split2)
+                                                    page.text = ("|ex" + n + "=").join(page_text_split)
+                                                except Exception as e:
+                                                    pywikibot.error(e)
+                                            if "|contr" + n + "=" in page.text:
+                                                try:
+                                                    page_text_split = page.text.split("|contr" + n + "=")
+                                                    if "=" in page_text_split[1]:
+                                                        page_text_split2 = page_text_split[1].split("=")
+                                                    else:
+                                                        page_text_split2 = page_text_split[1].split("}}")
+                                                    page_text_split2[0] = page_text_split2[0].replace("[[", "").replace("]]", "")
+                                                    page_text_split[1] = "=".join(page_text_split2)
+                                                    page.text = ("|contr" + n + "=").join(page_text_split)
+                                                except Exception as e:
+                                                    pywikibot.error(e)
+                                            if "|syn" + n + "=" in page.text:
+                                                try:
+                                                    page_text_split = page.text.split("|syn" + n + "=")
+                                                    if "=" in page_text_split[1]:
+                                                        page_text_split2 = page_text_split[1].split("=")
+                                                    else:
+                                                        page_text_split2 = page_text_split[1].split("}}")
+                                                    page_text_split2[0] = page_text_split2[0].replace("[[", "").replace("]]", "")
+                                                    page_text_split[1] = "=".join(page_text_split2)
+                                                    page.text = ("|syn" + n + "=").join(page_text_split)
+                                                except Exception as e:
+                                                    pywikibot.error(e)
+                                            if "|voir" + n + "=" in page.text:
+                                                try:
+                                                    page_text_split = page.text.split("|voir" + n + "=")
+                                                    if "=" in page_text_split[1]:
+                                                        page_text_split2 = page_text_split[1].split("=")
+                                                    else:
+                                                        page_text_split2 = page_text_split[1].split("}}")
+                                                    page_text_split2[0] = page_text_split2[0].replace("[[", "").replace("]]", "")
+                                                    page_text_split[1] = "=".join(page_text_split2)
+                                                    page.text = ("|voir" + n + "=").join(page_text_split)
+                                                except Exception as e:
+                                                    pywikibot.error(e)
+                                            if "|def" + n + "=" in page.text:
+                                                try:
+                                                    page_text_split = page.text.split("|def" + n + "=")
+                                                    if "=" in page_text_split[1]:
+                                                        page_text_split2 = page_text_split[1].split("=")
+                                                    else:
+                                                        page_text_split2 = page_text_split[1].split("}}")
+                                                    page_text_split3 = [i for i in page_text_split2[0]]
+                                                    page_text_split3[0] = page_text_split3[0].lower()
+                                                    page_text_split2[0] = "".join(page_text_split3)
+                                                    page_text_split2[0] = re.sub('\B(?!{{\"\|)\"\b([^\"]*)\b\"(?!}})\B', r'{{"|\1}}', page_text_split2[0])
+                                                    page_text_split[1] = "=".join(page_text_split2)
+                                                    page.text = ("|def" + n + "=").join(page_text_split)
+                                                except Exception as e:
+                                                    pywikibot.error(e)
+                                        if "|son=LL-Q150" in page.text:
+                                            page.text = page.text.replace("|son=LL-Q150", "|prononciation=LL-Q150")
+                                        if page.text != page_text_old:
+                                            page.save("maintenance")
+                                except Exception as e:
+                                    pywikibot.error(e)
+                    if "clear_talks" in self.site.config and self.site.config["clear_talks"]: #si fonction activée sur le wiki
+                        #Nettoyage des PDDs d'IPs (créer Modèle:Avertissement effacé)
+                        for page_name in self.site.all_pages(ns=3, start="1", end="A"):
+                            pywikibot.output("Page : " + page_name)
+                            if (page_name.count(".") == 3 or page_name.count(":") == 8):
+                                user_talk = pywikibot.User(self.site.site, ":".join(page_name.split(":")[1:]))
+                                if user_talk.isAnonymous():
+                                    page = self.site.page(page_name)
+                                    pywikibot.output("PDD d'IP")
+                                    if page.page_ns == 3 and (page.contributor_name != self.site.user_wiki or "<!-- level" in page.text) and abs((self.datetime_utcnow - page.latest_revision.timestamp).days) > self.site.days_clean_warnings:
+                                        pywikibot.output("Suppression des avertissements de la page " + page_name)
+                                        try:
+                                            if self.site.lang_bot == "fr":
+                                                page.put("{{Avertissement effacé|{{subst:#time: j F Y}}}}", "Anciens messages effacés", minor=False, botflag=True)
+                                            else:
+                                                page.put("{{Warning cleared|{{subst:#time: j F Y}}}}", "Old messages cleared", minor=False, botflag=True)
+                                        except Exception as e:
+                                            try:
+                                                bt = traceback.format_exc()
+                                                pywikibot.error(bt)
+                                            except UnicodeError:
+                                                pass
+                                    else:
+                                        pywikibot.output("Pas d'avertissement à effacer")
+                                else:
+                                    pywikibot.output("Pas une PDD d'IP")
                             else:
                                 pywikibot.output("Pas une PDD d'IP")
-                        else:
-                            pywikibot.output("Pas une PDD d'IP")
                     with open(self.tasks_time_month_filename, "w") as tasks_time_file:
                         tasks_time_file.write(self.datetime_utcnow.strftime("%Y%m"))
 
@@ -185,226 +201,19 @@ class wiki_task:
                         if page_name in pages_checked: #passage des pages déjà vérifiées
                             continue
                         if page.isRedirectPage():
-                            pywikibot.output("Correction de redirection sur la page " + str(page))
-                            redirect = page.redirects() #Correction redirections
+                            if not ("disable_correct_redirects" in self.site.config and self.site.config["disable_correct_redirects"]):
+                                pywikibot.output("Correction de redirection sur la page " + str(page))
+                                redirect = page.redirects() #Correction redirections
+                            else:
+                                pywikibot.output("La page " + str(page) + " est une redirection.")
                         else:
-                            #détection vandalismes
-                            vandalism_revert = page.vandalism_revert()
-                            if page.vand_edit: #Révocation si modification inférieure ou égale au score de révocation
-                                page.revert()
-                            if vandalism_revert < 0: #Webhook d'avertissement
-                                if webhooks_url[self.site.family] != None:
-                                    vand_prob = vand_f(abs(vandalism_revert))
-                                    if vand_prob > 100:
-                                        vand_prob = 100
-                                    detected = ""
-                                    for vandalism_score_detect in page.vandalism_score_detect:
-                                        if vandalism_score_detect[0] == "add_regex":
-                                            detected += str(vandalism_score_detect[1]) + " - + " + str(vandalism_score_detect[2].group()) + "\n"
-                                        elif vandalism_score_detect[0] == "size":
-                                            detected += str(vandalism_score_detect[1]) + " - size = " + str(page.size) + " < " + vandalism_score_detect[2] + "\n"
-                                        elif vandalism_score_detect[0] == "diff":
-                                            if int(vandalism_score_detect[2]) > 0:
-                                                detected += str(vandalism_score_detect[1]) + " - diff > " + vandalism_score_detect[2] + "\n"
-                                            else:
-                                                detected += str(vandalism_score_detect[1]) + " - diff < " + vandalism_score_detect[2] + "\n"
-                                        elif vandalism_score_detect[0] == "del_regex":
-                                            detected += str(vandalism_score_detect[1]) + " - - " + str(vandalism_score_detect[2].group()) + "\n"
-                                        else:
-                                            detected += str(vandalism_score_detect[1]) + " - + " + str(vandalism_score_detect[2].group()) + "\n"
-                                    if vandalism_revert <= page.limit:
-                                        if self.site.lang_bot == "fr":
-                                            title = "Modification non-constructive révoquée sur " + self.site.lang + ":" + page_name
-                                            description = "Cette modification a été détectée comme non-constructive"
-                                        else:
-                                            title = "Unconstructive edit reverted on " + self.site.lang + ":" + page_name
-                                            description = "This edit has been detected as unconstructive"
-                                        color = 13371938
-                                    elif vandalism_revert <= page.limit2:
-                                        if self.site.lang_bot == "fr":
-                                            title = "Modification suspecte sur " + self.site.lang + ":" + page_name
-                                            description = "Cette modification est probablement non-constructive"
-                                        else:
-                                            title = "Edit maybe unconstructive on " + self.site.lang + ":" + page_name
-                                            description = "This edit is probably unconstructive"
-                                        color = 12138760
-                                    else:
-                                        if self.site.lang_bot == "fr":
-                                            title = "Modification à vérifier sur " + self.site.lang + ":" + page_name
-                                            description = "Cette modification est peut-être non-constructive"
-                                        else:
-                                            title = "Edit to verify on " + self.site.lang + ":" + page_name
-                                            description = "This edit is maybe unconstructive"
-                                        color = 12161032
-                                    if self.site.lang_bot == "fr":
-                                        if task_day:
-                                            title = title + " (rappel)"
-                                        fields = [
-                                                {
-                                                  "name": "Score",
-                                                  "value": str(vandalism_revert),
-                                                  "inline": True
-                                                },
-                                                {
-                                                  "name": "Probabilité qu'il s'agisse d'une modification non-constructive",
-                                                  "value": str(round(vand_prob, 2)) + " %",
-                                                  "inline": True
-                                                },
-                                                {
-                                                  "name": "Détection",
-                                                  "value": detected,
-                                                  "inline": False
-                                                }
-                                            ]
-                                    else:
-                                        if task_day:
-                                            title = title + " (reminder)"
-                                        fields = [
-                                                {
-                                                  "name": "Score",
-                                                  "value": str(vandalism_revert),
-                                                  "inline": True
-                                                },
-                                                {
-                                                  "name": "Probability it's an unconstructive edit",
-                                                  "value": str(round(vand_prob, 2)) + " %",
-                                                  "inline": True
-                                                },
-                                                {
-                                                  "name": "Detecting",
-                                                  "value": detected,
-                                                  "inline": False
-                                                }
-                                            ]
-                                    discord_msg = {'embeds': [
-                                                    {
-                                                          'title': title,
-                                                          'description': description,
-                                                          'url': page.protocol + "//" + page.url + page.articlepath + "index.php?diff=prev&oldid=" + str(page.oldid),
-                                                          'author': {'name': page.contributor_name},
-                                                          'color': color,
-                                                          'fields': fields
-                                                    }
-                                                ]
-                                            }
-                                    request_site(webhooks_url[self.site.family], headers, json.dumps(discord_msg).encode("utf-8"), "POST")
-                                    if page.alert_request:
-                                        if self.site.lang_bot == "fr":
-                                            discord_msg = {'embeds': [
-                                                        {
-                                                              'title': "Demande de blocage de " + page.contributor_name,
-                                                              'description': "Un vandale est à bloquer.",
-                                                              'url': page.protocol + "//" + page.url + page.articlepath + page.alert_page,
-                                                              'author': {'name': page.contributor_name},
-                                                              'color': 16711680
-                                                        }
-                                                    ]
-                                                }
-                                        else:
-                                            discord_msg = {'embeds': [
-                                                        {
-                                                              'title': "Request to block against " + page.contributor_name,
-                                                              'description': "A vandal must be blocked.",
-                                                              'url': page.protocol + "//" + page.url + page.articlepath + page.alert_page,
-                                                              'author': {'name': page.contributor_name},
-                                                              'color': 16711680
-                                                        }
-                                                    ]
-                                                }
-                                        request_site(webhooks_url[self.site.family], headers, json.dumps(discord_msg).encode("utf-8"), "POST")
+                            if not ("disable_vandalism" in self.site.config and self.site.config["disable_vandalism"]):
+                                #détection vandalismes
+                                self.check_vandalism(page)
                             if page.page_ns == 0:
                                 #détection copies de Wikipédia
                                 if "check_WP" in self.site.config and self.site.config["check_WP"] and len(page.text.strip()) > 0:
-                                    score_check_WP = page.check_WP()
-                                    prob_WP = score_check_WP/len(page.text.strip())*100
-                                    template_WP = "User:" + page.user_wiki + "/CopyWP"
-                                    pywikibot.output("Probabilité de copie de Wikipédia de la page " + str(page) + " : " + str(prob_WP) + " % (" + str(score_check_WP) + " octets en commun/" + str(len(page.text.strip())) + " octets))")
-                                    if prob_WP >= 90:
-                                        if self.site.lang_bot == "fr":
-                                            if template_WP not in page.text:
-                                                page.text = "{{" + template_WP + "|" + page.page_name + "|" + str(round(prob_WP, 2)) + "}}\n" + page.text
-                                                page.save("copie de WP", botflag=False, minor=False)
-                                            fields = [
-                                                    {
-                                                      "name": "Probabilité de copie",
-                                                      "value": str(round(prob_WP, 2)) + " %",
-                                                      "inline": True
-                                                    }
-                                                ]
-                                            discord_msg = {'embeds': [
-                                                        {
-                                                              'title': "Très probable copie de Wikipédia sur " + self.site.lang + ":" + page_name,
-                                                              'description': "Cette page copie très probablement Wikipédia.",
-                                                              'url': page.protocol + "//" + page.url + page.articlepath + "index.php?diff=prev&oldid=" + str(page.oldid),
-                                                              'author': {'name': page.contributor_name},
-                                                              'color': 13371938,
-                                                              'fields': fields
-                                                        }
-                                                    ]
-                                                }
-                                        else:
-                                            if template_WP not in page.text:
-                                                page.text = "{{" + template_WP + "|" + page.page_name + "|" + str(round(prob_WP, 2)) + "}}\n" + page.text
-                                                page.save("copy of WP")
-                                            fields = [
-                                                    {
-                                                      "name": "Probability of copy",
-                                                      "value": str(round(prob_WP, 2)) + " %",
-                                                      "inline": True
-                                                    }
-                                                ]
-                                            discord_msg = {'embeds': [
-                                                        {
-                                                              'title': "Most likely copy from Wikipedia on " + self.site.lang + ":" + page_name,
-                                                              'description': "This page most likely copies Wikipedia.",
-                                                              'url': page.protocol + "//" + page.url + page.articlepath + "index.php?diff=prev&oldid=" + str(page.oldid),
-                                                              'author': {'name': page.contributor_name},
-                                                              'color': 13371938,
-                                                              'fields': fields
-                                                        }
-                                                    ]
-                                                }
-                                        request_site(webhooks_url[self.site.family], headers, json.dumps(discord_msg).encode("utf-8"), "POST")
-                                    elif prob_WP >= 50:
-                                        if self.site.lang_bot == "fr":
-                                            fields = [
-                                                    {
-                                                      "name": "Probabilité de copie",
-                                                      "value": str(round(prob_WP, 2)) + " %",
-                                                      "inline": True
-                                                    }
-                                                ]
-                                            discord_msg = {'embeds': [
-                                                        {
-                                                              'title': "Possible copie de Wikipédia sur " + self.site.lang + ":" + page_name,
-                                                              'description': "Cette page copie possiblement Wikipédia.",
-                                                              'url': page.protocol + "//" + page.url + page.articlepath + "index.php?diff=prev&oldid=" + str(page.oldid),
-                                                              'author': {'name': page.contributor_name},
-                                                              'color': 12161032,
-                                                              'fields': fields
-                                                        }
-                                                    ]
-                                                }
-                                        else:
-                                            fields = [
-                                                    {
-                                                      "name": "Probability of copy",
-                                                      "value": str(round(prob_WP, 2)) + " %",
-                                                      "inline": True
-                                                    }
-                                                ]
-                                            discord_msg = {'embeds': [
-                                                        {
-                                                              'title': "Likely copy from Wikipedia on " + self.site.lang + ":" + page_name,
-                                                              'description': "This page likely copies Wikipedia.",
-                                                              'url': page.protocol + "//" + page.url + page.articlepath + "index.php?diff=prev&oldid=" + str(page.oldid),
-                                                              'author': {'name': page.contributor_name},
-                                                              'color': 12161032,
-                                                              'fields': fields
-                                                        }
-                                                    ]
-                                                }
-                                        request_site(webhooks_url[self.site.family], headers, json.dumps(discord_msg).encode("utf-8"), "POST")
+                                    self.check_WP(page)
                                 edit_replace = page.edit_replace() #Recherches-remplacements
                                 pywikibot.output(str(edit_replace) + " recherche(s)-remplacement(s) sur la page " + str(page) + ".")
                             if not ("disable_del_categories" in self.site.config and self.site.config["disable_del_categories"]) and int(self.datetime_utcnow.strftime("%H")) == 0 and page.page_ns != 2:
@@ -639,3 +448,217 @@ class wiki_task:
                 except UnicodeError:
                     pass
             time.sleep(60)
+
+    def check_vandalism(self, page):
+        page_name = page.page_name
+        vandalism_revert = page.vandalism_revert()
+        if page.vand_edit: #Révocation si modification inférieure ou égale au score de révocation
+            page.revert()
+        if vandalism_revert < 0: #Webhook d'avertissement
+            if webhooks_url[self.site.family] != None:
+                vand_prob = vand_f(abs(vandalism_revert))
+                if vand_prob > 100:
+                    vand_prob = 100
+                detected = ""
+                for vandalism_score_detect in page.vandalism_score_detect:
+                    if vandalism_score_detect[0] == "add_regex":
+                        detected += str(vandalism_score_detect[1]) + " - + " + str(vandalism_score_detect[2].group()) + "\n"
+                    elif vandalism_score_detect[0] == "size":
+                        detected += str(vandalism_score_detect[1]) + " - size = " + str(page.size) + " < " + vandalism_score_detect[2] + "\n"
+                    elif vandalism_score_detect[0] == "diff":
+                        if int(vandalism_score_detect[2]) > 0:
+                            detected += str(vandalism_score_detect[1]) + " - diff > " + vandalism_score_detect[2] + "\n"
+                        else:
+                            detected += str(vandalism_score_detect[1]) + " - diff < " + vandalism_score_detect[2] + "\n"
+                    elif vandalism_score_detect[0] == "del_regex":
+                        detected += str(vandalism_score_detect[1]) + " - - " + str(vandalism_score_detect[2].group()) + "\n"
+                    else:
+                        detected += str(vandalism_score_detect[1]) + " - + " + str(vandalism_score_detect[2].group()) + "\n"
+                if vandalism_revert <= page.limit:
+                    if self.site.lang_bot == "fr":
+                        title = "Modification non-constructive révoquée sur " + self.site.lang + ":" + page_name
+                        description = "Cette modification a été détectée comme non-constructive"
+                    else:
+                        title = "Unconstructive edit reverted on " + self.site.lang + ":" + page_name
+                        description = "This edit has been detected as unconstructive"
+                    color = 13371938
+                elif vandalism_revert <= page.limit2:
+                    if self.site.lang_bot == "fr":
+                        title = "Modification suspecte sur " + self.site.lang + ":" + page_name
+                        description = "Cette modification est probablement non-constructive"
+                    else:
+                        title = "Edit maybe unconstructive on " + self.site.lang + ":" + page_name
+                        description = "This edit is probably unconstructive"
+                    color = 12138760
+                else:
+                    if self.site.lang_bot == "fr":
+                        title = "Modification à vérifier sur " + self.site.lang + ":" + page_name
+                        description = "Cette modification est peut-être non-constructive"
+                    else:
+                        title = "Edit to verify on " + self.site.lang + ":" + page_name
+                        description = "This edit is maybe unconstructive"
+                    color = 12161032
+                if self.site.lang_bot == "fr":
+                    fields = [
+                            {
+                              "name": "Score",
+                              "value": str(vandalism_revert),
+                              "inline": True
+                            },
+                            {
+                              "name": "Probabilité qu'il s'agisse d'une modification non-constructive",
+                              "value": str(round(vand_prob, 2)) + " %",
+                              "inline": True
+                            },
+                            {
+                              "name": "Détection",
+                              "value": detected,
+                              "inline": False
+                            }
+                        ]
+                else:
+                    fields = [
+                            {
+                              "name": "Score",
+                              "value": str(vandalism_revert),
+                              "inline": True
+                            },
+                            {
+                              "name": "Probability it's an unconstructive edit",
+                              "value": str(round(vand_prob, 2)) + " %",
+                              "inline": True
+                            },
+                            {
+                              "name": "Detecting",
+                              "value": detected,
+                              "inline": False
+                            }
+                        ]
+                discord_msg = {'embeds': [
+                                {
+                                      'title': title,
+                                      'description': description,
+                                      'url': page.protocol + "//" + page.url + page.articlepath + "index.php?diff=prev&oldid=" + str(page.oldid),
+                                      'author': {'name': page.contributor_name},
+                                      'color': color,
+                                      'fields': fields
+                                }
+                            ]
+                        }
+                request_site(webhooks_url[self.site.family], headers, json.dumps(discord_msg).encode("utf-8"), "POST")
+                if page.alert_request:
+                    if self.site.lang_bot == "fr":
+                        discord_msg = {'embeds': [
+                                    {
+                                          'title': "Demande de blocage de " + page.contributor_name,
+                                          'description': "Un vandale est à bloquer.",
+                                          'url': page.protocol + "//" + page.url + page.articlepath + page.alert_page,
+                                          'author': {'name': page.contributor_name},
+                                          'color': 16711680
+                                    }
+                                ]
+                            }
+                    else:
+                        discord_msg = {'embeds': [
+                                    {
+                                          'title': "Request to block against " + page.contributor_name,
+                                          'description': "A vandal must be blocked.",
+                                          'url': page.protocol + "//" + page.url + page.articlepath + page.alert_page,
+                                          'author': {'name': page.contributor_name},
+                                          'color': 16711680
+                                    }
+                                ]
+                            }
+                    request_site(webhooks_url[self.site.family], headers, json.dumps(discord_msg).encode("utf-8"), "POST")
+
+    def check_WP(self, page):
+        score_check_WP = page.check_WP()
+        prob_WP = score_check_WP/len(page.text.strip())*100
+        template_WP = "User:" + page.user_wiki + "/CopyWP"
+        pywikibot.output("Probabilité de copie de Wikipédia de la page " + str(page) + " : " + str(prob_WP) + " % (" + str(score_check_WP) + " octets en commun/" + str(len(page.text.strip())) + " octets))")
+        if prob_WP >= 90:
+            if self.site.lang_bot == "fr":
+                if template_WP not in page.text:
+                    page.text = "{{" + template_WP + "|" + page.page_name + "|" + str(round(prob_WP, 2)) + "}}\n" + page.text
+                    page.save("copie de WP", botflag=False, minor=False)
+                fields = [
+                        {
+                          "name": "Probabilité de copie",
+                          "value": str(round(prob_WP, 2)) + " %",
+                          "inline": True
+                        }
+                    ]
+                discord_msg = {'embeds': [
+                            {
+                                  'title': "Très probable copie de Wikipédia sur " + self.site.lang + ":" + page_name,
+                                  'description': "Cette page copie très probablement Wikipédia.",
+                                  'url': page.protocol + "//" + page.url + page.articlepath + "index.php?diff=prev&oldid=" + str(page.oldid),
+                                  'author': {'name': page.contributor_name},
+                                  'color': 13371938,
+                                  'fields': fields
+                            }
+                        ]
+                    }
+            else:
+                if template_WP not in page.text:
+                    page.text = "{{" + template_WP + "|" + page.page_name + "|" + str(round(prob_WP, 2)) + "}}\n" + page.text
+                    page.save("copy of WP")
+                fields = [
+                        {
+                          "name": "Probability of copy",
+                          "value": str(round(prob_WP, 2)) + " %",
+                          "inline": True
+                        }
+                    ]
+                discord_msg = {'embeds': [
+                            {
+                                  'title': "Most likely copy from Wikipedia on " + self.site.lang + ":" + page_name,
+                                  'description': "This page most likely copies Wikipedia.",
+                                  'url': page.protocol + "//" + page.url + page.articlepath + "index.php?diff=prev&oldid=" + str(page.oldid),
+                                  'author': {'name': page.contributor_name},
+                                  'color': 13371938,
+                                  'fields': fields
+                            }
+                        ]
+                    }
+            request_site(webhooks_url[self.site.family], headers, json.dumps(discord_msg).encode("utf-8"), "POST")
+        elif prob_WP >= 50:
+            if self.site.lang_bot == "fr":
+                fields = [
+                        {
+                          "name": "Probabilité de copie",
+                          "value": str(round(prob_WP, 2)) + " %",
+                          "inline": True
+                        }
+                    ]
+                discord_msg = {'embeds': [
+                            {
+                                  'title': "Possible copie de Wikipédia sur " + self.site.lang + ":" + page_name,
+                                  'description': "Cette page copie possiblement Wikipédia.",
+                                  'url': page.protocol + "//" + page.url + page.articlepath + "index.php?diff=prev&oldid=" + str(page.oldid),
+                                  'author': {'name': page.contributor_name},
+                                  'color': 12161032,
+                                  'fields': fields
+                            }
+                        ]
+                    }
+            else:
+                fields = [
+                        {
+                          "name": "Probability of copy",
+                          "value": str(round(prob_WP, 2)) + " %",
+                          "inline": True
+                        }
+                    ]
+                discord_msg = {'embeds': [
+                            {
+                                  'title': "Likely copy from Wikipedia on " + self.site.lang + ":" + page_name,
+                                  'description': "This page likely copies Wikipedia.",
+                                  'url': page.protocol + "//" + page.url + page.articlepath + "index.php?diff=prev&oldid=" + str(page.oldid),
+                                  'author': {'name': page.contributor_name},
+                                  'color': 12161032,
+                                  'fields': fields
+                            }
+                        ]
+                    }
+            request_site(webhooks_url[self.site.family], headers, json.dumps(discord_msg).encode("utf-8"), "POST")
