@@ -178,7 +178,7 @@ class wiki_task:
                         self.site.rc_pages(timestamp=time1hour.strftime("%Y%m%d%H%M%S"), rctoponly=False, show_trusted=True)
                         task_day = True
                         self.start_task_day = False
-                        today = self.datetime_utcnow.strftime("%d")
+                        today = int(self.datetime_utcnow.strftime("%d"))
                     else: #Sinon, parcours des RC des 10 dernières minutes
                         time1hour = self.datetime_utcnow - datetime.timedelta(minutes = 10)
                         pywikibot.output("Récupération des RC des 10 dernières minutes sur " + self.site.family + " " + self.site.lang + "...")
