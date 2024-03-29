@@ -623,7 +623,47 @@ class wiki_task:
                         ]
                     }
             request_site(webhooks_url[self.site.family], headers, json.dumps(discord_msg).encode("utf-8"), "POST")
-        elif prob_WP >= 10:
+        elif prob_WP >= 50:
+            if self.site.lang_bot == "fr":
+                fields = [
+                        {
+                          "name": "Probabilité de copie",
+                          "value": str(round(prob_WP, 2)) + " %",
+                          "inline": True
+                        }
+                    ]
+                discord_msg = {'embeds': [
+                            {
+                                  'title': "Probable copie de Wikipédia sur " + self.site.lang + ":" + page_name,
+                                  'description': "Cette page copie probablement Wikipédia.",
+                                  'url': page.protocol + "//" + page.url + page.articlepath + "index.php?diff=prev&oldid=" + str(page.oldid),
+                                  'author': {'name': page.contributor_name},
+                                  'color': 12138760,
+                                  'fields': fields
+                            }
+                        ]
+                    }
+            else:
+                fields = [
+                        {
+                          "name": "Probability of copy",
+                          "value": str(round(prob_WP, 2)) + " %",
+                          "inline": True
+                        }
+                    ]
+                discord_msg = {'embeds': [
+                            {
+                                  'title': "Likely copy from Wikipedia on " + self.site.lang + ":" + page_name,
+                                  'description': "This page likely copies Wikipedia.",
+                                  'url': page.protocol + "//" + page.url + page.articlepath + "index.php?diff=prev&oldid=" + str(page.oldid),
+                                  'author': {'name': page.contributor_name},
+                                  'color': 12138760,
+                                  'fields': fields
+                            }
+                        ]
+                    }
+            request_site(webhooks_url[self.site.family], headers, json.dumps(discord_msg).encode("utf-8"), "POST")
+        elif prob_WP >= 25:
             if self.site.lang_bot == "fr":
                 fields = [
                         {
@@ -653,7 +693,7 @@ class wiki_task:
                     ]
                 discord_msg = {'embeds': [
                             {
-                                  'title': "Likely copy from Wikipedia on " + self.site.lang + ":" + page_name,
+                                  'title': "Possible copy from Wikipedia on " + self.site.lang + ":" + page_name,
                                   'description': "This page likely copies Wikipedia.",
                                   'url': page.protocol + "//" + page.url + page.articlepath + "index.php?diff=prev&oldid=" + str(page.oldid),
                                   'author': {'name': page.contributor_name},
