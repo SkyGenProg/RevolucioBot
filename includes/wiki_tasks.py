@@ -623,7 +623,7 @@ class wiki_task:
                         ]
                     }
             request_site(webhooks_url[self.site.family], headers, json.dumps(discord_msg).encode("utf-8"), "POST")
-        elif prob_WP >= 50:
+        elif prob_WP >= 75:
             if self.site.lang_bot == "fr":
                 fields = [
                         {
@@ -663,7 +663,7 @@ class wiki_task:
                         ]
                     }
             request_site(webhooks_url[self.site.family], headers, json.dumps(discord_msg).encode("utf-8"), "POST")
-        elif prob_WP >= 25:
+        elif prob_WP >= 50:
             if self.site.lang_bot == "fr":
                 fields = [
                         {
