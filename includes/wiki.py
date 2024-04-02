@@ -235,13 +235,14 @@ class get_page(pywikibot.Page):
         if self.contributor_name == self.user_wiki:
             return 0
         vand = self.vandalism_score()
-        self.vand_edit = vand <= self.limit
+        self.vand_edit = False
         if vand < 0:
             if self.contributor_name in self.source.trusted:
                 return 0
         if self.page_ns == 2:
             if self.contributor_name in self.page_name:
                 return 0
+        self.vand_edit = vand <= self.limit
         if vand <= self.limit:
             pywikibot.output("Modification non-constructive détectée (%s)." % str(vand))
         elif vand <= self.limit2:
