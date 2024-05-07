@@ -201,7 +201,7 @@ class wiki_task:
                         if page_name in pages_checked: #passage des pages déjà vérifiées
                             continue
                         if page.isRedirectPage():
-                            if not ("disable_correct_redirects" in self.site.config and self.site.config["disable_correct_redirects"]):
+                            if "correct_redirects" in self.site.config and self.site.config["correct_redirects"]:
                                 pywikibot.output("Correction de redirection sur la page " + str(page))
                                 redirect = page.redirects() #Correction redirections
                             else:
