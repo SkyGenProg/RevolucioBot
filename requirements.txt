@@ -1,3 +1,4 @@
+mistralai
 mwparserfromhell>=0.5.0
 pywikibot
 requests>=2.20.1

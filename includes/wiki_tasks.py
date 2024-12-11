@@ -6,6 +6,9 @@ import base64, datetime, json, os, random, re, socket, traceback, time, urllib.r
 from config import *
 from includes.wiki import *
 from scipy.optimize import curve_fit
+from mistralai import Mistral
+
+client = Mistral(api_key=api_key)
 
 def curve(x, a, b, c, d):
     return d+(a-d)/(1+(x/c)**b)
@@ -210,6 +213,9 @@ class wiki_task:
                             if not ("disable_vandalism" in self.site.config and self.site.config["disable_vandalism"]):
                                 #détection vandalismes
                                 self.check_vandalism(page)
+                            if not ("disable_ai" in self.site.config and self.site.config["disable_ai"]):
+                                #utilisation de l'IA pour détecter les vandalismes
+                                self.check_vandalism_ai(page)
                             if page.page_ns == 0:
                                 #détection copies de Wikipédia
                                 if "check_WP" in self.site.config and self.site.config["check_WP"] and len(page.text.strip()) > 0:
@@ -570,6 +576,50 @@ class wiki_task:
                                 ]
                             }
                     request_site(webhooks_url[self.site.family], headers, json.dumps(discord_msg).encode("utf-8"), "POST")
+
+    def check_vandalism_ai(self, page):
+        diff = page.get_diff()
+        if self.site.lang_bot == "fr":
+            prompt = f"""Est-ce du vandalisme (indiquer la probabilité que ce soit du vandalisme en % et analyser la modification) ?
+Diff :
+{diff}
+"""
+        else:
+            prompt = f"""Is it vandalism (indicate the probability that it is vandalism in % and analyze the modification)?
+Diff :
+{diff}
+"""
+        pywikibot.output("Prompt :")
+        pywikibot.output(prompt)
+        chat_response = client.chat.complete(
+            model = model,
+            messages = [
+                {
+                    "role": "user",
+                    "content": prompt,
+                },
+            ]
+        )
+        result_ai = chat_response.choices[0].message.content
+        pywikibot.output("Résultat :")
+        pywikibot.output(result_ai)
+        if self.site.lang_bot == "fr":
+            title = "Analyse de l'IA (Mistral) sur " + self.site.lang + ":" + page.page_name
+        else:
+            title = "AI analysis (Mistral) on " + self.site.lang + ":" + page.page_name
+        color = 12161032
+        for i in range(0, len(result_ai)//4096+1):
+            discord_msg = {'embeds': [
+                    {
+                          'title': title,
+                          'description': result_ai[4096*i:4096*(i+1)],
+                          'url': page.protocol + "//" + page.url + page.articlepath + "index.php?diff=prev&oldid=" + str(page.oldid),
+                          'author': {'name': page.contributor_name},
+                          'color': color
+                    }
+                ]
+            }
+            request_site(webhooks_url[self.site.family], headers, json.dumps(discord_msg).encode("utf-8"), "POST")
 
     def check_WP(self, page):
         page_name = page.page_name
