@@ -51,6 +51,8 @@ if __name__ == "__main__":
     diff = page.get_diff()
     pywikibot.output(diff)
     prompt = f"""Est-ce du vandalisme (indiquer la probabilité que ce soit du vandalisme en % et analyser la modification) ?
+Wiki : {page.url}
+Page : {page.page_name}
 Diff :
 {diff}
 """
