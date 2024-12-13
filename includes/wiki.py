@@ -155,7 +155,7 @@ class get_page(pywikibot.Page):
         self.new_page = None
         self.text_page_oldid = None
         self.text_page_oldid2 = None
-        self.vand_edit = False
+        self.vand_to_revert = False
         self.fullurl = self.source.site.siteinfo["general"]["server"] + self.source.site.siteinfo["general"]["articlepath"].replace("$1", self.page_name)
         self.protocol = self.fullurl.split("/")[0]
         if self.protocol == "":
@@ -231,18 +231,11 @@ class get_page(pywikibot.Page):
             else:
                 talk.save("Warning 0", botflag=False, minor=False)
 
-    def vandalism_revert(self):
-        if self.contributor_name == self.user_wiki:
+    def vandalism_get_score_current(self): #Score sur la version actuelle en ignorant les contributeurs expérimentés
+        if self.contributor_is_trusted():
             return 0
         vand = self.vandalism_score()
-        self.vand_edit = False
-        if vand < 0:
-            if self.contributor_name in self.source.trusted:
-                return 0
-        if self.page_ns == 2:
-            if self.contributor_name in self.page_name:
-                return 0
-        self.vand_edit = vand <= self.limit
+        self.vand_to_revert = vand <= self.limit
         if vand <= self.limit:
             pywikibot.output("Modification non-constructive détectée (%s)." % str(vand))
         elif vand <= self.limit2:
@@ -252,6 +245,9 @@ class get_page(pywikibot.Page):
         else:
             pywikibot.output("Pas de modification suspecte détectée (%s)." % str(vand))
         return vand
+
+    def contributor_is_trusted(self):
+        return self.contributor_name == self.user_wiki or self.contributor_name in self.source.trusted or (self.page_ns == 2 and self.contributor_name in self.page_name)
 
     def get_text_page_old(self, revision_oldid=None, revision_oldid2=None): #revision_oldid : nouvelle version/version à vérifier, revision_oldid2 : ancienne version/version à comparer
         oldid = -1
@@ -289,7 +285,7 @@ class get_page(pywikibot.Page):
         diff_text = '\n'.join(diff)
         return diff_text
 
-    def vandalism_score(self, revision_oldid=None, revision_oldid2=None):
+    def vandalism_score(self, revision_oldid=None, revision_oldid2=None): #Score sur le diff en paramètres en incluant les utilisateurs expérimentés
         self.vandalism_score_detect = []
         self.get_text_page_old(revision_oldid, revision_oldid2)
         regex_vandalisms_0_filename = "regex_vandalisms_0.txt"

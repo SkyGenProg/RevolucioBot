@@ -457,12 +457,12 @@ class wiki_task:
 
     def check_vandalism(self, page):
         page_name = page.page_name
-        vandalism_revert = page.vandalism_revert()
-        if page.vand_edit: #Révocation si modification inférieure ou égale au score de révocation
+        vandalism_score = page.vandalism_get_score_current()
+        if page.vand_to_revert: #Révocation si modification inférieure ou égale au score de révocation
             page.revert()
-        if vandalism_revert < 0: #Webhook d'avertissement
+        if vandalism_score < 0: #Webhook d'avertissement
             if webhooks_url[self.site.family] != None:
-                vand_prob = vand_f(abs(vandalism_revert))
+                vand_prob = vand_f(abs(vandalism_score))
                 if vand_prob > 100:
                     vand_prob = 100
                 detected = ""
@@ -480,7 +480,7 @@ class wiki_task:
                         detected += str(vandalism_score_detect[1]) + " - - " + str(vandalism_score_detect[2].group()) + "\n"
                     else:
                         detected += str(vandalism_score_detect[1]) + " - + " + str(vandalism_score_detect[2].group()) + "\n"
-                if vandalism_revert <= page.limit:
+                if vandalism_score <= page.limit:
                     if self.site.lang_bot == "fr":
                         title = "Modification non-constructive révoquée sur " + self.site.lang + ":" + page_name
                         description = "Cette modification a été détectée comme non-constructive"
@@ -488,7 +488,7 @@ class wiki_task:
                         title = "Unconstructive edit reverted on " + self.site.lang + ":" + page_name
                         description = "This edit has been detected as unconstructive"
                     color = 13371938
-                elif vandalism_revert <= page.limit2:
+                elif vandalism_score <= page.limit2:
                     if self.site.lang_bot == "fr":
                         title = "Modification suspecte sur " + self.site.lang + ":" + page_name
                         description = "Cette modification est probablement non-constructive"
@@ -508,36 +508,26 @@ class wiki_task:
                     fields = [
                             {
                               "name": "Score",
-                              "value": str(vandalism_revert),
+                              "value": str(vandalism_score),
                               "inline": True
                             },
                             {
                               "name": "Probabilité qu'il s'agisse d'une modification non-constructive",
                               "value": str(round(vand_prob, 2)) + " %",
                               "inline": True
-                            },
-                            {
-                              "name": "Détection",
-                              "value": detected,
-                              "inline": False
                             }
                         ]
                 else:
                     fields = [
                             {
                               "name": "Score",
-                              "value": str(vandalism_revert),
+                              "value": str(vandalism_score),
                               "inline": True
                             },
                             {
                               "name": "Probability it's an unconstructive edit",
                               "value": str(round(vand_prob, 2)) + " %",
                               "inline": True
-                            },
-                            {
-                              "name": "Detecting",
-                              "value": detected,
-                              "inline": False
                             }
                         ]
                 discord_msg = {'embeds': [
@@ -552,6 +542,18 @@ class wiki_task:
                             ]
                         }
                 request_site(webhooks_url[self.site.family], headers, json.dumps(discord_msg).encode("utf-8"), "POST")
+                for i in range(len(detected)//4096+1):
+                    discord_msg = {'embeds': [
+                            {
+                                  'title': title,
+                                  'description': detected[4096*i:4096*(i+1)],
+                                  'url': page.protocol + "//" + page.url + page.articlepath + "index.php?diff=prev&oldid=" + str(page.oldid),
+                                  'author': {'name': page.contributor_name},
+                                  'color': color
+                            }
+                        ]
+                    }
+                    request_site(webhooks_url[self.site.family], headers, json.dumps(discord_msg).encode("utf-8"), "POST")
                 if page.alert_request:
                     if self.site.lang_bot == "fr":
                         discord_msg = {'embeds': [
@@ -578,52 +580,53 @@ class wiki_task:
                     request_site(webhooks_url[self.site.family], headers, json.dumps(discord_msg).encode("utf-8"), "POST")
 
     def check_vandalism_ai(self, page):
-        diff = page.get_diff()
-        if self.site.lang_bot == "fr":
-            prompt = f"""Est-ce du vandalisme (indiquer la probabilité que ce soit du vandalisme en % et analyser la modification) ?
+        if not page.contributor_is_trusted():
+            diff = page.get_diff()
+            if self.site.lang_bot == "fr":
+                prompt = f"""Est-ce du vandalisme (indiquer la probabilité que ce soit du vandalisme en % et analyser la modification) ?
 Wiki : {page.url}
 Page : {page.page_name}
 Diff :
 {diff}
 """
-        else:
-            prompt = f"""Is it vandalism (indicate the probability that it is vandalism in % and analyze the modification)?
+            else:
+                prompt = f"""Is it vandalism (indicate the probability that it is vandalism in % and analyze the modification)?
 Wiki: {page.url}
 Page: {page.page_name}
 Diff:
 {diff}
-"""
-        pywikibot.output("Prompt :")
-        pywikibot.output(prompt)
-        chat_response = client.chat.complete(
-            model = model,
-            messages = [
-                {
-                    "role": "user",
-                    "content": prompt,
-                },
-            ]
-        )
-        result_ai = chat_response.choices[0].message.content
-        pywikibot.output("Résultat :")
-        pywikibot.output(result_ai)
-        if self.site.lang_bot == "fr":
-            title = "Analyse de l'IA (Mistral) sur " + self.site.lang + ":" + page.page_name
-        else:
-            title = "AI analysis (Mistral) on " + self.site.lang + ":" + page.page_name
-        color = 12161032
-        for i in range(0, len(result_ai)//4096+1):
-            discord_msg = {'embeds': [
+    """
+            pywikibot.output("Prompt :")
+            pywikibot.output(prompt)
+            chat_response = client.chat.complete(
+                model = model,
+                messages = [
                     {
-                          'title': title,
-                          'description': result_ai[4096*i:4096*(i+1)],
-                          'url': page.protocol + "//" + page.url + page.articlepath + "index.php?diff=prev&oldid=" + str(page.oldid),
-                          'author': {'name': page.contributor_name},
-                          'color': color
-                    }
+                        "role": "user",
+                        "content": prompt,
+                    },
                 ]
-            }
-            request_site(webhooks_url[self.site.family], headers, json.dumps(discord_msg).encode("utf-8"), "POST")
+            )
+            result_ai = chat_response.choices[0].message.content
+            pywikibot.output("Résultat :")
+            pywikibot.output(result_ai)
+            if self.site.lang_bot == "fr":
+                title = "Analyse de l'IA (Mistral) sur " + self.site.lang + ":" + page.page_name
+            else:
+                title = "AI analysis (Mistral) on " + self.site.lang + ":" + page.page_name
+            color = 12161032
+            for i in range(len(result_ai)//4096+1):
+                discord_msg = {'embeds': [
+                        {
+                              'title': title,
+                              'description': result_ai[4096*i:4096*(i+1)],
+                              'url': page.protocol + "//" + page.url + page.articlepath + "index.php?diff=prev&oldid=" + str(page.oldid),
+                              'author': {'name': page.contributor_name},
+                              'color': color
+                        }
+                    ]
+                }
+                request_site(webhooks_url[self.site.family], headers, json.dumps(discord_msg).encode("utf-8"), "POST")
 
     def check_WP(self, page):
         page_name = page.page_name
