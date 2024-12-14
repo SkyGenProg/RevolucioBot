@@ -436,7 +436,7 @@ class get_page(pywikibot.Page):
         categories_list = []
         for category in self.categories():
             if not category.exists():
-                self.text = re.sub(r"\[\[(?i)" + re.escape(category.title()) + r"(\|.*)?\]\]", "", self.text, flags=re.IGNORECASE)
+                self.text = re.sub(r"(?i)\[\[" + re.escape(category.title()) + r"(\|.*)?\]\]", "", self.text, flags=re.IGNORECASE)
                 categories_list.append(category.title())
         if categories_list != []:
             if self.lang_bot == "fr":
