@@ -112,7 +112,7 @@ class get_wiki:
             except KeyError:
                 rccontinue = None
             for contrib in contribs:
-                if show_trusted or contrib["user"] not in self.trusted:
+                if show_trusted or ("user" in contrib and contrib["user"] not in self.trusted):
                     self.diffs_rc.append(contrib)
 
     def page(self, page_wiki):
@@ -126,13 +126,16 @@ class get_wiki:
             diff_info[page_info["revid"]] = {"reverted": False, "next_revid": -1}
         diff_info[page_info["revid"]]["score"] = vandalism_score
         diff_info[page_info["revid"]]["anon"] = "anon" in page_info
-        diff_info[page_info["revid"]]["trusted"] = page_info["user"] in self.trusted
-        diff_info[page_info["revid"]]["user"] = page_info["user"]
+        diff_info[page_info["revid"]]["trusted"] = "user" in page_info and page_info["user"] in self.trusted
+        if "user" in page_info:
+            diff_info[page_info["revid"]]["user"] = page_info["user"]
+        else:
+            diff_info[page_info["revid"]]["user"] = ""
         diff_info[page_info["revid"]]["page"] = page_info["title"]
         diff_info[page_info["revid"]]["old"] = old
         diff_info[page_info["revid"]]["new"] = new
         if not diff_info[page_info["revid"]]["reverted"]:
-            diff_info[page_info["revid"]]["reverted"] = diff_info[page_info["revid"]]["next_revid"] > 0 and not diff_info[page_info["revid"]]["trusted"] and diff_info[diff_info[page_info["revid"]]["next_revid"]]["reverted"] and diff_info[diff_info[page_info["revid"]]["next_revid"]]["user"] == page_info["user"]
+            diff_info[page_info["revid"]]["reverted"] = diff_info[page_info["revid"]]["next_revid"] > 0 and not diff_info[page_info["revid"]]["trusted"] and diff_info[diff_info[page_info["revid"]]["next_revid"]]["reverted"] and "user" in page_info and diff_info[diff_info[page_info["revid"]]["next_revid"]]["user"] == page_info["user"]
         if page_info["old_revid"] != 0 and page_info["old_revid"] != -1:
             diff_info[page_info["old_revid"]] = {"reverted": False, "next_revid": page_info["revid"]}
             if "comment" in page_info:

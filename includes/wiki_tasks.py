@@ -68,7 +68,11 @@ class wiki_task:
                                         page_text_split[1] = "=".join(page_text_split2)
                                         page.text = ("|ex" + n + "=").join(page_text_split)
                                     except Exception as e:
-                                        pywikibot.error(e)
+                                        try:
+                                            bt = traceback.format_exc()
+                                            pywikibot.error(bt)
+                                        except UnicodeError:
+                                            pass
                                 if "|contr" + n + "=" in page.text:
                                     try:
                                         page_text_split = page.text.split("|contr" + n + "=")
@@ -80,7 +84,11 @@ class wiki_task:
                                         page_text_split[1] = "=".join(page_text_split2)
                                         page.text = ("|contr" + n + "=").join(page_text_split)
                                     except Exception as e:
-                                        pywikibot.error(e)
+                                        try:
+                                            bt = traceback.format_exc()
+                                            pywikibot.error(bt)
+                                        except UnicodeError:
+                                            pass
                                 if "|syn" + n + "=" in page.text:
                                     try:
                                         page_text_split = page.text.split("|syn" + n + "=")
@@ -92,7 +100,11 @@ class wiki_task:
                                         page_text_split[1] = "=".join(page_text_split2)
                                         page.text = ("|syn" + n + "=").join(page_text_split)
                                     except Exception as e:
-                                        pywikibot.error(e)
+                                        try:
+                                            bt = traceback.format_exc()
+                                            pywikibot.error(bt)
+                                        except UnicodeError:
+                                            pass
                                 if "|voir" + n + "=" in page.text:
                                     try:
                                         page_text_split = page.text.split("|voir" + n + "=")
@@ -104,7 +116,11 @@ class wiki_task:
                                         page_text_split[1] = "=".join(page_text_split2)
                                         page.text = ("|voir" + n + "=").join(page_text_split)
                                     except Exception as e:
-                                        pywikibot.error(e)
+                                        try:
+                                            bt = traceback.format_exc()
+                                            pywikibot.error(bt)
+                                        except UnicodeError:
+                                            pass
                                 if "|def" + n + "=" in page.text:
                                     try:
                                         page_text_split = page.text.split("|def" + n + "=")
@@ -119,13 +135,21 @@ class wiki_task:
                                         page_text_split[1] = "=".join(page_text_split2)
                                         page.text = ("|def" + n + "=").join(page_text_split)
                                     except Exception as e:
-                                        pywikibot.error(e)
+                                        try:
+                                            bt = traceback.format_exc()
+                                            pywikibot.error(bt)
+                                        except UnicodeError:
+                                            pass
                             if "|son=LL-Q150" in page.text:
                                 page.text = page.text.replace("|son=LL-Q150", "|prononciation=LL-Q150")
                             if page.text != page_text_old:
                                 page.save("maintenance")
                     except Exception as e:
-                        pywikibot.error(e)
+                        try:
+                            bt = traceback.format_exc()
+                            pywikibot.error(bt)
+                        except UnicodeError:
+                            pass
         if "clear_talks" in self.site.config and self.site.config["clear_talks"]: #si fonction activée sur le wiki
             #Nettoyage des PDDs d'IPs (créer Modèle:Avertissement effacé)
             for page_name in self.site.all_pages(ns=3, start="1", end="A"):
@@ -185,7 +209,11 @@ class wiki_task:
                     vandalism_score = page.vandalism_score(page_info["revid"], page_info["old_revid"])
                     detailed_diff_info = self.site.add_detailed_diff_info(detailed_diff_info, page_info, page.text_page_oldid, page.text_page_oldid2, vandalism_score)
                 except Exception as e:
-                    pywikibot.error(e)
+                    try:
+                        bt = traceback.format_exc()
+                        pywikibot.error(bt)
+                    except UnicodeError:
+                        pass
             if page_name in pages_checked: #passage des pages déjà vérifiées
                 continue
             if page.isRedirectPage():
@@ -309,7 +337,11 @@ class wiki_task:
                         coeffs_curve, _ = curve_fit(curve, scores_x, scores_y, maxfev=1000000)
                         no_coeffs = False
                     except Exception as e:
-                        pywikibot.error(e)
+                        try:
+                            bt = traceback.format_exc()
+                            pywikibot.error(bt)
+                        except UnicodeError:
+                            pass
                         no_coeffs = True
                 else:
                     pywikibot.output("Pas assez de scores pour générer la fonction.")
@@ -600,11 +632,11 @@ Diff:
                 for i in range(len(result_ai)//4096+1):
                     discord_msg = {'embeds': [
                             {
-                                  'title': title,
-                                  'description': result_ai[4096*i:4096*(i+1)],
-                                  'url': page.protocol + "//" + page.url + page.articlepath + "index.php?diff=prev&oldid=" + str(page.oldid),
-                                  'author': {'name': page.contributor_name},
-                                  'color': color
+                                'title': title,
+                                'description': result_ai[4096*i:4096*(i+1)],
+                                'url': page.protocol + "//" + page.url + page.articlepath + "index.php?diff=prev&oldid=" + str(page.oldid),
+                                'author': {'name': page.contributor_name},
+                                'color': color
                             }
                         ]
                     }
@@ -614,17 +646,16 @@ Diff:
                 else:
                     title = "AI analysis (Mistral) failed on " + self.site.lang + ":" + page.page_name
                 color = 13371938
-                for i in range(len(result_ai)//4096+1):
-                    discord_msg = {'embeds': [
-                            {
-                                  'title': title,
-                                  'description': '',
-                                  'url': page.protocol + "//" + page.url + page.articlepath + "index.php?diff=prev&oldid=" + str(page.oldid),
-                                  'author': {'name': page.contributor_name},
-                                  'color': color
-                            }
-                        ]
-                    }
+                discord_msg = {'embeds': [
+                        {
+                            'title': title,
+                            'description': '',
+                            'url': page.protocol + "//" + page.url + page.articlepath + "index.php?diff=prev&oldid=" + str(page.oldid),
+                            'author': {'name': page.contributor_name},
+                            'color': color
+                        }
+                    ]
+                }
             request_site(webhooks_url[self.site.family], headers, json.dumps(discord_msg).encode("utf-8"), "POST")
 
     def check_WP(self, page):
