@@ -24,6 +24,7 @@ class wiki_task:
         self.site.get_trusted() #récupération des utilisateurs ignorés par le bot
 
     def task_every_month(self):
+        datetime_utcnow = datetime.datetime.utcnow()
         pywikibot.output("Tâches mensuelles (" + self.site.family + " " + self.site.lang + ").")
         if "check_all_pages" in self.site.config and self.site.config["check_all_pages"]: #si fonction activée sur le wiki
             for page_name in self.site.all_pages(ns=0): #parcours de toutes les pages de l'espace principal
@@ -159,7 +160,7 @@ class wiki_task:
                     if user_talk.isAnonymous():
                         page = self.site.page(page_name)
                         pywikibot.output("PDD d'IP")
-                        if page.page_ns == 3 and (page.contributor_name != self.site.user_wiki or "<!-- level" in page.text) and abs((self.datetime_utcnow - page.latest_revision.timestamp).days) > self.site.days_clean_warnings:
+                        if page.page_ns == 3 and (page.contributor_name != self.site.user_wiki or "<!-- level" in page.text) and abs((datetime_utcnow - page.latest_revision.timestamp).days) > self.site.days_clean_warnings:
                             pywikibot.output("Suppression des avertissements de la page " + page_name)
                             try:
                                 if self.site.lang_bot == "fr":
@@ -180,20 +181,22 @@ class wiki_task:
                     pywikibot.output("Pas une PDD d'IP")
 
     def task_every_day(self):
-        if not self.ignore_task_month and int(self.datetime_utcnow.strftime("%d")) == 1 and int(self.datetime_utcnow.strftime("%H")) == 0:
+        datetime_utcnow = datetime.datetime.utcnow()
+        if not self.ignore_task_month and int(datetime_utcnow.strftime("%d")) == 1 and int(datetime_utcnow.strftime("%H")) == 0:
             self.task_every_month()
         self.task_every_10minutes(True)
 
     def task_every_10minutes(self, task_day=False):
+        datetime_utcnow = datetime.datetime.utcnow()
         detailed_diff_info = {}
         if task_day: #Une fois par jour, parcours de toutes les RC du jour
             pywikibot.output("Tâches réalisées tous les jours (" + self.site.family + " " + self.site.lang + ").")
-            time1hour = self.datetime_utcnow - datetime.timedelta(hours = 24)
+            time1hour = datetime_utcnow - datetime.timedelta(hours = 24)
             pywikibot.output("Récupération des RC des 24 dernières heures sur " + self.site.family + " " + self.site.lang + "...")
             self.site.rc_pages(timestamp=time1hour.strftime("%Y%m%d%H%M%S"), rctoponly=False, show_trusted=True)
         else: #Sinon, parcours des RC des 10 dernières minutes
             pywikibot.output("Tâches réalisées une fois toutes les 10 minutes (" + self.site.family + " " + self.site.lang + ").")
-            time1hour = self.datetime_utcnow - datetime.timedelta(minutes = 10)
+            time1hour = datetime_utcnow - datetime.timedelta(minutes = 10)
             pywikibot.output("Récupération des RC des 10 dernières minutes sur " + self.site.family + " " + self.site.lang + "...")
             self.site.rc_pages(timestamp=time1hour.strftime("%Y%m%d%H%M%S"))
         pages_checked = [] #pages vérifiées (pour éviter de revérifier la page)
@@ -442,13 +445,13 @@ class wiki_task:
             #remise à 0 du BàS du Dico des Ados
             bas = self.site.page("Dico:Bac à sable")
             bas_zero = self.site.page("Dico:Bac à sable/Zéro")
-            if abs((self.datetime_utcnow - bas.latest_revision.timestamp).seconds) > 3600 and bas.text != bas_zero.text:
+            if abs((datetime_utcnow - bas.latest_revision.timestamp).seconds) > 3600 and bas.text != bas_zero.text:
                 pywikibot.output("Remise à zéro du bac à sable")
                 bas.put(bas_zero.text, "Remise à zéro du bac à sable")
             for page_name in self.site.all_pages(ns=4, apprefix="Bac à sable/Test/"):
                 if page_name != "Dico:Bac à sable/Zéro":
                     bas_page = self.site.page(page_name)
-                    if abs((self.datetime_utcnow - bas_page.latest_revision.timestamp).seconds) > 7200 and "{{SI" not in bas_page.text:
+                    if abs((datetime_utcnow - bas_page.latest_revision.timestamp).seconds) > 7200 and "{{SI" not in bas_page.text:
                         pywikibot.output("SI de " + page_name)
                         bas_page.text = "{{SI|Remise à zéro du bac à sable}}\n" + bas_page.text
                         bas_page.save("Remise à zéro du bac à sable")
@@ -640,6 +643,7 @@ Diff:
                             }
                         ]
                     }
+                    request_site(webhooks_url[self.site.family], headers, json.dumps(discord_msg).encode("utf-8"), "POST")
             else:
                 if self.site.lang_bot == "fr":
                     title = "Analyse de l'IA (Mistral) échouée sur " + self.site.lang + ":" + page.page_name
@@ -656,7 +660,7 @@ Diff:
                         }
                     ]
                 }
-            request_site(webhooks_url[self.site.family], headers, json.dumps(discord_msg).encode("utf-8"), "POST")
+                request_site(webhooks_url[self.site.family], headers, json.dumps(discord_msg).encode("utf-8"), "POST")
 
     def check_WP(self, page):
         page_name = page.page_name
@@ -796,7 +800,6 @@ Diff:
         schedule.every(1).day.at("00:00").do(self.task_every_day) #tâches journalières
         schedule.every(10).minutes.do(self.task_every_10minutes) #tâches toutes les 10 minutes
         while True:
-            self.datetime_utcnow = datetime.datetime.utcnow()
             try:
                 if self.start_task_month: 
                     self.task_every_month()
