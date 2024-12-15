@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-ver = "6.0.0"
+ver = "6.0.0-beta.4"
 release_date = "/12/2024"
 
 webhooks_url = {'localhost': "REMOVED",

@@ -2,7 +2,7 @@
 
 import pywikibot
 from pywikibot import pagegenerators, textlib
-import base64, datetime, json, os, random, re, schedule, socket, traceback, time, urllib.request, urllib.error, urllib.parse, zlib
+import base64, datetime, json, os, random, re, schedule, socket, traceback, urllib.request, urllib.error, urllib.parse, zlib
 from config import *
 from includes.wiki import *
 from scipy.optimize import curve_fit
@@ -817,4 +817,3 @@ Diff:
                     pywikibot.error(bt)
                 except UnicodeError:
                     pass
-            time.sleep(60)
