@@ -353,14 +353,16 @@ class get_page(pywikibot.Page):
                         vand += score
         return vand
 
-    def check_WP(self, page_name_WP=None, diff=None):
+    def check_WP(self, page_name_WP=None, diff=None, lang=None):
         if page_name_WP == None:
             page_name_WP = self.page_name
         if diff == None:
             text_to_check = self.text.strip()
         else:
             text_to_check = self.getOldVersion(oldid = diff)
-        url = "%s//%s%s/api.php?action=query&prop=revisions&rvprop=content&rvslots=*&titles=%s&formatversion=2&format=json" % ("https:", self.lang_bot + ".wikipedia.org", "/w", urllib.parse.quote(page_name_WP))
+        if lang is None:
+            lang = self.lang_bot
+        url = "%s//%s%s/api.php?action=query&prop=revisions&rvprop=content&rvslots=*&titles=%s&formatversion=2&format=json" % ("https:", lang + ".wikipedia.org", "/w", urllib.parse.quote(page_name_WP))
         j = json.loads(request_site(url))
         if "missing" in j["query"]["pages"][0]:
             return 0
@@ -369,7 +371,10 @@ class get_page(pywikibot.Page):
         matcher = difflib.SequenceMatcher(a=text_to_check, b=page_text_WP)
         for match in matcher.get_matching_blocks():
             score += match.size
-        return score
+        if score < 10 and lang == "en":
+            return self.check_WP(page_name_WP, diff, "simple")
+        else:
+            return score
 
     def edit_replace(self):
         file1 = "replace1_" + self.source.family + "_" + self.lang + ".txt"
