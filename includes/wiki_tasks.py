@@ -638,7 +638,7 @@ Diff:
                             }
                         ]
                     }
-                    request_site(webhooks_url[self.site.family], headers, json.dumps(discord_msg).encode("utf-8"), "POST")
+                    request_site(webhooks_url_ai[self.site.family], headers, json.dumps(discord_msg).encode("utf-8"), "POST")
             else:
                 if self.site.lang_bot == "fr":
                     title = "Analyse de l'IA (Mistral) échouée sur " + self.site.lang + ":" + page.page_name
@@ -655,7 +655,7 @@ Diff:
                         }
                     ]
                 }
-                request_site(webhooks_url[self.site.family], headers, json.dumps(discord_msg).encode("utf-8"), "POST")
+                request_site(webhooks_url_ai[self.site.family], headers, json.dumps(discord_msg).encode("utf-8"), "POST")
 
     def check_WP(self, page):
         page_name = page.page_name
