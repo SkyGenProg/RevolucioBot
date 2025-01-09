@@ -5,6 +5,7 @@ import argparse, os, logging
 from includes.wiki import *
 from includes.wiki_tasks import *
 from config import *
+from mistralai import Mistral
 
 arg = argparse.ArgumentParser()
 required_arg = arg.add_argument_group("required arguments")
@@ -16,8 +17,10 @@ required_arg.add_argument("--diff", required=True)
 required_arg.add_argument("--oldid", required=True)
 args = arg.parse_args()
 
+client = Mistral(api_key=api_key)
+
 if __name__ == "__main__":
-    print("Revolució %s" % ver)
+    pywikibot.output("Revolució %s" % ver)
     if(not os.path.exists("files")):
        os.mkdir("files")
     os.chdir("files")
@@ -42,7 +45,27 @@ if __name__ == "__main__":
             detected += str(vandalism_score_detect[1]) + " - - " + str(vandalism_score_detect[2].group()) + "\n"
         else:
             detected += str(vandalism_score_detect[1]) + " - + " + str(vandalism_score_detect[2].group()) + "\n"
-    print(detected)
-    print("Score : " + str(vandalism_score))
-    print("Diff : ")
-    print(page.get_diff())
+    pywikibot.output(detected)
+    pywikibot.output("Score : " + str(vandalism_score))
+    pywikibot.output("Diff : ")
+    diff = page.get_diff()
+    pywikibot.output(diff)
+    prompt = f"""Est-ce du vandalisme (indiquer la probabilité que ce soit du vandalisme en % et analyser la modification) ?
+Wiki : {page.url}
+Page : {page.page_name}
+Diff :
+{diff}
+"""
+    pywikibot.output("Prompt :")
+    pywikibot.output(prompt)
+    pywikibot.output("Analyse de l'IA : ")
+    chat_response = client.chat.complete(
+        model = model,
+        messages = [
+            {
+                "role": "user",
+                "content": prompt,
+            },
+        ]
+    )
+    pywikibot.output(chat_response.choices[0].message.content)

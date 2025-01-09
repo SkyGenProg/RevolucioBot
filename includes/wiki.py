@@ -112,7 +112,7 @@ class get_wiki:
             except KeyError:
                 rccontinue = None
             for contrib in contribs:
-                if show_trusted or contrib["user"] not in self.trusted:
+                if show_trusted or ("user" in contrib and contrib["user"] not in self.trusted):
                     self.diffs_rc.append(contrib)
 
     def page(self, page_wiki):
@@ -126,13 +126,16 @@ class get_wiki:
             diff_info[page_info["revid"]] = {"reverted": False, "next_revid": -1}
         diff_info[page_info["revid"]]["score"] = vandalism_score
         diff_info[page_info["revid"]]["anon"] = "anon" in page_info
-        diff_info[page_info["revid"]]["trusted"] = page_info["user"] in self.trusted
-        diff_info[page_info["revid"]]["user"] = page_info["user"]
+        diff_info[page_info["revid"]]["trusted"] = "user" in page_info and page_info["user"] in self.trusted
+        if "user" in page_info:
+            diff_info[page_info["revid"]]["user"] = page_info["user"]
+        else:
+            diff_info[page_info["revid"]]["user"] = ""
         diff_info[page_info["revid"]]["page"] = page_info["title"]
         diff_info[page_info["revid"]]["old"] = old
         diff_info[page_info["revid"]]["new"] = new
         if not diff_info[page_info["revid"]]["reverted"]:
-            diff_info[page_info["revid"]]["reverted"] = diff_info[page_info["revid"]]["next_revid"] > 0 and not diff_info[page_info["revid"]]["trusted"] and diff_info[diff_info[page_info["revid"]]["next_revid"]]["reverted"] and diff_info[diff_info[page_info["revid"]]["next_revid"]]["user"] == page_info["user"]
+            diff_info[page_info["revid"]]["reverted"] = diff_info[page_info["revid"]]["next_revid"] > 0 and not diff_info[page_info["revid"]]["trusted"] and diff_info[diff_info[page_info["revid"]]["next_revid"]]["reverted"] and "user" in page_info and diff_info[diff_info[page_info["revid"]]["next_revid"]]["user"] == page_info["user"]
         if page_info["old_revid"] != 0 and page_info["old_revid"] != -1:
             diff_info[page_info["old_revid"]] = {"reverted": False, "next_revid": page_info["revid"]}
             if "comment" in page_info:
@@ -155,7 +158,7 @@ class get_page(pywikibot.Page):
         self.new_page = None
         self.text_page_oldid = None
         self.text_page_oldid2 = None
-        self.vand_edit = False
+        self.vand_to_revert = False
         self.fullurl = self.source.site.siteinfo["general"]["server"] + self.source.site.siteinfo["general"]["articlepath"].replace("$1", self.page_name)
         self.protocol = self.fullurl.split("/")[0]
         if self.protocol == "":
@@ -231,18 +234,11 @@ class get_page(pywikibot.Page):
             else:
                 talk.save("Warning 0", botflag=False, minor=False)
 
-    def vandalism_revert(self):
-        if self.contributor_name == self.user_wiki:
+    def vandalism_get_score_current(self): #Score sur la version actuelle en ignorant les contributeurs expérimentés
+        if self.contributor_is_trusted():
             return 0
         vand = self.vandalism_score()
-        self.vand_edit = False
-        if vand < 0:
-            if self.contributor_name in self.source.trusted:
-                return 0
-        if self.page_ns == 2:
-            if self.contributor_name in self.page_name:
-                return 0
-        self.vand_edit = vand <= self.limit
+        self.vand_to_revert = vand <= self.limit
         if vand <= self.limit:
             pywikibot.output("Modification non-constructive détectée (%s)." % str(vand))
         elif vand <= self.limit2:
@@ -252,6 +248,9 @@ class get_page(pywikibot.Page):
         else:
             pywikibot.output("Pas de modification suspecte détectée (%s)." % str(vand))
         return vand
+
+    def contributor_is_trusted(self):
+        return self.contributor_name == self.user_wiki or self.contributor_name in self.source.trusted or (self.page_ns == 2 and self.contributor_name in self.page_name)
 
     def get_text_page_old(self, revision_oldid=None, revision_oldid2=None): #revision_oldid : nouvelle version/version à vérifier, revision_oldid2 : ancienne version/version à comparer
         oldid = -1
@@ -289,7 +288,7 @@ class get_page(pywikibot.Page):
         diff_text = '\n'.join(diff)
         return diff_text
 
-    def vandalism_score(self, revision_oldid=None, revision_oldid2=None):
+    def vandalism_score(self, revision_oldid=None, revision_oldid2=None): #Score sur le diff en paramètres en incluant les utilisateurs expérimentés
         self.vandalism_score_detect = []
         self.get_text_page_old(revision_oldid, revision_oldid2)
         regex_vandalisms_0_filename = "regex_vandalisms_0.txt"
@@ -354,14 +353,16 @@ class get_page(pywikibot.Page):
                         vand += score
         return vand
 
-    def check_WP(self, page_name_WP=None, diff=None):
+    def check_WP(self, page_name_WP=None, diff=None, lang=None):
         if page_name_WP == None:
             page_name_WP = self.page_name
         if diff == None:
             text_to_check = self.text.strip()
         else:
             text_to_check = self.getOldVersion(oldid = diff)
-        url = "%s//%s%s/api.php?action=query&prop=revisions&rvprop=content&rvslots=*&titles=%s&formatversion=2&format=json" % ("https:", self.lang_bot + ".wikipedia.org", "/w", urllib.parse.quote(page_name_WP))
+        if lang is None:
+            lang = self.lang_bot
+        url = "%s//%s%s/api.php?action=query&prop=revisions&rvprop=content&rvslots=*&titles=%s&formatversion=2&format=json" % ("https:", lang + ".wikipedia.org", "/w", urllib.parse.quote(page_name_WP))
         j = json.loads(request_site(url))
         if "missing" in j["query"]["pages"][0]:
             return 0
@@ -370,7 +371,10 @@ class get_page(pywikibot.Page):
         matcher = difflib.SequenceMatcher(a=text_to_check, b=page_text_WP)
         for match in matcher.get_matching_blocks():
             score += match.size
-        return score
+        if score < 10 and lang == "en":
+            return self.check_WP(page_name_WP, diff, "simple")
+        else:
+            return score
 
     def edit_replace(self):
         file1 = "replace1_" + self.source.family + "_" + self.lang + ".txt"
@@ -440,7 +444,7 @@ class get_page(pywikibot.Page):
         categories_list = []
         for category in self.categories():
             if not category.exists():
-                self.text = re.sub(r"\[\[(?i)" + re.escape(category.title()) + r"(\|.*)?\]\]", "", self.text, flags=re.IGNORECASE)
+                self.text = re.sub(r"(?i)\[\[" + re.escape(category.title()) + r"(\|.*)?\]\]", "", self.text, flags=re.IGNORECASE)
                 categories_list.append(category.title())
         if categories_list != []:
             if self.lang_bot == "fr":

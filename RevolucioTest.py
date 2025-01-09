@@ -11,6 +11,7 @@ logging.getLogger().addHandler(logging.StreamHandler())
 
 arg = argparse.ArgumentParser()
 arg.add_argument("--start_task_day", action="count")
+arg.add_argument("--start_task_month", action="count")
 arg.add_argument("--ignore_task_month", action="count")
 args = arg.parse_args()
 
@@ -20,5 +21,5 @@ if __name__ == "__main__":
        os.mkdir("files")
     os.chdir("files")
     localhost_site = get_wiki("localhost", "localhost", "RevolucioBot")
-    localhost_task = wiki_task(localhost_site, args.start_task_day, args.ignore_task_month)
+    localhost_task = wiki_task(localhost_site, args.start_task_day, args.start_task_month, args.ignore_task_month)
     threading.Thread(target=localhost_task.execute).start()
