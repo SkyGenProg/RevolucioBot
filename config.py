@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
 
+import os
+
 ver = "6.0.1"
 release_date = "13/04/2025"
 
@@ -16,5 +18,5 @@ headers = {
     'user-agent': 'Mozilla/5.0 Revolucio'
 }
 
-api_key = "cynujNBf9UptrQO4cJFpKAvOggJXDZjM"
+api_key = os.environ["MISTRAL_API_KEY"]
 model = "mistral-large-latest"
