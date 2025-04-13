@@ -235,11 +235,18 @@ class wiki_task:
                     pywikibot.output(str(edit_replace) + " recherche(s)-remplacement(s) sur la page " + str(page) + ".")
                 if not ("disable_del_categories" in self.site.config and self.site.config["disable_del_categories"]) and task_day and page.page_ns != 2:
                     pywikibot.output("Suppression des catégories inexistantes sur la page " + str(page))
-                    del_categories_no_exists = page.del_categories_no_exists() #Suppression 
-                    if del_categories_no_exists != []:
-                        pywikibot.output("Catégories retirées " + ", ".join(del_categories_no_exists))
-                    else:
-                        pywikibot.output("Aucune catégorie à retirer.")
+                    try:
+                        del_categories_no_exists = page.del_categories_no_exists() #Suppression 
+                        if del_categories_no_exists != []:
+                            pywikibot.output("Catégories retirées " + ", ".join(del_categories_no_exists))
+                        else:
+                            pywikibot.output("Aucune catégorie à retirer.")
+                    except Exception as e:
+                        try:
+                            bt = traceback.format_exc()
+                            pywikibot.error(bt)
+                        except UnicodeError:
+                            pass
                 pages_checked.append(page_name)
         if task_day: #Tâches journalières (après passage des RC)
             self.site.get_trusted() #récupération des utilisateurs ignorés par le bot

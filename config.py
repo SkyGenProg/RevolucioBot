@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
-ver = "6.0.0"
-release_date = "09/01/2025"
+ver = "6.0.1"
+release_date = "13/04/2025"
 
 webhooks_url = {'localhost': "REMOVED",
                 'vikidia': "REMOVED",
@@ -16,5 +16,5 @@ headers = {
     'user-agent': 'Mozilla/5.0 Revolucio'
 }
 
-api_key = ""
+api_key = "cynujNBf9UptrQO4cJFpKAvOggJXDZjM"
 model = "mistral-large-latest"
