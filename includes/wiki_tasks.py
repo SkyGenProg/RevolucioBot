@@ -597,6 +597,7 @@ class wiki_task:
             diff = page.get_diff()
             if self.site.lang_bot == "fr":
                 prompt = f"""Est-ce du vandalisme (indiquer la probabilité que ce soit du vandalisme en % et analyser la modification) ?
+Date : {page.latest_revision.timestamp}
 Wiki : {page.url}
 Page : {page.page_name}
 Diff :
@@ -604,6 +605,7 @@ Diff :
 """
             else:
                 prompt = f"""Is it vandalism (indicate the probability that it is vandalism in % and analyze the modification)?
+Date : {page.latest_revision.timestamp}
 Wiki: {page.url}
 Page: {page.page_name}
 Diff:
