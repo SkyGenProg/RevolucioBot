@@ -159,6 +159,7 @@ class get_page(pywikibot.Page):
         self.text_page_oldid = None
         self.text_page_oldid2 = None
         self.vand_to_revert = False
+        self.reverted = False
         self.fullurl = self.source.site.siteinfo["general"]["server"] + self.source.site.siteinfo["general"]["articlepath"].replace("$1", self.page_name)
         self.protocol = self.fullurl.split("/")[0]
         if self.protocol == "":
@@ -205,6 +206,7 @@ class get_page(pywikibot.Page):
             self.save("Annulation modification non-constructive", botflag=False, minor=False)
         else:
             self.save("Revert", botflag=False, minor=False)
+        self.reverted = True
 
     def warn_revert(self):
         talk = pywikibot.Page(self.source.site, "User Talk:%s" % self.contributor_name)
