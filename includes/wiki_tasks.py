@@ -577,7 +577,7 @@ class wiki_task:
         if not page.contributor_is_trusted():
             diff = page.get_diff()
             if self.site.lang_bot == "fr":
-                prompt = f"""Analyser la modification et indiquer la probabilité que ce soit du vandalisme en % à la fin de la réponse.
+                prompt = f"""Analyser la modification et indiquer la probabilité que ce soit du vandalisme en %.
 Date : {page.latest_revision.timestamp}
 Wiki : {page.url}
 Page : {page.page_name}
@@ -588,16 +588,16 @@ Analyse de la modification :
 ...
 Probabilité de vandalisme : [probabilité] %"""
             else:
-                prompt = f"""Analyze the modification and indicate the probability that it is vandalism in % at the end of the answer.
+                prompt = f"""Analyze the modification and indicate the probability that it is vandalism in %.
 Date : {page.latest_revision.timestamp}
 Wiki: {page.url}
 Page: {page.page_name}
 Diff:
 {diff}
 Format of answer:
-Analyse de la modification :
+Analysis of the modification:
 ...
-Probability of vandalism : [probability] %"""
+Probability of vandalism: [probability] %"""
             try:
                 chat_response = client.chat.complete(
                     model = model,
@@ -619,12 +619,18 @@ Probability of vandalism : [probability] %"""
             if success:
                 result_ai = chat_response.choices[0].message.content
                 if self.site.lang_bot == "fr":
-                    score = int(result_ai.lower().split("probabilité de vandalisme :")[1].split("%")[0].strip())
+                    match = re.search(r"Probabilité de vandalisme\s*:\s*(\d+)\s*%", result_ai)
                 else:
-                    score = int(result_ai.lower().split("probability of vandalism :")[1].split("%")[0].strip())
-                if score >= 99 and not page.reverted:
+                    match = re.search(r"Probability of vandalism\s*:\s*(\d+)\s*%", result_ai)
+                if match:
+                    proba_ai = int(match.group(1))
+                else:
+                    proba_ai = 0
+                if proba_ai >= 90 and not page.reverted: #Révocation si la probabilité de vandalisme détectée par le LLM est supérieure ou égale à 90 %
                     page.revert()
                     color = 13371938
+                elif proba_ai >= 50:
+                    color = 12138760
                 else:
                     color = 12161032
                 if self.site.lang_bot == "fr":
