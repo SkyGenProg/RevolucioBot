@@ -619,9 +619,9 @@ Probability of vandalism: [probability] %"""
             if success:
                 result_ai = chat_response.choices[0].message.content
                 if self.site.lang_bot == "fr":
-                    match = re.search(r"Probabilité de vandalisme\s*:\s*(\d+)\s*%", result_ai)
+                    match = re.search(r"probabilité de vandalisme\s*:\s*(\d+)\s*%", result_ai.lower())
                 else:
-                    match = re.search(r"Probability of vandalism\s*:\s*(\d+)\s*%", result_ai)
+                    match = re.search(r"probability of vandalism\s*:\s*(\d+)\s*%", result_ai.lower())
                 if match:
                     proba_ai = int(match.group(1))
                 else:
