@@ -337,25 +337,6 @@ class wiki_task:
                 for i in range(len(scores_x)):
                     file.write(str(scores_x[i]) + ":" + str(scores_n_reverted_2[i]) + "/" + str(scores_n_2[i]) + "\r\n")
             if prop_users_ip > 0:
-                if len(scores_x) >= 4 and len(scores_y) >= 4:
-                    try:
-                        coeffs_curve, _ = curve_fit(curve, scores_x, scores_y, maxfev=1000000)
-                        no_coeffs = False
-                    except Exception as e:
-                        try:
-                            bt = traceback.format_exc()
-                            pywikibot.error(bt)
-                        except UnicodeError:
-                            pass
-                        no_coeffs = True
-                else:
-                    pywikibot.output("Pas assez de scores pour générer la fonction.")
-                    no_coeffs = True
-                with open("vand_f_" + self.site.family + "_" + self.site.lang + "_" + time1hour.strftime("%Y%m%d") + ".txt", "w") as file:
-                    if not no_coeffs:
-                        file.write(str(coeffs_curve))
-                    else:
-                        file.write("erreur")
                 if webhooks_url[self.site.family] != None:
                     if self.site.lang_bot == "fr":
                         fields = [
@@ -596,21 +577,27 @@ class wiki_task:
         if not page.contributor_is_trusted():
             diff = page.get_diff()
             if self.site.lang_bot == "fr":
-                prompt = f"""Est-ce du vandalisme (indiquer la probabilité que ce soit du vandalisme en % et analyser la modification) ?
+                prompt = f"""Analyser la modification et indiquer la probabilité que ce soit du vandalisme en %.
 Date : {page.latest_revision.timestamp}
 Wiki : {page.url}
 Page : {page.page_name}
 Diff :
 {diff}
-"""
+Format de réponse :
+Analyse de la modification :
+...
+Probabilité de vandalisme : [probabilité] %"""
             else:
-                prompt = f"""Is it vandalism (indicate the probability that it is vandalism in % and analyze the modification)?
+                prompt = f"""Analyze the modification and indicate the probability that it is vandalism in %.
 Date : {page.latest_revision.timestamp}
 Wiki: {page.url}
 Page: {page.page_name}
 Diff:
 {diff}
-    """
+Format of answer:
+Analysis of the modification:
+...
+Probability of vandalism: [probability] %"""
             try:
                 chat_response = client.chat.complete(
                     model = model,
@@ -632,10 +619,28 @@ Diff:
             if success:
                 result_ai = chat_response.choices[0].message.content
                 if self.site.lang_bot == "fr":
+                    match = re.search(r"Probabilité de vandalisme\s*:\s*(\d+)\s*%", result_ai)
+                else:
+                    match = re.search(r"Probability of vandalism\s*:\s*(\d+)\s*%", result_ai)
+                if match:
+                    proba_ai = int(match.group(1))
+                else:
+                    proba_ai = 0
+                if proba_ai >= 90 and not page.reverted: #Révocation si la probabilité de vandalisme détectée par le LLM est supérieure ou égale à 90 %
+                    page.revert()
+                    color = 13371938
+                elif proba_ai >= 50:
+                    color = 12138760
+                else:
+                    color = 12161032
+                if self.site.lang_bot == "fr":
                     title = "Analyse de l'IA (Mistral) sur " + self.site.lang + ":" + page.page_name
+                    if page.reverted:
+                        title += " (modification révoquée)"
                 else:
                     title = "AI analysis (Mistral) on " + self.site.lang + ":" + page.page_name
-                color = 12161032
+                    if page.reverted:
+                        title += " (reverted edit)"
                 for i in range(len(result_ai)//4096+1):
                     discord_msg = {'embeds': [
                             {
