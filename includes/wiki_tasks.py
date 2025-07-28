@@ -626,7 +626,7 @@ Probability of vandalism: [probability] %"""
                     proba_ai = int(match.group(1))
                 else:
                     proba_ai = 0
-                if proba_ai >= 90 and not page.reverted: #Révocation si la probabilité de vandalisme détectée par le LLM est supérieure ou égale à 90 %
+                if proba_ai >= 95 and not page.reverted: #Révocation si la probabilité de vandalisme détectée par le LLM est supérieure ou égale à 95 %
                     page.revert()
                     color = 13371938
                 elif proba_ai >= 50:
