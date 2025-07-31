@@ -583,17 +583,19 @@ Wiki : {page.url}
 Page : {page.page_name}
 Diff :
 {diff}
+Résumé de modification : {page.latest_revision.comment}
 Format de réponse :
 Analyse de la modification :
 ...
 Probabilité de vandalisme : [probabilité] %"""
             else:
                 prompt = f"""Analyze the modification and indicate the probability that it is vandalism in %.
-Date : {page.latest_revision.timestamp}
+Date: {page.latest_revision.timestamp}
 Wiki: {page.url}
 Page: {page.page_name}
 Diff:
 {diff}
+Edit summary: {page.latest_revision.comment}
 Format of answer:
 Analysis of the modification:
 ...
@@ -626,7 +628,7 @@ Probability of vandalism: [probability] %"""
                     proba_ai = int(match.group(1))
                 else:
                     proba_ai = 0
-                if proba_ai >= 95 and not page.reverted: #Révocation si la probabilité de vandalisme détectée par le LLM est supérieure ou égale à 95 %
+                if proba_ai >= 99 and not page.reverted: #Révocation si la probabilité de vandalisme détectée par le LLM est supérieure ou égale à 99 %
                     page.revert()
                     color = 13371938
                 elif proba_ai >= 50:
@@ -778,7 +780,7 @@ Probability of vandalism: [probability] %"""
                                   'description': "Cette page copie possiblement Wikipédia.",
                                   'url': page.protocol + "//" + page.url + page.articlepath + "index.php?diff=prev&oldid=" + str(page.oldid),
                                   'author': {'name': page.contributor_name},
-                                  'color': 12161032,
+                                  'color': 12138760,
                                   'fields': fields
                             }
                         ]
@@ -797,7 +799,7 @@ Probability of vandalism: [probability] %"""
                                   'description': "This page likely copies Wikipedia.",
                                   'url': page.protocol + "//" + page.url + page.articlepath + "index.php?diff=prev&oldid=" + str(page.oldid),
                                   'author': {'name': page.contributor_name},
-                                  'color': 12161032,
+                                  'color': 12138760,
                                   'fields': fields
                             }
                         ]
@@ -811,11 +813,11 @@ Probability of vandalism: [probability] %"""
         while True:
             self.datetime_utcnow = datetime.datetime.utcnow()
             try:
-                if not self.ignore_task_month and (self.start_task_month or int(self.datetime_utcnow.strftime("%m")) != month): 
+                if not self.ignore_task_month and (self.start_task_month or int(self.datetime_utcnow.strftime("%m")) != month):
                     self.task_every_month()
                     self.start_task_month = False
                     month = int(self.datetime_utcnow.strftime("%m"))
-                if self.start_task_day or int(self.datetime_utcnow.strftime("%d")) != day: 
+                if self.start_task_day or int(self.datetime_utcnow.strftime("%d")) != day:
                     self.task_every_day()
                     self.start_task_day = False
                     day = int(self.datetime_utcnow.strftime("%d"))
