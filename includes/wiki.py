@@ -36,7 +36,28 @@ class get_wiki:
         self.url = self.fullurl.split("/")[2]
         self.articlepath = self.site.siteinfo["general"]["articlepath"].replace("$1", "")
         self.scriptpath = self.site.siteinfo["general"]["scriptpath"]
+        self.get_admins()
         self.get_trusted()
+
+    def get_admins(self):
+        url = "%s//%s%s/api.php?action=query&list=allusers&augroup=sysop&aulimit=500&format=json" % (self.protocol, self.url, self.scriptpath)
+        self.trusted = []
+        aufrom = ""
+        while aufrom != None:
+            if aufrom != "":
+                j = json.loads(request_site(url + "&aufrom=" + urllib.parse.quote(aufrom)))
+            else:
+                j = json.loads(request_site(url))
+            try:
+                trusted_query = j["query"]["allusers"]
+            except KeyError:
+                trusted_query = []
+            try:
+                aufrom = j["continue"]["aufrom"]
+            except KeyError:
+                aufrom = None
+            for user_trusted in trusted_query:
+                self.trusted.append(user_trusted["name"])
 
     def get_trusted(self):
         url = "%s//%s%s/api.php?action=query&list=allusers&auwitheditsonly&auactiveusers&auprop=rights&aulimit=500&format=json" % (self.protocol, self.url, self.scriptpath)

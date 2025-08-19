@@ -2,8 +2,8 @@
 
 import os
 
-ver = "6.1.5"
-release_date = "10/08/2025"
+ver = "6.1.6"
+release_date = "19/08/2025"
 
 webhooks_url = {'localhost': "REMOVED",
                 'vikidia': "REMOVED",
