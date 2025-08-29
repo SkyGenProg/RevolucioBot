@@ -36,12 +36,10 @@ class get_wiki:
         self.url = self.fullurl.split("/")[2]
         self.articlepath = self.site.siteinfo["general"]["articlepath"].replace("$1", "")
         self.scriptpath = self.site.siteinfo["general"]["scriptpath"]
-        self.get_admins()
-        self.get_trusted()
+        self.trusted = []
 
     def get_admins(self):
         url = "%s//%s%s/api.php?action=query&list=allusers&augroup=sysop&aulimit=500&format=json" % (self.protocol, self.url, self.scriptpath)
-        self.trusted = []
         aufrom = ""
         while aufrom != None:
             if aufrom != "":
@@ -61,7 +59,6 @@ class get_wiki:
 
     def get_trusted(self):
         url = "%s//%s%s/api.php?action=query&list=allusers&auwitheditsonly&auactiveusers&auprop=rights&aulimit=500&format=json" % (self.protocol, self.url, self.scriptpath)
-        self.trusted = []
         aufrom = ""
         while aufrom != None:
             if aufrom != "":
@@ -79,6 +76,11 @@ class get_wiki:
             for user_trusted in trusted_query:
                 if "autoconfirmed" in user_trusted["rights"] and user_trusted["name"] not in self.trusted:
                     self.trusted.append(user_trusted["name"])
+
+    def get_admins_trusted(self):
+        self.trusted = []
+        self.get_admins()
+        self.get_trusted()
 
     def all_pages(self, n_pages=5000, ns=0, start=None, end=None, apfilterredir=None, apprefix=None, urladd=None):
         pages = []

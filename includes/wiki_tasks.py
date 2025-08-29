@@ -21,7 +21,7 @@ class wiki_task:
         self.start_task_day = start_task_day
         self.start_task_month = start_task_month and not ignore_task_month
         self.ignore_task_month = ignore_task_month
-        self.site.get_trusted() #récupération des utilisateurs ignorés par le bot
+        self.site.get_admins_trusted() #récupération des utilisateurs ignorés par le bot
 
     def task_every_month(self):
         pywikibot.output("Tâches mensuelles (" + self.site.family + " " + self.site.lang + ").")
@@ -249,7 +249,7 @@ class wiki_task:
                             pass
                 pages_checked.append(page_name)
         if task_day: #Tâches journalières (après passage des RC)
-            self.site.get_trusted() #récupération des utilisateurs ignorés par le bot
+            self.site.get_admins_trusted() #récupération des utilisateurs ignorés par le bot
             #Statistiques journalières
             scores_n = {}
             scores_n_reverted = {}
