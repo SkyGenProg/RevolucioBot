@@ -1,1 +1,1 @@
-{"lang_bot": "fr", "alert_page": "Project:Alerte/24", "clear_talks": true, "check_WP": true, "correct_redirects": true}
+{"lang_bot": "fr", "alert_page": "Project:Alerte/25", "clear_talks": true, "check_WP": true, "correct_redirects": true}
