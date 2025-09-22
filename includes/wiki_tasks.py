@@ -625,7 +625,7 @@ Probability of vandalism: [probability] %"""
                 else:
                     match = re.search(r"probability of vandalism.*:[^0-9]*([\d\.,]+)[^0-9]*%", result_ai.lower())
                 if match:
-                    proba_ai = int(match.group(1))
+                    proba_ai = float(match.group(1).replace(",", "."))
                 else:
                     proba_ai = 0
                 if proba_ai >= 99 and not page.reverted: #Révocation si la probabilité de vandalisme détectée par le LLM est supérieure ou égale à 99 %
