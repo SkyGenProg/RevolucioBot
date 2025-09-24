@@ -171,7 +171,7 @@ class get_page(pywikibot.Page):
         self.scriptpath = self.source.site.siteinfo["general"]["scriptpath"]
         if not self.special:
             try:
-                self.contributor_name = self.userName()
+                self.contributor_name = self.latest_revision.user
                 self.page_ns = self.namespace()
                 self.oldid = self.latest_revision_id
                 self.size = len(self.text)
