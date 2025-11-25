@@ -39,7 +39,7 @@ class wiki_task:
                 pywikibot.output(str(edit_replace) + " recherche(s)-remplacement(s) sur la page " + str(page) + ".")
                 if not ("disable_del_categories" in self.site.config and self.site.config["disable_del_categories"]) and page.page_ns != 2:
                     pywikibot.output("Suppression des catégories inexistantes sur la page " + str(page))
-                    del_categories_no_exists = page.del_categories_no_exists() #Suppression 
+                    del_categories_no_exists = page.del_categories_no_exists() #Suppression
                     if del_categories_no_exists != []:
                         pywikibot.output("Catégories retirées " + ", ".join(del_categories_no_exists))
                     else:
@@ -222,10 +222,11 @@ class wiki_task:
                     else:
                         pywikibot.output("La page " + str(page) + " est une redirection.")
                 else:
-                    if not ("disable_vandalism" in self.site.config and self.site.config["disable_vandalism"]):
+                    is_revert = "mw-undo" in page_info["tags"] or "mw-rollback" in page_info["tags"] or "mw-manual-revert" in page_info["tags"]
+                    if not is_revert and not ("disable_vandalism" in self.site.config and self.site.config["disable_vandalism"]):
                         #détection vandalismes
                         self.check_vandalism(page)
-                    if not ("disable_ai" in self.site.config and self.site.config["disable_ai"]):
+                    if not is_revert and not ("disable_ai" in self.site.config and self.site.config["disable_ai"]):
                         #utilisation de l'IA pour détecter les vandalismes
                         self.check_vandalism_ai(page)
                     if page.page_ns == 0:
@@ -237,7 +238,7 @@ class wiki_task:
                     if not ("disable_del_categories" in self.site.config and self.site.config["disable_del_categories"]) and task_day and page.page_ns != 2:
                         pywikibot.output("Suppression des catégories inexistantes sur la page " + str(page))
                         try:
-                            del_categories_no_exists = page.del_categories_no_exists() #Suppression 
+                            del_categories_no_exists = page.del_categories_no_exists() #Suppression
                             if del_categories_no_exists != []:
                                 pywikibot.output("Catégories retirées " + ", ".join(del_categories_no_exists))
                             else:
