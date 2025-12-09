@@ -163,9 +163,9 @@ class wiki_task:
                             pywikibot.output("Suppression des avertissements de la page " + page_name)
                             try:
                                 if self.site.lang_bot == "fr":
-                                    page.put("{{Avertissement effacé|{{subst:#time: j F Y}}}}", "Anciens messages effacés", minor=False, botflag=True)
+                                    page.put("{{Avertissement effacé|{{subst:#time: j F Y}}}}", "Anciens messages effacés", minor=False)
                                 else:
-                                    page.put("{{Warning cleared|{{subst:#time: j F Y}}}}", "Old messages cleared", minor=False, botflag=True)
+                                    page.put("{{Warning cleared|{{subst:#time: j F Y}}}}", "Old messages cleared", minor=False)
                             except Exception as e:
                                 try:
                                     bt = traceback.format_exc()
@@ -636,7 +636,7 @@ Probability of vandalism: [probability] %"""
                     proba_ai = float(match.group(1).replace(",", "."))
                 else:
                     proba_ai = 0
-                if proba_ai >= 99 and not page.reverted: #Révocation si la probabilité de vandalisme détectée par le LLM est supérieure ou égale à 99 %
+                if proba_ai >= page.limit_ai and not page.reverted: #Révocation si la probabilité de vandalisme détectée par le LLM est supérieure ou égale au seuil
                     page.revert()
                     color = 13371938
                 elif proba_ai >= 50:
@@ -691,7 +691,7 @@ Probability of vandalism: [probability] %"""
             if self.site.lang_bot == "fr":
                 if template_WP not in page.text:
                     page.text = "{{" + template_WP + "|" + page_name + "|" + str(round(prob_WP, 2)) + "}}\n" + page.text
-                    page.save("copie de WP", botflag=False, minor=False)
+                    page.save("copie de WP", bot=False, minor=False)
                 fields = [
                         {
                           "name": "Probabilité de copie",
