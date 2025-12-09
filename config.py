@@ -18,5 +18,5 @@ headers = {
     'user-agent': 'Mozilla/5.0 Revolucio'
 }
 
-api_key = "REMOVED"
+api_key = os.environ["MISTRAL_API_KEY"]
 model = "mistral-large-latest"
