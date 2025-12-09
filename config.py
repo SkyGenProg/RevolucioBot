@@ -2,8 +2,8 @@
 
 import os
 
-ver = "6.2.3"
-release_date = "08/12/2025"
+ver = "6.2.4"
+release_date = "09/12/2025"
 
 webhooks_url = {'localhost': "REMOVED",
                 'vikidia': "REMOVED",
@@ -18,5 +18,5 @@ headers = {
     'user-agent': 'Mozilla/5.0 Revolucio'
 }
 
-api_key = os.environ["MISTRAL_API_KEY"]
+api_key = "REMOVED"
 model = "mistral-large-latest"
