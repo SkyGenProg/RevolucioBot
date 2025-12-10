@@ -183,7 +183,7 @@ class get_page(pywikibot.Page):
 
         self.limit = -50
         self.limit2 = -30
-        self.limit_ai = 90
+        self.limit_ai = 98
         #Page d'alerte
         if "alert_page" in self.source.config:
             self.alert_page = datetime.datetime.now().strftime(self.source.config["alert_page"].replace("\r", "").replace("\n", ""))
