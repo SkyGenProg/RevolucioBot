@@ -460,9 +460,9 @@ class wiki_task:
     def check_vandalism(self, page):
         page_name = page.page_name
         vandalism_score = page.vandalism_get_score_current()
-        if page.vand_to_revert: #Révocation si modification inférieure ou égale au score de révocation
+        if page.vand_to_revert: #Révocation si modification inférieure ou égale au score de révocation (non-IA)
             page.revert()
-        if vandalism_score < 0: #Webhook d'avertissement
+        if vandalism_score < 0: #Webhook d'avertissement (non-IA)
             if webhooks_url[self.site.family] != None:
                 vand_prob = vand_f(abs(vandalism_score))
                 if vand_prob > 100:
@@ -556,30 +556,8 @@ class wiki_task:
                         ]
                     }
                     request_site(webhooks_url[self.site.family], headers, json.dumps(discord_msg).encode("utf-8"), "POST")
-                if page.alert_request:
-                    if self.site.lang_bot == "fr":
-                        discord_msg = {'embeds': [
-                                    {
-                                          'title': "Demande de blocage de " + page.contributor_name,
-                                          'description': "Un vandale est à bloquer.",
-                                          'url': page.protocol + "//" + page.url + page.articlepath + page.alert_page,
-                                          'author': {'name': page.contributor_name},
-                                          'color': 16711680
-                                    }
-                                ]
-                            }
-                    else:
-                        discord_msg = {'embeds': [
-                                    {
-                                          'title': "Request to block against " + page.contributor_name,
-                                          'description': "A vandal must be blocked.",
-                                          'url': page.protocol + "//" + page.url + page.articlepath + page.alert_page,
-                                          'author': {'name': page.contributor_name},
-                                          'color': 16711680
-                                    }
-                                ]
-                            }
-                    request_site(webhooks_url[self.site.family], headers, json.dumps(discord_msg).encode("utf-8"), "POST")
+        if webhooks_url[self.site.family] != None and page.alert_request:
+            self.block_alert(page)
 
     def check_vandalism_ai(self, page):
         if not page.contributor_is_trusted():
@@ -680,6 +658,33 @@ Probability of vandalism: [probability] %"""
                     ]
                 }
                 request_site(webhooks_url_ai[self.site.family], headers, json.dumps(discord_msg).encode("utf-8"), "POST")
+        if webhooks_url[self.site.family] != None and page.alert_request:
+            self.block_alert(page)
+
+    def block_alert(self, page):
+        if self.site.lang_bot == "fr":
+            discord_msg = {'embeds': [
+                        {
+                              'title': "Demande de blocage de " + page.contributor_name,
+                              'description': "Un vandale est à bloquer.",
+                              'url': page.protocol + "//" + page.url + page.articlepath + page.alert_page,
+                              'author': {'name': page.contributor_name},
+                              'color': 16711680
+                        }
+                    ]
+                }
+        else:
+            discord_msg = {'embeds': [
+                        {
+                              'title': "Request to block against " + page.contributor_name,
+                              'description': "A vandal must be blocked.",
+                              'url': page.protocol + "//" + page.url + page.articlepath + page.alert_page,
+                              'author': {'name': page.contributor_name},
+                              'color': 16711680
+                        }
+                    ]
+                }
+        request_site(webhooks_url[self.site.family], headers, json.dumps(discord_msg).encode("utf-8"), "POST")
 
     def check_WP(self, page):
         page_name = page.page_name
