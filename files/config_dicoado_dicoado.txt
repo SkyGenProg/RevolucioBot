@@ -1,1 +1,1 @@
-{"lang_bot": "fr", "trusted_groups": "sysop", "alert_page": "Project:Alerte/%Y%m%d%H%M%S", "check_all_pages": true, "clear_talks": true, "correct_redirects": false}
+{"lang_bot": "fr", "trusted_groups": "sysop|patroller|autopatrol|bot", "alert_page": "Project:Alerte/%Y%m%d%H%M%S", "check_all_pages": true, "clear_talks": true, "correct_redirects": false}
