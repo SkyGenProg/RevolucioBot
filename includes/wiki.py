@@ -92,6 +92,27 @@ class get_wiki:
                 pages.append(contrib["title"])
         return pages
 
+    def problematic_redirects(self, type_redirects):
+        pages = []
+        url = "%s//%s%s/api.php?action=query&list=querypage&qppage=%s&qplimit=max&format=json" % (self.protocol, self.url, self.scriptpath, type_redirects)
+        apcontinue = ""
+        while apcontinue != None:
+            if apcontinue != "":
+                j = json.loads(request_site(url + "&apcontinue=" + urllib.parse.quote(apcontinue)))
+            else:
+                j = json.loads(request_site(url))
+            try:
+                results = j["query"]["querypage"]["results"]
+            except KeyError:
+                return []
+            try:
+                apcontinue = j["continue"]["apcontinue"]
+            except KeyError:
+                apcontinue = None
+            for result in results:
+                pages.append(result["title"])
+        return pages
+
     def rc_pages(self, n_edits=5000, timestamp=None, rctoponly=True, show_trusted=False, namespace=None, timestamp_start=None):
         self.diffs_rc = []
         page_names = []
@@ -450,7 +471,7 @@ class get_page(pywikibot.Page):
             else:
                 type_redirect = "correct"
                 pywikibot.output("Redirection correcte.")
-        except pywikibot.exceptions.CircularRedirect:
+        except pywikibot.exceptions.CircularRedirectError:
             type_redirect = "circular"
             if self.lang_bot == "fr":
                 self.put("{{User:%s/RedirectDelete|circular=True}}" % self.user_wiki, "Demande suppression redirection en boucle")

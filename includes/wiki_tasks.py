@@ -32,9 +32,6 @@ class wiki_task:
                 if not ("disable_vandalism" in self.site.config and self.site.config["disable_vandalism"]):
                     #détection vandalismes
                     self.check_vandalism(page)
-                if "correct_redirects" in self.site.config and self.site.config["correct_redirects"] and page.isRedirectPage():
-                    pywikibot.output("Correction de redirection sur la page " + str(page))
-                    redirect = page.redirects() #Correction redirections
                 edit_replace = page.edit_replace() #Recherches-remplacements
                 pywikibot.output(str(edit_replace) + " recherche(s)-remplacement(s) sur la page " + str(page) + ".")
                 if not ("disable_del_categories" in self.site.config and self.site.config["disable_del_categories"]) and page.page_ns != 2:
@@ -180,6 +177,13 @@ class wiki_task:
                     pywikibot.output("Pas une PDD d'IP")
 
     def task_every_day(self):
+        #Correction redirections une fois par jour
+        if "correct_redirects" in self.site.config and self.site.config["correct_redirects"]:
+            for page_name in self.site.problematic_redirects("DoubleRedirects")+self.site.problematic_redirects("BrokenRedirects"):
+                page = self.site.page(page_name)
+                if page.isRedirectPage():
+                    pywikibot.output("Correction de redirection sur la page " + str(page))
+                    redirect = page.redirects()
         self.task_every_10minutes(True)
 
     def task_every_10minutes(self, task_day=False):
