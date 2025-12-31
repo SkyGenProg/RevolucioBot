@@ -32,9 +32,6 @@ class wiki_task:
                 if not ("disable_vandalism" in self.site.config and self.site.config["disable_vandalism"]):
                     #détection vandalismes
                     self.check_vandalism(page)
-                if "correct_redirects" in self.site.config and self.site.config["correct_redirects"] and page.isRedirectPage():
-                    pywikibot.output("Correction de redirection sur la page " + str(page))
-                    redirect = page.redirects() #Correction redirections
                 edit_replace = page.edit_replace() #Recherches-remplacements
                 pywikibot.output(str(edit_replace) + " recherche(s)-remplacement(s) sur la page " + str(page) + ".")
                 if not ("disable_del_categories" in self.site.config and self.site.config["disable_del_categories"]) and page.page_ns != 2:
@@ -180,6 +177,13 @@ class wiki_task:
                     pywikibot.output("Pas une PDD d'IP")
 
     def task_every_day(self):
+        #Correction redirections une fois par jour
+        if "correct_redirects" in self.site.config and self.site.config["correct_redirects"]:
+            for page_name in self.site.problematic_redirects("DoubleRedirects")+self.site.problematic_redirects("BrokenRedirects"):
+                page = self.site.page(page_name)
+                if page.isRedirectPage():
+                    pywikibot.output("Correction de redirection sur la page " + str(page))
+                    redirect = page.redirects()
         self.task_every_10minutes(True)
 
     def task_every_10minutes(self, task_day=False):
@@ -482,7 +486,7 @@ class wiki_task:
                         detected += str(vandalism_score_detect[1]) + " - - " + str(vandalism_score_detect[2].group()) + "\n"
                     else:
                         detected += str(vandalism_score_detect[1]) + " - + " + str(vandalism_score_detect[2].group()) + "\n"
-                if vandalism_score <= page.limit:
+                if page.vand_to_revert:
                     if self.site.lang_bot == "fr":
                         title = "Modification non-constructive révoquée sur " + self.site.lang + ":" + page_name
                         description = "Cette modification a été détectée comme non-constructive"
@@ -563,7 +567,7 @@ class wiki_task:
         if not page.contributor_is_trusted():
             diff = page.get_diff()
             if self.site.lang_bot == "fr":
-                prompt = f"""Analyser la modification et indiquer la probabilité que ce soit du vandalisme en %.
+                prompt = f"""Analyser la modification, indiquer la probabilité que ce soit du vandalisme en % et résumer en 10 mots maximum la pertinence de la modification.
 Date : {page.latest_revision.timestamp}
 Wiki : {page.url}
 Page : {page.page_name}
@@ -573,9 +577,10 @@ Résumé de modification : {page.latest_revision.comment}
 Format de réponse :
 Analyse de la modification :
 ...
-Probabilité de vandalisme : [probabilité] %"""
+Probabilité de vandalisme : [probabilité] %
+Résumé : [résumé en 10 mots maximum]"""
             else:
-                prompt = f"""Analyze the modification and indicate the probability that it is vandalism in %.
+                prompt = f"""Analyze the modification and indicate the probability that it is vandalism in % and summary in 10 words max the relevance of the modification.
 Date: {page.latest_revision.timestamp}
 Wiki: {page.url}
 Page: {page.page_name}
@@ -585,7 +590,8 @@ Edit summary: {page.latest_revision.comment}
 Format of answer:
 Analysis of the modification:
 ...
-Probability of vandalism: [probability] %"""
+Probability of vandalism: [probability] %
+Summary: [summary in 10 words max]"""
             try:
                 chat_response = client.chat.complete(
                     model = model,
@@ -614,10 +620,25 @@ Probability of vandalism: [probability] %"""
                     proba_ai = float(match.group(1).replace(",", "."))
                 else:
                     proba_ai = 0
+                if self.site.lang_bot == "fr":
+                    match = re.search(r"résumé.*:\s*[^a-zA-ZÀ-ÿ0-9]*([^*]+)", result_ai.lower())
+                else:
+                    match = re.search(r"summary.*:\s*[^a-zA-ZÀ-ÿ0-9]*([^*]+)", result_ai.lower())
+                if match:
+                    summary_ai = match.group(1)
+                else:
+                    summary_ai = None
                 if proba_ai >= page.limit_ai and not page.reverted: #Révocation si la probabilité de vandalisme détectée par le LLM est supérieure ou égale au seuil
-                    page.revert()
+                    page.revert(summary_ai)
                     color = 13371938
-                elif proba_ai >= 50:
+                elif proba_ai >= page.limit_ai2:
+                    page.get_warnings_user()
+                    if page.warn_level > 0 and not page.reverted: #Révocation si la probabilité de vandalisme détectée par le LLM est supérieure ou égale au second seuil et si l'utilisateur a déjà été averti
+                        page.revert(summary_ai)
+                        color = 13371938
+                    else:
+                        color = 12138760
+                elif proba_ai >= page.limit_ai3:
                     color = 12138760
                 else:
                     color = 12161032

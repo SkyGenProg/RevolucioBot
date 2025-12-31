@@ -92,6 +92,27 @@ class get_wiki:
                 pages.append(contrib["title"])
         return pages
 
+    def problematic_redirects(self, type_redirects):
+        pages = []
+        url = "%s//%s%s/api.php?action=query&list=querypage&qppage=%s&qplimit=max&format=json" % (self.protocol, self.url, self.scriptpath, type_redirects)
+        apcontinue = ""
+        while apcontinue != None:
+            if apcontinue != "":
+                j = json.loads(request_site(url + "&apcontinue=" + urllib.parse.quote(apcontinue)))
+            else:
+                j = json.loads(request_site(url))
+            try:
+                results = j["query"]["querypage"]["results"]
+            except KeyError:
+                return []
+            try:
+                apcontinue = j["continue"]["apcontinue"]
+            except KeyError:
+                apcontinue = None
+            for result in results:
+                pages.append(result["title"])
+        return pages
+
     def rc_pages(self, n_edits=5000, timestamp=None, rctoponly=True, show_trusted=False, namespace=None, timestamp_start=None):
         self.diffs_rc = []
         page_names = []
@@ -184,6 +205,8 @@ class get_page(pywikibot.Page):
         self.limit = -50
         self.limit2 = -30
         self.limit_ai = 98
+        self.limit_ai2 = 90
+        self.limit_ai3 = 50
         #Page d'alerte
         if "alert_page" in self.source.config:
             self.alert_page = datetime.datetime.now().strftime(self.source.config["alert_page"].replace("\r", "").replace("\n", ""))
@@ -193,12 +216,13 @@ class get_page(pywikibot.Page):
             else:
                 self.alert_page = "Project:Alert"
         self.alert_request = False
+        self.warn_level = -1
 
-    def revert(self):
-        self.only_revert()
-        self.warn_revert()
+    def revert(self, summary=""):
+        self.only_revert(summary)
+        self.warn_revert(summary)
 
-    def only_revert(self):
+    def only_revert(self, summary=""):
         if self.text_page_oldid == None or self.text_page_oldid2 == None:
             self.get_text_page_old()
         if self.new_page:
@@ -206,52 +230,69 @@ class get_page(pywikibot.Page):
         else:
             self.text = self.text_page_oldid2
         if self.lang_bot == "fr":
-            self.save("Annulation modification non-constructive", bot=False, minor=False)
+            if summary != "":
+                self.save("Annulation : " + summary, bot=False, minor=False)
+            else:
+                self.save("Annulation modification non-constructive", bot=False, minor=False)
         else:
-            self.save("Revert", bot=False, minor=False)
+            if summary != "":
+                self.save("Revert : " + summary, bot=False, minor=False)
+            else:
+                self.save("Revert", bot=False, minor=False)
         self.reverted = True
 
-    def warn_revert(self):
-        talk = pywikibot.Page(self.source.site, "User Talk:%s" % self.contributor_name)
-        if ("averto-1" in talk.text.lower() or "niveau=1" in talk.text.lower() or "level=1" in talk.text.lower()) and "averto-2" not in talk.text.lower() and "niveau=2" not in talk.text.lower() and "level=2" not in talk.text.lower(): #averti 2 fois
+    def get_warnings_user(self):
+        self.talk = pywikibot.Page(self.source.site, "User Talk:%s" % self.contributor_name)
+        if ("averto-1" in self.talk.text.lower() or "niveau=1" in self.talk.text.lower() or "level=1" in self.talk.text.lower()) and "averto-2" not in self.talk.text.lower() and "niveau=2" not in self.talk.text.lower() and "level=2" not in self.talk.text.lower(): #averti 2 fois
+            self.warn_level = 2
+        elif ("averto-0" in self.talk.text.lower() or "niveau=0" in self.talk.text.lower() or "level=0" in self.talk.text.lower()) and "averto-1" not in self.talk.text.lower() and "niveau=1" not in self.talk.text.lower() and "level=1" not in self.talk.text.lower(): #averti une fois
+            self.warn_level = 1
+        elif "averto-0" not in self.talk.text.lower() and "niveau=0" not in self.talk.text.lower() and "level=0" not in self.talk.text.lower(): #pas averti
+            self.warn_level = 0
+
+    def warn_revert(self, summary=""):
+        if self.warn_level < 0:
+            self.get_warnings_user()
+        if self.warn_level >= 2: #averti 2 fois
             alert = pywikibot.Page(self.source.site, self.alert_page)
             alert.text = alert.text + "\n{{subst:User:%s/Alert|%s}}" % (self.user_wiki, self.contributor_name)
             if self.lang_bot == "fr":
                 alert.save("Alerte vandalisme", bot=False, minor=False)
             else:
                 alert.save("Vandalism alert", bot=False, minor=False)
-            talk.text = talk.text + "\n{{subst:User:%s/Vandalism2|%s}} <!-- level=2 -->" % (self.user_wiki, self.page_name)
+            self.talk.text = self.talk.text + "\n{{subst:User:%s/Vandalism2|%s|%s}} <!-- level=2 -->" % (self.user_wiki, self.page_name, summary)
             if self.lang_bot == "fr":
-                talk.save("Avertissement 2", bot=False, minor=False)
+                self.talk.save("Avertissement 2", bot=False, minor=False)
             else:
-                talk.save("Warning 2", bot=False, minor=False)
+                self.talk.save("Warning 2", bot=False, minor=False)
             self.alert_request = True
-        elif ("averto-0" in talk.text.lower() or "niveau=0" in talk.text.lower() or "level=0" in talk.text.lower()) and "averto-1" not in talk.text.lower() and "niveau=1" not in talk.text.lower() and "level=1" not in talk.text.lower(): #averti une fois
-            talk.text = talk.text + "\n{{subst:User:%s/Vandalism1|%s}} <!-- level=1 -->" % (self.user_wiki, self.page_name)
+        elif self.warn_level == 1: #averti une fois
+            self.talk.text = self.talk.text + "\n{{subst:User:%s/Vandalism1|%s|%s}} <!-- level=1 -->" % (self.user_wiki, self.page_name, summary)
             if self.lang_bot == "fr":
-                talk.save("Avertissement 1", bot=False, minor=False)
+                self.talk.save("Avertissement 1", bot=False, minor=False)
             else:
-                talk.save("Warning 1", bot=False, minor=False)
-        elif "averto-0" not in talk.text.lower() and "niveau=0" not in talk.text.lower() and "level=0" not in talk.text.lower(): #pas averti
-            talk.text = talk.text + "\n{{subst:User:%s/Vandalism0|%s}} <!-- level=0 -->" % (self.user_wiki, self.page_name)
+                self.talk.save("Warning 1", bot=False, minor=False)
+        else: #pas averti
+            self.talk.text = self.talk.text + "\n{{subst:User:%s/Vandalism0|%s|%s}} <!-- level=0 -->" % (self.user_wiki, self.page_name, summary)
             if self.lang_bot == "fr":
-                talk.save("Avertissement 0", bot=False, minor=False)
+                self.talk.save("Avertissement 0", bot=False, minor=False)
             else:
-                talk.save("Warning 0", bot=False, minor=False)
+                self.talk.save("Warning 0", bot=False, minor=False)
 
     def vandalism_get_score_current(self): #Score sur la version actuelle en ignorant les contributeurs expérimentés
         if self.contributor_is_trusted():
             return 0
         vand = self.vandalism_score()
-        self.vand_to_revert = vand <= self.limit
         if vand <= self.limit:
-            pywikibot.output("Modification non-constructive détectée (%s)." % str(vand))
+            self.vand_to_revert = True
         elif vand <= self.limit2:
-            pywikibot.output("Modification suspecte détectée (%s)." % str(vand))
-        elif vand < 0:
-            pywikibot.output("Modification à vérifier détectée (%s)." % str(vand))
+            self.get_warnings_user()
+            if self.warn_level > 0:
+                self.vand_to_revert = True
+            else:
+                self.vand_to_revert = False
         else:
-            pywikibot.output("Pas de modification suspecte détectée (%s)." % str(vand))
+            self.vand_to_revert = False
         return vand
 
     def contributor_is_trusted(self):
@@ -415,28 +456,37 @@ class get_page(pywikibot.Page):
             page_redirect = self.getRedirectTarget()
             if not page_redirect.exists():
                 type_redirect = "broken"
-                if self.lang_bot == "fr":
-                    self.put("{{User:%s/RedirectDelete}}" % self.user_wiki, "Demande suppression redirection cassée")
-                else:
-                    self.put("{{User:%s/RedirectDelete}}" % self.user_wiki, "Delete broken redirect")
-                pywikibot.output("Redirecton cassée demandée à la suppression.")
+                try:
+                    if self.lang_bot == "fr":
+                        self.put("{{User:%s/RedirectDelete}}" % self.user_wiki, "Demande suppression redirection cassée")
+                    else:
+                        self.put("{{User:%s/RedirectDelete}}" % self.user_wiki, "Delete broken redirect")
+                    pywikibot.output("Redirecton cassée demandée à la suppression.")
+                except Exception as e:
+                    pywikibot.error(e)
             elif page_redirect.isRedirectPage():
                 type_redirect = "double"
-                if self.lang_bot == "fr":
-                    self.put("#REDIRECT[[%s]]" % page_redirect.getRedirectTarget().title(), "Correction redirection")
-                else:
-                    self.put("#REDIRECT[[%s]]" % page_redirect.getRedirectTarget().title(), "Correct redirect")
-                pywikibot.output("Double redirection corrigée.")
+                try:
+                    if self.lang_bot == "fr":
+                        self.put("#REDIRECT[[%s]]" % page_redirect.getRedirectTarget().title(), "Correction redirection")
+                    else:
+                        self.put("#REDIRECT[[%s]]" % page_redirect.getRedirectTarget().title(), "Correct redirect")
+                    pywikibot.output("Double redirection corrigée.")
+                except Exception as e:
+                    pywikibot.error(e)
             else:
                 type_redirect = "correct"
                 pywikibot.output("Redirection correcte.")
-        except pywikibot.exceptions.CircularRedirect:
+        except pywikibot.exceptions.CircularRedirectError:
             type_redirect = "circular"
-            if self.lang_bot == "fr":
-                self.put("{{User:%s/RedirectDelete|circular=True}}" % self.user_wiki, "Demande suppression redirection en boucle")
-            else:
-                self.put("{{User:%s/RedirectDelete|circular=True}}" % self.user_wiki, "Delete circular redirect")
-            pywikibot.output("Redirecton en boucle demandée à la suppression.")
+            try:
+                if self.lang_bot == "fr":
+                    self.put("{{User:%s/RedirectDelete|circular=True}}" % self.user_wiki, "Demande suppression redirection en boucle")
+                else:
+                    self.put("{{User:%s/RedirectDelete|circular=True}}" % self.user_wiki, "Delete circular redirect")
+                pywikibot.output("Redirecton en boucle demandée à la suppression.")
+            except Exception as e:
+                pywikibot.error(e)
         return type_redirect
 
     def category_page(self, category_name):
