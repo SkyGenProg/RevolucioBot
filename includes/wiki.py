@@ -456,28 +456,37 @@ class get_page(pywikibot.Page):
             page_redirect = self.getRedirectTarget()
             if not page_redirect.exists():
                 type_redirect = "broken"
-                if self.lang_bot == "fr":
-                    self.put("{{User:%s/RedirectDelete}}" % self.user_wiki, "Demande suppression redirection cassée")
-                else:
-                    self.put("{{User:%s/RedirectDelete}}" % self.user_wiki, "Delete broken redirect")
-                pywikibot.output("Redirecton cassée demandée à la suppression.")
+                try:
+                    if self.lang_bot == "fr":
+                        self.put("{{User:%s/RedirectDelete}}" % self.user_wiki, "Demande suppression redirection cassée")
+                    else:
+                        self.put("{{User:%s/RedirectDelete}}" % self.user_wiki, "Delete broken redirect")
+                    pywikibot.output("Redirecton cassée demandée à la suppression.")
+                except Exception as e:
+                    pywikibot.error(e)
             elif page_redirect.isRedirectPage():
                 type_redirect = "double"
-                if self.lang_bot == "fr":
-                    self.put("#REDIRECT[[%s]]" % page_redirect.getRedirectTarget().title(), "Correction redirection")
-                else:
-                    self.put("#REDIRECT[[%s]]" % page_redirect.getRedirectTarget().title(), "Correct redirect")
-                pywikibot.output("Double redirection corrigée.")
+                try:
+                    if self.lang_bot == "fr":
+                        self.put("#REDIRECT[[%s]]" % page_redirect.getRedirectTarget().title(), "Correction redirection")
+                    else:
+                        self.put("#REDIRECT[[%s]]" % page_redirect.getRedirectTarget().title(), "Correct redirect")
+                    pywikibot.output("Double redirection corrigée.")
+                except Exception as e:
+                    pywikibot.error(e)
             else:
                 type_redirect = "correct"
                 pywikibot.output("Redirection correcte.")
         except pywikibot.exceptions.CircularRedirectError:
             type_redirect = "circular"
-            if self.lang_bot == "fr":
-                self.put("{{User:%s/RedirectDelete|circular=True}}" % self.user_wiki, "Demande suppression redirection en boucle")
-            else:
-                self.put("{{User:%s/RedirectDelete|circular=True}}" % self.user_wiki, "Delete circular redirect")
-            pywikibot.output("Redirecton en boucle demandée à la suppression.")
+            try:
+                if self.lang_bot == "fr":
+                    self.put("{{User:%s/RedirectDelete|circular=True}}" % self.user_wiki, "Demande suppression redirection en boucle")
+                else:
+                    self.put("{{User:%s/RedirectDelete|circular=True}}" % self.user_wiki, "Delete circular redirect")
+                pywikibot.output("Redirecton en boucle demandée à la suppression.")
+            except Exception as e:
+                pywikibot.error(e)
         return type_redirect
 
     def category_page(self, category_name):
