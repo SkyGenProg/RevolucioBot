@@ -482,7 +482,7 @@ class wiki_task:
                         detected += str(vandalism_score_detect[1]) + " - - " + str(vandalism_score_detect[2].group()) + "\n"
                     else:
                         detected += str(vandalism_score_detect[1]) + " - + " + str(vandalism_score_detect[2].group()) + "\n"
-                if vandalism_score <= page.limit:
+                if page.vand_to_revert:
                     if self.site.lang_bot == "fr":
                         title = "Modification non-constructive révoquée sur " + self.site.lang + ":" + page_name
                         description = "Cette modification a été détectée comme non-constructive"
@@ -563,7 +563,7 @@ class wiki_task:
         if not page.contributor_is_trusted():
             diff = page.get_diff()
             if self.site.lang_bot == "fr":
-                prompt = f"""Analyser la modification et indiquer la probabilité que ce soit du vandalisme en %.
+                prompt = f"""Analyser la modification, indiquer la probabilité que ce soit du vandalisme en % et résumer en 10 mots maximum la pertinence de la modification.
 Date : {page.latest_revision.timestamp}
 Wiki : {page.url}
 Page : {page.page_name}
@@ -573,9 +573,10 @@ Résumé de modification : {page.latest_revision.comment}
 Format de réponse :
 Analyse de la modification :
 ...
-Probabilité de vandalisme : [probabilité] %"""
+Probabilité de vandalisme : [probabilité] %
+Résumé : [résumé en 10 mots maximum]"""
             else:
-                prompt = f"""Analyze the modification and indicate the probability that it is vandalism in %.
+                prompt = f"""Analyze the modification and indicate the probability that it is vandalism in % and summary in 10 words max the relevance of the modification.
 Date: {page.latest_revision.timestamp}
 Wiki: {page.url}
 Page: {page.page_name}
@@ -585,7 +586,8 @@ Edit summary: {page.latest_revision.comment}
 Format of answer:
 Analysis of the modification:
 ...
-Probability of vandalism: [probability] %"""
+Probability of vandalism: [probability] %
+Summary: [summary in 10 words max]"""
             try:
                 chat_response = client.chat.complete(
                     model = model,
@@ -614,10 +616,25 @@ Probability of vandalism: [probability] %"""
                     proba_ai = float(match.group(1).replace(",", "."))
                 else:
                     proba_ai = 0
+                if self.site.lang_bot == "fr":
+                    match = re.search(r"résumé.*:\s*[^a-zA-ZÀ-ÿ0-9]*([^*]+)", result_ai.lower())
+                else:
+                    match = re.search(r"summary.*:\s*[^a-zA-ZÀ-ÿ0-9]*([^*]+)", result_ai.lower())
+                if match:
+                    summary_ai = match.group(1)
+                else:
+                    summary_ai = None
                 if proba_ai >= page.limit_ai and not page.reverted: #Révocation si la probabilité de vandalisme détectée par le LLM est supérieure ou égale au seuil
-                    page.revert()
+                    page.revert(summary_ai)
                     color = 13371938
-                elif proba_ai >= 50:
+                elif proba_ai >= page.limit_ai2:
+                    page.get_warnings_user()
+                    if page.warn_level > 0 and not page.reverted: #Révocation si la probabilité de vandalisme détectée par le LLM est supérieure ou égale au second seuil et si l'utilisateur a déjà été averti
+                        page.revert(summary_ai)
+                        color = 13371938
+                    else:
+                        color = 12138760
+                elif proba_ai >= page.limit_ai3:
                     color = 12138760
                 else:
                     color = 12161032

@@ -184,6 +184,8 @@ class get_page(pywikibot.Page):
         self.limit = -50
         self.limit2 = -30
         self.limit_ai = 98
+        self.limit_ai2 = 90
+        self.limit_ai3 = 50
         #Page d'alerte
         if "alert_page" in self.source.config:
             self.alert_page = datetime.datetime.now().strftime(self.source.config["alert_page"].replace("\r", "").replace("\n", ""))
@@ -193,12 +195,13 @@ class get_page(pywikibot.Page):
             else:
                 self.alert_page = "Project:Alert"
         self.alert_request = False
+        self.warn_level = -1
 
-    def revert(self):
-        self.only_revert()
-        self.warn_revert()
+    def revert(self, summary=""):
+        self.only_revert(summary)
+        self.warn_revert(summary)
 
-    def only_revert(self):
+    def only_revert(self, summary=""):
         if self.text_page_oldid == None or self.text_page_oldid2 == None:
             self.get_text_page_old()
         if self.new_page:
@@ -206,52 +209,69 @@ class get_page(pywikibot.Page):
         else:
             self.text = self.text_page_oldid2
         if self.lang_bot == "fr":
-            self.save("Annulation modification non-constructive", bot=False, minor=False)
+            if summary != "":
+                self.save("Annulation : " + summary, bot=False, minor=False)
+            else:
+                self.save("Annulation modification non-constructive", bot=False, minor=False)
         else:
-            self.save("Revert", bot=False, minor=False)
+            if summary != "":
+                self.save("Revert : " + summary, bot=False, minor=False)
+            else:
+                self.save("Revert", bot=False, minor=False)
         self.reverted = True
 
-    def warn_revert(self):
-        talk = pywikibot.Page(self.source.site, "User Talk:%s" % self.contributor_name)
-        if ("averto-1" in talk.text.lower() or "niveau=1" in talk.text.lower() or "level=1" in talk.text.lower()) and "averto-2" not in talk.text.lower() and "niveau=2" not in talk.text.lower() and "level=2" not in talk.text.lower(): #averti 2 fois
+    def get_warnings_user(self):
+        self.talk = pywikibot.Page(self.source.site, "User Talk:%s" % self.contributor_name)
+        if ("averto-1" in self.talk.text.lower() or "niveau=1" in self.talk.text.lower() or "level=1" in self.talk.text.lower()) and "averto-2" not in self.talk.text.lower() and "niveau=2" not in self.talk.text.lower() and "level=2" not in self.talk.text.lower(): #averti 2 fois
+            self.warn_level = 2
+        elif ("averto-0" in self.talk.text.lower() or "niveau=0" in self.talk.text.lower() or "level=0" in self.talk.text.lower()) and "averto-1" not in self.talk.text.lower() and "niveau=1" not in self.talk.text.lower() and "level=1" not in self.talk.text.lower(): #averti une fois
+            self.warn_level = 1
+        elif "averto-0" not in self.talk.text.lower() and "niveau=0" not in self.talk.text.lower() and "level=0" not in self.talk.text.lower(): #pas averti
+            self.warn_level = 0
+
+    def warn_revert(self, summary=""):
+        if self.warn_level < 0:
+            self.get_warnings_user()
+        if self.warn_level >= 2: #averti 2 fois
             alert = pywikibot.Page(self.source.site, self.alert_page)
             alert.text = alert.text + "\n{{subst:User:%s/Alert|%s}}" % (self.user_wiki, self.contributor_name)
             if self.lang_bot == "fr":
                 alert.save("Alerte vandalisme", bot=False, minor=False)
             else:
                 alert.save("Vandalism alert", bot=False, minor=False)
-            talk.text = talk.text + "\n{{subst:User:%s/Vandalism2|%s}} <!-- level=2 -->" % (self.user_wiki, self.page_name)
+            self.talk.text = self.talk.text + "\n{{subst:User:%s/Vandalism2|%s|%s}} <!-- level=2 -->" % (self.user_wiki, self.page_name, summary)
             if self.lang_bot == "fr":
-                talk.save("Avertissement 2", bot=False, minor=False)
+                self.talk.save("Avertissement 2", bot=False, minor=False)
             else:
-                talk.save("Warning 2", bot=False, minor=False)
+                self.talk.save("Warning 2", bot=False, minor=False)
             self.alert_request = True
-        elif ("averto-0" in talk.text.lower() or "niveau=0" in talk.text.lower() or "level=0" in talk.text.lower()) and "averto-1" not in talk.text.lower() and "niveau=1" not in talk.text.lower() and "level=1" not in talk.text.lower(): #averti une fois
-            talk.text = talk.text + "\n{{subst:User:%s/Vandalism1|%s}} <!-- level=1 -->" % (self.user_wiki, self.page_name)
+        elif self.warn_level == 1: #averti une fois
+            self.talk.text = self.talk.text + "\n{{subst:User:%s/Vandalism1|%s|%s}} <!-- level=1 -->" % (self.user_wiki, self.page_name, summary)
             if self.lang_bot == "fr":
-                talk.save("Avertissement 1", bot=False, minor=False)
+                self.talk.save("Avertissement 1", bot=False, minor=False)
             else:
-                talk.save("Warning 1", bot=False, minor=False)
-        elif "averto-0" not in talk.text.lower() and "niveau=0" not in talk.text.lower() and "level=0" not in talk.text.lower(): #pas averti
-            talk.text = talk.text + "\n{{subst:User:%s/Vandalism0|%s}} <!-- level=0 -->" % (self.user_wiki, self.page_name)
+                self.talk.save("Warning 1", bot=False, minor=False)
+        else: #pas averti
+            self.talk.text = self.talk.text + "\n{{subst:User:%s/Vandalism0|%s|%s}} <!-- level=0 -->" % (self.user_wiki, self.page_name, summary)
             if self.lang_bot == "fr":
-                talk.save("Avertissement 0", bot=False, minor=False)
+                self.talk.save("Avertissement 0", bot=False, minor=False)
             else:
-                talk.save("Warning 0", bot=False, minor=False)
+                self.talk.save("Warning 0", bot=False, minor=False)
 
     def vandalism_get_score_current(self): #Score sur la version actuelle en ignorant les contributeurs expérimentés
         if self.contributor_is_trusted():
             return 0
         vand = self.vandalism_score()
-        self.vand_to_revert = vand <= self.limit
         if vand <= self.limit:
-            pywikibot.output("Modification non-constructive détectée (%s)." % str(vand))
+            self.vand_to_revert = True
         elif vand <= self.limit2:
-            pywikibot.output("Modification suspecte détectée (%s)." % str(vand))
-        elif vand < 0:
-            pywikibot.output("Modification à vérifier détectée (%s)." % str(vand))
+            self.get_warnings_user()
+            if self.warn_level > 0:
+                self.vand_to_revert = True
+            else:
+                self.vand_to_revert = False
         else:
-            pywikibot.output("Pas de modification suspecte détectée (%s)." % str(vand))
+            self.vand_to_revert = False
         return vand
 
     def contributor_is_trusted(self):
