@@ -198,62 +198,59 @@ class wiki_task:
             time1hour = self.datetime_utcnow - datetime.timedelta(minutes = 10)
             pywikibot.output("Récupération des RC des 10 dernières minutes sur " + self.site.family + " " + self.site.lang + "...")
             self.site.rc_pages(timestamp=time1hour.strftime("%Y%m%d%H%M%S"))
-        pages_checked = [] #pages vérifiées (pour éviter de revérifier la page)
-        for page_info in self.site.diffs_rc:
+        pages_checked = [] #pages vérifiées (pour éviter de revérifier la page modifiée plusieurs fois : seule la dernière modification est prise en compte)
+        for page_info in self.site.diffs_rc: #parcours des modifications récentes
             try:
-                #parcours des modifications récentes
                 page_name = page_info["title"]
                 page = self.site.page(page_name)
-                if page.special or not page.exists(): #passage des pages spéciales ou inexistantes
-                    continue
-                pywikibot.output("Page : " + page_name)
-                if task_day: #Ajout de la modif dans les stats
-                    try:
-                        vandalism_score = page.vandalism_score(page_info["revid"], page_info["old_revid"])
-                        detailed_diff_info = self.site.add_detailed_diff_info(detailed_diff_info, page_info, page.text_page_oldid, page.text_page_oldid2, vandalism_score)
-                    except Exception as e:
+                if not page.special and page.exists(): #vérification que la page ne soit pas une page spéciale et que la page existe (n'a pas été supprimée)
+                    pywikibot.output("Page : " + page_name)
+                    if task_day: #Ajout de la modif dans les stats
                         try:
-                            bt = traceback.format_exc()
-                            pywikibot.error(bt)
-                        except UnicodeError:
-                            pass
-                if page_name in pages_checked: #passage des pages déjà vérifiées
-                    continue
-                if page.isRedirectPage():
-                    if "correct_redirects" in self.site.config and self.site.config["correct_redirects"]:
-                        pywikibot.output("Correction de redirection sur la page " + str(page))
-                        redirect = page.redirects() #Correction redirections
-                    else:
-                        pywikibot.output("La page " + str(page) + " est une redirection.")
-                else:
-                    is_revert = "mw-undo" in page_info["tags"] or "mw-rollback" in page_info["tags"] or "mw-manual-revert" in page_info["tags"]
-                    if not is_revert and not ("disable_vandalism" in self.site.config and self.site.config["disable_vandalism"]):
-                        #détection vandalismes
-                        self.check_vandalism(page)
-                    if not is_revert and not ("disable_ai" in self.site.config and self.site.config["disable_ai"]):
-                        #utilisation de l'IA pour détecter les vandalismes
-                        self.check_vandalism_ai(page)
-                    if page.page_ns == 0:
-                        #détection copies de Wikipédia
-                        if "check_WP" in self.site.config and self.site.config["check_WP"] and len(page.text.strip()) > 0:
-                            self.check_WP(page)
-                        edit_replace = page.edit_replace() #Recherches-remplacements
-                        pywikibot.output(str(edit_replace) + " recherche(s)-remplacement(s) sur la page " + str(page) + ".")
-                    if not ("disable_del_categories" in self.site.config and self.site.config["disable_del_categories"]) and task_day and page.page_ns != 2:
-                        pywikibot.output("Suppression des catégories inexistantes sur la page " + str(page))
-                        try:
-                            del_categories_no_exists = page.del_categories_no_exists() #Suppression
-                            if del_categories_no_exists != []:
-                                pywikibot.output("Catégories retirées " + ", ".join(del_categories_no_exists))
-                            else:
-                                pywikibot.output("Aucune catégorie à retirer.")
+                            vandalism_score = page.vandalism_score(page_info["revid"], page_info["old_revid"])
+                            detailed_diff_info = self.site.add_detailed_diff_info(detailed_diff_info, page_info, page.text_page_oldid, page.text_page_oldid2, vandalism_score)
                         except Exception as e:
                             try:
                                 bt = traceback.format_exc()
                                 pywikibot.error(bt)
                             except UnicodeError:
                                 pass
-                    pages_checked.append(page_name)
+                    if page_name not in pages_checked: #vérification uniquement si la page n'a pas été vérifiée
+                        pages_checked.append(page_name)
+                        if page.isRedirectPage():
+                            if "correct_redirects" in self.site.config and self.site.config["correct_redirects"]:
+                                pywikibot.output("Correction de redirection sur la page " + str(page))
+                                redirect = page.redirects() #Correction redirections
+                            else:
+                                pywikibot.output("La page " + str(page) + " est une redirection.")
+                        else:
+                            is_revert = "mw-undo" in page_info["tags"] or "mw-rollback" in page_info["tags"] or "mw-manual-revert" in page_info["tags"]
+                            if not is_revert and not ("disable_vandalism" in self.site.config and self.site.config["disable_vandalism"]):
+                                #détection vandalismes
+                                self.check_vandalism(page)
+                            if not is_revert and not ("disable_ai" in self.site.config and self.site.config["disable_ai"]):
+                                #utilisation de l'IA pour détecter les vandalismes
+                                self.check_vandalism_ai(page)
+                            if page.page_ns == 0:
+                                #détection copies de Wikipédia
+                                if "check_WP" in self.site.config and self.site.config["check_WP"] and len(page.text.strip()) > 0:
+                                    self.check_WP(page)
+                                edit_replace = page.edit_replace() #Recherches-remplacements
+                                pywikibot.output(str(edit_replace) + " recherche(s)-remplacement(s) sur la page " + str(page) + ".")
+                            if not ("disable_del_categories" in self.site.config and self.site.config["disable_del_categories"]) and task_day and page.page_ns != 2:
+                                pywikibot.output("Suppression des catégories inexistantes sur la page " + str(page))
+                                try:
+                                    del_categories_no_exists = page.del_categories_no_exists() #Suppression
+                                    if del_categories_no_exists != []:
+                                        pywikibot.output("Catégories retirées " + ", ".join(del_categories_no_exists))
+                                    else:
+                                        pywikibot.output("Aucune catégorie à retirer.")
+                                except Exception as e:
+                                    try:
+                                        bt = traceback.format_exc()
+                                        pywikibot.error(bt)
+                                    except UnicodeError:
+                                        pass
             except Exception as e:
                 try:
                     bt = traceback.format_exc()
