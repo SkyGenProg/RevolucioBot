@@ -463,7 +463,11 @@ class get_page(pywikibot.Page):
                         self.put("{{User:%s/RedirectDelete}}" % self.user_wiki, "Delete broken redirect")
                     pywikibot.output("Redirecton cassée demandée à la suppression.")
                 except Exception as e:
-                    pywikibot.error(e)
+                    try:
+                        bt = traceback.format_exc()
+                        pywikibot.error(bt)
+                    except UnicodeError:
+                        pass
             elif page_redirect.isRedirectPage():
                 type_redirect = "double"
                 try:
@@ -473,7 +477,11 @@ class get_page(pywikibot.Page):
                         self.put("#REDIRECT[[%s]]" % page_redirect.getRedirectTarget().title(), "Correct redirect")
                     pywikibot.output("Double redirection corrigée.")
                 except Exception as e:
-                    pywikibot.error(e)
+                    try:
+                        bt = traceback.format_exc()
+                        pywikibot.error(bt)
+                    except UnicodeError:
+                        pass
             else:
                 type_redirect = "correct"
                 pywikibot.output("Redirection correcte.")
@@ -486,7 +494,11 @@ class get_page(pywikibot.Page):
                     self.put("{{User:%s/RedirectDelete|circular=True}}" % self.user_wiki, "Delete circular redirect")
                 pywikibot.output("Redirecton en boucle demandée à la suppression.")
             except Exception as e:
-                pywikibot.error(e)
+                try:
+                    bt = traceback.format_exc()
+                    pywikibot.error(bt)
+                except UnicodeError:
+                    pass
         return type_redirect
 
     def category_page(self, category_name):
