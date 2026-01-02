@@ -2,7 +2,7 @@
 
 import pywikibot
 from pywikibot import pagegenerators, textlib
-import base64, datetime, difflib, json, os, random, re, socket, time, urllib.request, urllib.error, urllib.parse, zlib
+import base64, datetime, difflib, json, os, random, re, socket, time, traceback, urllib.request, urllib.error, urllib.parse, zlib
 from config import *
 
 class get_wiki:
