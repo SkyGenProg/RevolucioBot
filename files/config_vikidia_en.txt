@@ -1,1 +1,1 @@
-{"lang_bot": "en", "trusted_groups": "sysop|patroller|autopatrol|bot", "alert_page": "Vikidia:Requests/Administrators/2025", "disable_del_categories": true, "clear_talks": true, "check_WP": true, "correct_redirects": true}
+{"lang_bot": "en", "trusted_groups": "sysop|patroller|autopatrol|bot", "alert_page": "Vikidia:Requests/Administrators/%Y", "disable_del_categories": true, "clear_talks": true, "check_WP": true, "correct_redirects": true}

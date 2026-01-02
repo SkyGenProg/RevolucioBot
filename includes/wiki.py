@@ -2,7 +2,7 @@
 
 import pywikibot
 from pywikibot import pagegenerators, textlib
-import base64, datetime, difflib, json, os, random, re, socket, time, urllib.request, urllib.error, urllib.parse, zlib
+import base64, datetime, difflib, json, os, random, re, socket, time, traceback, urllib.request, urllib.error, urllib.parse, zlib
 from config import *
 
 class get_wiki:
@@ -288,7 +288,8 @@ class get_page(pywikibot.Page):
         elif vand <= self.limit2:
             self.get_warnings_user()
             if self.warn_level > 0:
-                self.vand_to_revert = True
+                user_rights = self.contributor_rights()
+                self.vand_to_revert = "autoconfirmed" not in user_rights #Révocation si utilisateur non-autoconfirmed et a déjà reçu des avertissements
             else:
                 self.vand_to_revert = False
         else:
@@ -297,6 +298,15 @@ class get_page(pywikibot.Page):
 
     def contributor_is_trusted(self):
         return self.contributor_name == self.user_wiki or self.contributor_name in self.source.trusted or (self.page_ns == 2 and self.contributor_name in self.page_name)
+
+    def contributor_rights(self):
+        url = "%s//%s%s/api.php?action=query&list=users&ususers=%s&usprop=rights&format=json" % (self.protocol, self.url, self.scriptpath, self.contributor_name)
+        j = json.loads(request_site(url))
+        try:
+            rights = j["query"]["users"][0]["rights"]
+        except KeyError:
+            rights = []
+        return rights
 
     def get_text_page_old(self, revision_oldid=None, revision_oldid2=None): #revision_oldid : nouvelle version/version à vérifier, revision_oldid2 : ancienne version/version à comparer
         oldid = -1
