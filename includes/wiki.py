@@ -300,7 +300,7 @@ class get_page(pywikibot.Page):
         return self.contributor_name == self.user_wiki or self.contributor_name in self.source.trusted or (self.page_ns == 2 and self.contributor_name in self.page_name)
 
     def contributor_rights(self):
-        url = "%s//%s%s/api.php?action=query&list=users&ususers=%s&usprop=rights&format=json" % (self.protocol, self.url, self.scriptpath, self.contributor_name)
+        url = "%s//%s%s/api.php?action=query&list=users&ususers=%s&usprop=rights&format=json" % (self.protocol, self.url, self.scriptpath, urllib.parse.quote(self.contributor_name))
         j = json.loads(request_site(url))
         try:
             rights = j["query"]["users"][0]["rights"]
