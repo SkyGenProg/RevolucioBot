@@ -205,7 +205,7 @@ class wiki_task:
                 page = self.site.page(page_name)
                 if not page.special and page.exists(): #vérification que la page ne soit pas une page spéciale et que la page existe (n'a pas été supprimée)
                     pywikibot.output("Page : " + page_name)
-                    if task_day: #Ajout de la modif dans les stats
+                    if task_day and page.isRedirectPage(): #Ajout de la modif dans les stats
                         try:
                             vandalism_score = page.vandalism_score(page_info["revid"], page_info["old_revid"])
                             detailed_diff_info = self.site.add_detailed_diff_info(detailed_diff_info, page_info, page.text_page_oldid, page.text_page_oldid2, vandalism_score)
@@ -659,7 +659,15 @@ Summary: [summary in 10 words max]"""
                             }
                         ]
                     }
-                    request_site(webhooks_url_ai[self.site.family], headers, json.dumps(discord_msg).encode("utf-8"), "POST")
+                    try:
+                        request_site(webhooks_url_ai[self.site.family], headers, json.dumps(discord_msg).encode("utf-8"), "POST")
+                    except Exception as e:
+                        try:
+                            bt = traceback.format_exc()
+                            pywikibot.error(bt)
+                            pywikibot.error(str(discord_msg))
+                        except UnicodeError:
+                            pass
             else:
                 if self.site.lang_bot == "fr":
                     title = "Analyse de l'IA (Mistral) échouée sur " + self.site.lang + ":" + page.page_name
@@ -676,7 +684,15 @@ Summary: [summary in 10 words max]"""
                         }
                     ]
                 }
-                request_site(webhooks_url_ai[self.site.family], headers, json.dumps(discord_msg).encode("utf-8"), "POST")
+                try:
+                    request_site(webhooks_url_ai[self.site.family], headers, json.dumps(discord_msg).encode("utf-8"), "POST")
+                except Exception as e:
+                    try:
+                        bt = traceback.format_exc()
+                        pywikibot.error(bt)
+                        pywikibot.error(str(discord_msg))
+                    except UnicodeError:
+                        pass
         if webhooks_url[self.site.family] != None and page.alert_request:
             self.block_alert(page)
 
