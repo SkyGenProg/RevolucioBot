@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
 
 import pywikibot
-from pywikibot import pagegenerators, textlib
-import base64, datetime, difflib, json, os, random, re, socket, time, traceback, urllib.request, urllib.error, urllib.parse, zlib
-from config import *
+from pywikibot import pagegenerators
+import datetime, difflib, json, re, traceback, urllib.request, urllib.error, urllib.parse
+from config import headers
 
 class get_wiki:
     def __init__(self, family, lang, user_wiki):
@@ -115,7 +115,6 @@ class get_wiki:
 
     def rc_pages(self, n_edits=5000, timestamp=None, rctoponly=True, show_trusted=False, namespace=None, timestamp_start=None):
         self.diffs_rc = []
-        page_names = []
         url = "%s//%s%s/api.php?action=query&list=recentchanges&rclimit=%s&rcend=%s&rcprop=timestamp|title|user|ids|comment|tags&rctype=edit|new|categorize&rcshow=!bot&format=json" % (self.protocol, self.url, self.scriptpath, str(n_edits), str(timestamp))
         if timestamp_start:
             url += "&rcstart=" + str(timestamp_start)
@@ -470,7 +469,7 @@ class get_page(pywikibot.Page):
                     else:
                         self.put("{{User:%s/RedirectDelete}}" % self.user_wiki, "Delete broken redirect")
                     pywikibot.output("Redirecton cassée demandée à la suppression.")
-                except Exception as e:
+                except:
                     try:
                         bt = traceback.format_exc()
                         pywikibot.error(bt)
@@ -483,7 +482,7 @@ class get_page(pywikibot.Page):
                     else:
                         self.put("#REDIRECT[[%s]]" % page_redirect.getRedirectTarget().title(), "Correct redirect")
                     pywikibot.output("Double redirection corrigée.")
-                except Exception as e:
+                except:
                     try:
                         bt = traceback.format_exc()
                         pywikibot.error(bt)
@@ -498,7 +497,7 @@ class get_page(pywikibot.Page):
                 else:
                     self.put("{{User:%s/RedirectDelete|circular=True}}" % self.user_wiki, "Delete circular redirect")
                 pywikibot.output("Redirecton en boucle demandée à la suppression.")
-            except Exception as e:
+            except:
                 try:
                     bt = traceback.format_exc()
                     pywikibot.error(bt)

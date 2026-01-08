@@ -1,12 +1,10 @@
 # -*- coding: utf-8 -*-
 
 import pywikibot
-from pywikibot import pagegenerators, textlib
-import base64, datetime, json, os, random, re, socket, time, traceback, urllib.request, urllib.error, urllib.parse, zlib
-from config import *
-from includes.wiki import *
-from scipy.optimize import curve_fit
+import datetime, json, re, time, traceback
+from config import api_key, headers, model, webhooks_url, webhooks_url_ai
 from mistralai import Mistral
+from includes.wiki import request_site
 
 client = Mistral(api_key=api_key)
 
@@ -64,7 +62,7 @@ class wiki_task:
                                         page_text_split2[0] = "".join(page_text_split3)
                                         page_text_split[1] = "=".join(page_text_split2)
                                         page.text = ("|ex" + n + "=").join(page_text_split)
-                                    except Exception as e:
+                                    except:
                                         try:
                                             bt = traceback.format_exc()
                                             pywikibot.error(bt)
@@ -80,7 +78,7 @@ class wiki_task:
                                         page_text_split2[0] = page_text_split2[0].replace("[[", "").replace("]]", "")
                                         page_text_split[1] = "=".join(page_text_split2)
                                         page.text = ("|contr" + n + "=").join(page_text_split)
-                                    except Exception as e:
+                                    except:
                                         try:
                                             bt = traceback.format_exc()
                                             pywikibot.error(bt)
@@ -96,7 +94,7 @@ class wiki_task:
                                         page_text_split2[0] = page_text_split2[0].replace("[[", "").replace("]]", "")
                                         page_text_split[1] = "=".join(page_text_split2)
                                         page.text = ("|syn" + n + "=").join(page_text_split)
-                                    except Exception as e:
+                                    except:
                                         try:
                                             bt = traceback.format_exc()
                                             pywikibot.error(bt)
@@ -112,7 +110,7 @@ class wiki_task:
                                         page_text_split2[0] = page_text_split2[0].replace("[[", "").replace("]]", "")
                                         page_text_split[1] = "=".join(page_text_split2)
                                         page.text = ("|voir" + n + "=").join(page_text_split)
-                                    except Exception as e:
+                                    except:
                                         try:
                                             bt = traceback.format_exc()
                                             pywikibot.error(bt)
@@ -131,7 +129,7 @@ class wiki_task:
                                         page_text_split2[0] = re.sub('\B(?!{{\"\|)\"\b([^\"]*)\b\"(?!}})\B', r'{{"|\1}}', page_text_split2[0])
                                         page_text_split[1] = "=".join(page_text_split2)
                                         page.text = ("|def" + n + "=").join(page_text_split)
-                                    except Exception as e:
+                                    except:
                                         try:
                                             bt = traceback.format_exc()
                                             pywikibot.error(bt)
@@ -141,7 +139,7 @@ class wiki_task:
                                 page.text = page.text.replace("|son=LL-Q150", "|prononciation=LL-Q150")
                             if page.text != page_text_old:
                                 page.save("maintenance")
-                    except Exception as e:
+                    except:
                         try:
                             bt = traceback.format_exc()
                             pywikibot.error(bt)
@@ -163,7 +161,7 @@ class wiki_task:
                                     page.put("{{Avertissement effacé|{{subst:#time: j F Y}}}}", "Anciens messages effacés", minor=False)
                                 else:
                                     page.put("{{Warning cleared|{{subst:#time: j F Y}}}}", "Old messages cleared", minor=False)
-                            except Exception as e:
+                            except:
                                 try:
                                     bt = traceback.format_exc()
                                     pywikibot.error(bt)
@@ -209,7 +207,7 @@ class wiki_task:
                         try:
                             vandalism_score = page.vandalism_score(page_info["revid"], page_info["old_revid"])
                             detailed_diff_info = self.site.add_detailed_diff_info(detailed_diff_info, page_info, page.text_page_oldid, page.text_page_oldid2, vandalism_score)
-                        except Exception as e:
+                        except:
                             try:
                                 bt = traceback.format_exc()
                                 pywikibot.error(bt)
@@ -245,13 +243,13 @@ class wiki_task:
                                         pywikibot.output("Catégories retirées " + ", ".join(del_categories_no_exists))
                                     else:
                                         pywikibot.output("Aucune catégorie à retirer.")
-                                except Exception as e:
+                                except:
                                     try:
                                         bt = traceback.format_exc()
                                         pywikibot.error(bt)
                                     except UnicodeError:
                                         pass
-            except Exception as e:
+            except:
                 try:
                     bt = traceback.format_exc()
                     pywikibot.error(bt)
@@ -600,7 +598,7 @@ Summary: [summary in 10 words max]"""
                     ]
                 )
                 success = True
-            except Exception as e:
+            except:
                 try:
                     bt = traceback.format_exc()
                     pywikibot.error(bt)
@@ -661,7 +659,7 @@ Summary: [summary in 10 words max]"""
                     }
                     try:
                         request_site(webhooks_url_ai[self.site.family], headers, json.dumps(discord_msg).encode("utf-8"), "POST")
-                    except Exception as e:
+                    except:
                         try:
                             bt = traceback.format_exc()
                             pywikibot.error(bt)
@@ -686,7 +684,7 @@ Summary: [summary in 10 words max]"""
                 }
                 try:
                     request_site(webhooks_url_ai[self.site.family], headers, json.dumps(discord_msg).encode("utf-8"), "POST")
-                except Exception as e:
+                except:
                     try:
                         bt = traceback.format_exc()
                         pywikibot.error(bt)
@@ -870,7 +868,7 @@ Summary: [summary in 10 words max]"""
                     self.start_task_day = False
                     day = int(self.datetime_utcnow.strftime("%d"))
                 self.task_every_10minutes()
-            except Exception as e:
+            except:
                 try:
                     bt = traceback.format_exc()
                     pywikibot.error(bt)

@@ -1,11 +1,10 @@
 # -*- coding: utf-8 -*-
 
-import argparse, os, logging
+import argparse, os
 
-from includes.wiki import *
-from includes.wiki_tasks import *
-from config import *
-from mistralai import Mistral
+import pywikibot
+from includes.wiki import get_wiki
+from config import ver
 
 arg = argparse.ArgumentParser()
 required_arg = arg.add_argument_group("required arguments")
