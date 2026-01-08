@@ -183,7 +183,7 @@ class wiki_task:
                 page = self.site.page(page_name)
                 if page.isRedirectPage():
                     pywikibot.output("Correction de redirection sur la page " + str(page))
-                    redirect = page.redirects()
+                    page.redirects()
         self.task_every_10minutes(True)
 
     def task_every_10minutes(self, task_day=False):
@@ -205,7 +205,7 @@ class wiki_task:
                 page = self.site.page(page_name)
                 if not page.special and page.exists(): #vérification que la page ne soit pas une page spéciale et que la page existe (n'a pas été supprimée)
                     pywikibot.output("Page : " + page_name)
-                    if task_day and page.isRedirectPage(): #Ajout de la modif dans les stats
+                    if task_day and not page.isRedirectPage(): #Ajout de la modif dans les stats
                         try:
                             vandalism_score = page.vandalism_score(page_info["revid"], page_info["old_revid"])
                             detailed_diff_info = self.site.add_detailed_diff_info(detailed_diff_info, page_info, page.text_page_oldid, page.text_page_oldid2, vandalism_score)
@@ -220,7 +220,7 @@ class wiki_task:
                         if page.isRedirectPage():
                             if "correct_redirects" in self.site.config and self.site.config["correct_redirects"]:
                                 pywikibot.output("Correction de redirection sur la page " + str(page))
-                                redirect = page.redirects() #Correction redirections
+                                page.redirects() #Correction redirections
                             else:
                                 pywikibot.output("La page " + str(page) + " est une redirection.")
                         else:

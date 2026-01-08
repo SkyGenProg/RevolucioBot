@@ -461,11 +461,9 @@ class get_page(pywikibot.Page):
         return n
 
     def redirects(self):
-        type_redirect = None
         try:
             page_redirect = self.getRedirectTarget()
             if not page_redirect.exists():
-                type_redirect = "broken"
                 try:
                     if self.lang_bot == "fr":
                         self.put("{{User:%s/RedirectDelete}}" % self.user_wiki, "Demande suppression redirection cassée")
@@ -479,7 +477,6 @@ class get_page(pywikibot.Page):
                     except UnicodeError:
                         pass
             elif page_redirect.isRedirectPage():
-                type_redirect = "double"
                 try:
                     if self.lang_bot == "fr":
                         self.put("#REDIRECT[[%s]]" % page_redirect.getRedirectTarget().title(), "Correction redirection")
@@ -493,10 +490,8 @@ class get_page(pywikibot.Page):
                     except UnicodeError:
                         pass
             else:
-                type_redirect = "correct"
                 pywikibot.output("Redirection correcte.")
         except pywikibot.exceptions.CircularRedirectError:
-            type_redirect = "circular"
             try:
                 if self.lang_bot == "fr":
                     self.put("{{User:%s/RedirectDelete|circular=True}}" % self.user_wiki, "Demande suppression redirection en boucle")
@@ -509,7 +504,6 @@ class get_page(pywikibot.Page):
                     pywikibot.error(bt)
                 except UnicodeError:
                     pass
-        return type_redirect
 
     def category_page(self, category_name):
         for category in self.categories():
