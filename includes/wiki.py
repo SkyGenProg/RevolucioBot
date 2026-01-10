@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
 
 import pywikibot
-from pywikibot import pagegenerators, textlib
-import base64, datetime, difflib, json, os, random, re, socket, time, traceback, urllib.request, urllib.error, urllib.parse, zlib
-from config import *
+from pywikibot import pagegenerators
+import datetime, difflib, json, re, traceback, urllib.request, urllib.error, urllib.parse
+from config import headers
 
 class get_wiki:
     def __init__(self, family, lang, user_wiki):
@@ -115,7 +115,6 @@ class get_wiki:
 
     def rc_pages(self, n_edits=5000, timestamp=None, rctoponly=True, show_trusted=False, namespace=None, timestamp_start=None):
         self.diffs_rc = []
-        page_names = []
         url = "%s//%s%s/api.php?action=query&list=recentchanges&rclimit=%s&rcend=%s&rcprop=timestamp|title|user|ids|comment|tags&rctype=edit|new|categorize&rcshow=!bot&format=json" % (self.protocol, self.url, self.scriptpath, str(n_edits), str(timestamp))
         if timestamp_start:
             url += "&rcstart=" + str(timestamp_start)
@@ -282,16 +281,13 @@ class get_page(pywikibot.Page):
     def vandalism_get_score_current(self): #Score sur la version actuelle en ignorant les contributeurs expérimentés
         if self.contributor_is_trusted():
             return 0
+        user_rights = self.contributor_rights()
         vand = self.vandalism_score()
-        if vand <= self.limit:
+        if vand <= self.limit and "autoconfirmed" not in user_rights:
             self.vand_to_revert = True
-        elif vand <= self.limit2:
+        elif vand <= self.limit2 and "autoconfirmed" not in user_rights:
             self.get_warnings_user()
-            if self.warn_level > 0:
-                user_rights = self.contributor_rights()
-                self.vand_to_revert = "autoconfirmed" not in user_rights #Révocation si utilisateur non-autoconfirmed et a déjà reçu des avertissements
-            else:
-                self.vand_to_revert = False
+            self.vand_to_revert = self.warn_level > 0 #Révocation si utilisateur précédemment averti
         else:
             self.vand_to_revert = False
         return vand
@@ -300,7 +296,7 @@ class get_page(pywikibot.Page):
         return self.contributor_name == self.user_wiki or self.contributor_name in self.source.trusted or (self.page_ns == 2 and self.contributor_name in self.page_name)
 
     def contributor_rights(self):
-        url = "%s//%s%s/api.php?action=query&list=users&ususers=%s&usprop=rights&format=json" % (self.protocol, self.url, self.scriptpath, self.contributor_name)
+        url = "%s//%s%s/api.php?action=query&list=users&ususers=%s&usprop=rights&format=json" % (self.protocol, self.url, self.scriptpath, urllib.parse.quote(self.contributor_name))
         j = json.loads(request_site(url))
         try:
             rights = j["query"]["users"][0]["rights"]
@@ -461,55 +457,49 @@ class get_page(pywikibot.Page):
         return n
 
     def redirects(self):
-        type_redirect = None
         try:
             page_redirect = self.getRedirectTarget()
             if not page_redirect.exists():
-                type_redirect = "broken"
                 try:
                     if self.lang_bot == "fr":
                         self.put("{{User:%s/RedirectDelete}}" % self.user_wiki, "Demande suppression redirection cassée")
                     else:
                         self.put("{{User:%s/RedirectDelete}}" % self.user_wiki, "Delete broken redirect")
                     pywikibot.output("Redirecton cassée demandée à la suppression.")
-                except Exception as e:
+                except:
                     try:
                         bt = traceback.format_exc()
                         pywikibot.error(bt)
                     except UnicodeError:
                         pass
             elif page_redirect.isRedirectPage():
-                type_redirect = "double"
                 try:
                     if self.lang_bot == "fr":
                         self.put("#REDIRECT[[%s]]" % page_redirect.getRedirectTarget().title(), "Correction redirection")
                     else:
                         self.put("#REDIRECT[[%s]]" % page_redirect.getRedirectTarget().title(), "Correct redirect")
                     pywikibot.output("Double redirection corrigée.")
-                except Exception as e:
+                except:
                     try:
                         bt = traceback.format_exc()
                         pywikibot.error(bt)
                     except UnicodeError:
                         pass
             else:
-                type_redirect = "correct"
                 pywikibot.output("Redirection correcte.")
         except pywikibot.exceptions.CircularRedirectError:
-            type_redirect = "circular"
             try:
                 if self.lang_bot == "fr":
                     self.put("{{User:%s/RedirectDelete|circular=True}}" % self.user_wiki, "Demande suppression redirection en boucle")
                 else:
                     self.put("{{User:%s/RedirectDelete|circular=True}}" % self.user_wiki, "Delete circular redirect")
                 pywikibot.output("Redirecton en boucle demandée à la suppression.")
-            except Exception as e:
+            except:
                 try:
                     bt = traceback.format_exc()
                     pywikibot.error(bt)
                 except UnicodeError:
                     pass
-        return type_redirect
 
     def category_page(self, category_name):
         for category in self.categories():

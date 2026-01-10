@@ -1,12 +1,10 @@
 # -*- coding: utf-8 -*-
 
 import pywikibot
-from pywikibot import pagegenerators, textlib
-import base64, datetime, json, os, random, re, socket, time, traceback, urllib.request, urllib.error, urllib.parse, zlib
-from config import *
-from includes.wiki import *
-from scipy.optimize import curve_fit
+import datetime, json, re, time, traceback
+from config import api_key, headers, model, webhooks_url, webhooks_url_ai
 from mistralai import Mistral
+from includes.wiki import request_site
 
 client = Mistral(api_key=api_key)
 
@@ -64,7 +62,7 @@ class wiki_task:
                                         page_text_split2[0] = "".join(page_text_split3)
                                         page_text_split[1] = "=".join(page_text_split2)
                                         page.text = ("|ex" + n + "=").join(page_text_split)
-                                    except Exception as e:
+                                    except:
                                         try:
                                             bt = traceback.format_exc()
                                             pywikibot.error(bt)
@@ -80,7 +78,7 @@ class wiki_task:
                                         page_text_split2[0] = page_text_split2[0].replace("[[", "").replace("]]", "")
                                         page_text_split[1] = "=".join(page_text_split2)
                                         page.text = ("|contr" + n + "=").join(page_text_split)
-                                    except Exception as e:
+                                    except:
                                         try:
                                             bt = traceback.format_exc()
                                             pywikibot.error(bt)
@@ -96,7 +94,7 @@ class wiki_task:
                                         page_text_split2[0] = page_text_split2[0].replace("[[", "").replace("]]", "")
                                         page_text_split[1] = "=".join(page_text_split2)
                                         page.text = ("|syn" + n + "=").join(page_text_split)
-                                    except Exception as e:
+                                    except:
                                         try:
                                             bt = traceback.format_exc()
                                             pywikibot.error(bt)
@@ -112,7 +110,7 @@ class wiki_task:
                                         page_text_split2[0] = page_text_split2[0].replace("[[", "").replace("]]", "")
                                         page_text_split[1] = "=".join(page_text_split2)
                                         page.text = ("|voir" + n + "=").join(page_text_split)
-                                    except Exception as e:
+                                    except:
                                         try:
                                             bt = traceback.format_exc()
                                             pywikibot.error(bt)
@@ -131,7 +129,7 @@ class wiki_task:
                                         page_text_split2[0] = re.sub('\B(?!{{\"\|)\"\b([^\"]*)\b\"(?!}})\B', r'{{"|\1}}', page_text_split2[0])
                                         page_text_split[1] = "=".join(page_text_split2)
                                         page.text = ("|def" + n + "=").join(page_text_split)
-                                    except Exception as e:
+                                    except:
                                         try:
                                             bt = traceback.format_exc()
                                             pywikibot.error(bt)
@@ -141,7 +139,7 @@ class wiki_task:
                                 page.text = page.text.replace("|son=LL-Q150", "|prononciation=LL-Q150")
                             if page.text != page_text_old:
                                 page.save("maintenance")
-                    except Exception as e:
+                    except:
                         try:
                             bt = traceback.format_exc()
                             pywikibot.error(bt)
@@ -163,7 +161,7 @@ class wiki_task:
                                     page.put("{{Avertissement effacé|{{subst:#time: j F Y}}}}", "Anciens messages effacés", minor=False)
                                 else:
                                     page.put("{{Warning cleared|{{subst:#time: j F Y}}}}", "Old messages cleared", minor=False)
-                            except Exception as e:
+                            except:
                                 try:
                                     bt = traceback.format_exc()
                                     pywikibot.error(bt)
@@ -183,7 +181,7 @@ class wiki_task:
                 page = self.site.page(page_name)
                 if page.isRedirectPage():
                     pywikibot.output("Correction de redirection sur la page " + str(page))
-                    redirect = page.redirects()
+                    page.redirects()
         self.task_every_10minutes(True)
 
     def task_every_10minutes(self, task_day=False):
@@ -205,11 +203,11 @@ class wiki_task:
                 page = self.site.page(page_name)
                 if not page.special and page.exists(): #vérification que la page ne soit pas une page spéciale et que la page existe (n'a pas été supprimée)
                     pywikibot.output("Page : " + page_name)
-                    if task_day: #Ajout de la modif dans les stats
+                    if task_day and not page.isRedirectPage(): #Ajout de la modif dans les stats
                         try:
                             vandalism_score = page.vandalism_score(page_info["revid"], page_info["old_revid"])
                             detailed_diff_info = self.site.add_detailed_diff_info(detailed_diff_info, page_info, page.text_page_oldid, page.text_page_oldid2, vandalism_score)
-                        except Exception as e:
+                        except:
                             try:
                                 bt = traceback.format_exc()
                                 pywikibot.error(bt)
@@ -220,7 +218,7 @@ class wiki_task:
                         if page.isRedirectPage():
                             if "correct_redirects" in self.site.config and self.site.config["correct_redirects"]:
                                 pywikibot.output("Correction de redirection sur la page " + str(page))
-                                redirect = page.redirects() #Correction redirections
+                                page.redirects() #Correction redirections
                             else:
                                 pywikibot.output("La page " + str(page) + " est une redirection.")
                         else:
@@ -245,13 +243,13 @@ class wiki_task:
                                         pywikibot.output("Catégories retirées " + ", ".join(del_categories_no_exists))
                                     else:
                                         pywikibot.output("Aucune catégorie à retirer.")
-                                except Exception as e:
+                                except:
                                     try:
                                         bt = traceback.format_exc()
                                         pywikibot.error(bt)
                                     except UnicodeError:
                                         pass
-            except Exception as e:
+            except:
                 try:
                     bt = traceback.format_exc()
                     pywikibot.error(bt)
@@ -600,7 +598,7 @@ Summary: [summary in 10 words max]"""
                     ]
                 )
                 success = True
-            except Exception as e:
+            except:
                 try:
                     bt = traceback.format_exc()
                     pywikibot.error(bt)
@@ -625,14 +623,16 @@ Summary: [summary in 10 words max]"""
                     summary_ai = match.group(1)
                 else:
                     summary_ai = None
-                if proba_ai >= page.limit_ai and not page.reverted: #Révocation si la probabilité de vandalisme détectée par le LLM est supérieure ou égale au seuil
-                    page.revert(summary_ai)
-                    color = 13371938
-                elif proba_ai >= page.limit_ai2:
-                    page.get_warnings_user()
-                    user_rights = page.contributor_rights()
-                    if page.warn_level > 0 and "autoconfirmed" not in user_rights and not page.reverted: #Si utilisateuur non-autoconfirmed et a déjà eu des avertissements, révocation si la probabilité de vandalisme détectée par le LLM est supérieure ou égale au second seuil
+                user_rights = page.contributor_rights()
+                if proba_ai >= page.limit_ai and "autoconfirmed" not in user_rights: #Révocation si la probabilité de vandalisme détectée par le LLM est supérieure ou égale au seuil
+                    if not page.reverted:
                         page.revert(summary_ai)
+                    color = 13371938
+                elif proba_ai >= page.limit_ai2 and "autoconfirmed" not in user_rights:
+                    page.get_warnings_user()
+                    if page.warn_level > 0: #Si utilisateuur non-autoconfirmed et a déjà eu des avertissements, révocation si la probabilité de vandalisme détectée par le LLM est supérieure ou égale au second seuil
+                        if not page.reverted:
+                            page.revert(summary_ai)
                         color = 13371938
                     else:
                         color = 12138760
@@ -659,7 +659,15 @@ Summary: [summary in 10 words max]"""
                             }
                         ]
                     }
-                    request_site(webhooks_url_ai[self.site.family], headers, json.dumps(discord_msg).encode("utf-8"), "POST")
+                    try:
+                        request_site(webhooks_url_ai[self.site.family], headers, json.dumps(discord_msg).encode("utf-8"), "POST")
+                    except:
+                        try:
+                            bt = traceback.format_exc()
+                            pywikibot.error(bt)
+                            pywikibot.error(str(discord_msg))
+                        except UnicodeError:
+                            pass
             else:
                 if self.site.lang_bot == "fr":
                     title = "Analyse de l'IA (Mistral) échouée sur " + self.site.lang + ":" + page.page_name
@@ -676,7 +684,15 @@ Summary: [summary in 10 words max]"""
                         }
                     ]
                 }
-                request_site(webhooks_url_ai[self.site.family], headers, json.dumps(discord_msg).encode("utf-8"), "POST")
+                try:
+                    request_site(webhooks_url_ai[self.site.family], headers, json.dumps(discord_msg).encode("utf-8"), "POST")
+                except:
+                    try:
+                        bt = traceback.format_exc()
+                        pywikibot.error(bt)
+                        pywikibot.error(str(discord_msg))
+                    except UnicodeError:
+                        pass
         if webhooks_url[self.site.family] != None and page.alert_request:
             self.block_alert(page)
 
@@ -854,7 +870,7 @@ Summary: [summary in 10 words max]"""
                     self.start_task_day = False
                     day = int(self.datetime_utcnow.strftime("%d"))
                 self.task_every_10minutes()
-            except Exception as e:
+            except:
                 try:
                     bt = traceback.format_exc()
                     pywikibot.error(bt)

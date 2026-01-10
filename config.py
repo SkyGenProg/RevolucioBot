@@ -1,9 +1,7 @@
 # -*- coding: utf-8 -*-
 
-import os
-
-ver = "6.3.2"
-release_date = "02/01/2026"
+ver = "6.3.7"
+release_date = "10/01/2026"
 
 webhooks_url = {'localhost': "REMOVED",
                 'vikidia': "REMOVED",
@@ -18,5 +16,5 @@ headers = {
     'user-agent': 'Mozilla/5.0 Revolucio'
 }
 
-api_key = os.environ["MISTRAL_API_KEY"]
+api_key = ""
 model = "mistral-large-latest"

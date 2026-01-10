@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
 
-import argparse, os, logging, threading
+import argparse, logging, os, threading
 
-from includes.wiki import *
-from includes.wiki_tasks import *
-from config import *
+from includes.wiki import get_wiki
+from includes.wiki_tasks import wiki_task
+from config import ver
 
 logging.basicConfig(filename="logs.log", encoding="utf-8", level=logging.DEBUG, format="%(asctime)s %(thread)d %(levelname)s:%(message)s")
 logging.getLogger().addHandler(logging.StreamHandler())

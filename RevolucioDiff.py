@@ -1,10 +1,9 @@
 # -*- coding: utf-8 -*-
 
-import argparse, os, logging
+import argparse, os, pywikibot
 
-from includes.wiki import *
-from includes.wiki_tasks import *
-from config import *
+from includes.wiki import get_wiki
+from config import api_key, model, ver
 from mistralai import Mistral
 
 arg = argparse.ArgumentParser()
