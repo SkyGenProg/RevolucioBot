@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
-ver = "6.3.6"
-release_date = "08/01/2026"
+ver = "6.3.7"
+release_date = "10/01/2026"
 
 webhooks_url = {'localhost': "REMOVED",
                 'vikidia': "REMOVED",

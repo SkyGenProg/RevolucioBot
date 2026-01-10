@@ -623,14 +623,16 @@ Summary: [summary in 10 words max]"""
                     summary_ai = match.group(1)
                 else:
                     summary_ai = None
-                if proba_ai >= page.limit_ai and not page.reverted: #Révocation si la probabilité de vandalisme détectée par le LLM est supérieure ou égale au seuil
-                    page.revert(summary_ai)
-                    color = 13371938
-                elif proba_ai >= page.limit_ai2:
-                    page.get_warnings_user()
-                    user_rights = page.contributor_rights()
-                    if page.warn_level > 0 and "autoconfirmed" not in user_rights and not page.reverted: #Si utilisateuur non-autoconfirmed et a déjà eu des avertissements, révocation si la probabilité de vandalisme détectée par le LLM est supérieure ou égale au second seuil
+                user_rights = page.contributor_rights()
+                if proba_ai >= page.limit_ai and "autoconfirmed" not in user_rights: #Révocation si la probabilité de vandalisme détectée par le LLM est supérieure ou égale au seuil
+                    if not page.reverted:
                         page.revert(summary_ai)
+                    color = 13371938
+                elif proba_ai >= page.limit_ai2 and "autoconfirmed" not in user_rights:
+                    page.get_warnings_user()
+                    if page.warn_level > 0: #Si utilisateuur non-autoconfirmed et a déjà eu des avertissements, révocation si la probabilité de vandalisme détectée par le LLM est supérieure ou égale au second seuil
+                        if not page.reverted:
+                            page.revert(summary_ai)
                         color = 13371938
                     else:
                         color = 12138760

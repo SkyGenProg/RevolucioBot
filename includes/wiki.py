@@ -281,16 +281,13 @@ class get_page(pywikibot.Page):
     def vandalism_get_score_current(self): #Score sur la version actuelle en ignorant les contributeurs expérimentés
         if self.contributor_is_trusted():
             return 0
+        user_rights = self.contributor_rights()
         vand = self.vandalism_score()
-        if vand <= self.limit:
+        if vand <= self.limit and "autoconfirmed" not in user_rights:
             self.vand_to_revert = True
-        elif vand <= self.limit2:
+        elif vand <= self.limit2 and "autoconfirmed" not in user_rights:
             self.get_warnings_user()
-            if self.warn_level > 0:
-                user_rights = self.contributor_rights()
-                self.vand_to_revert = "autoconfirmed" not in user_rights #Révocation si utilisateur non-autoconfirmed et a déjà reçu des avertissements
-            else:
-                self.vand_to_revert = False
+            self.vand_to_revert = self.warn_level > 0 #Révocation si utilisateur précédemment averti
         else:
             self.vand_to_revert = False
         return vand
