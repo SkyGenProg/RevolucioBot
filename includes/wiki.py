@@ -335,8 +335,7 @@ class get_page(pywikibot.Page):
         self.text_page_oldid2 = text_page_oldid2
 
     def get_diff(self):
-        differ = difflib.Differ()
-        diff = list(differ.compare(self.text_page_oldid2.splitlines(), self.text_page_oldid.splitlines()))
+        diff = list(difflib.unified_diff(self.text_page_oldid2.splitlines(), self.text_page_oldid.splitlines()))
         diff_text = '\n'.join(diff)
         return diff_text
 

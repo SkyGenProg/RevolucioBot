@@ -46,9 +46,9 @@ if __name__ == "__main__":
             detected += str(vandalism_score_detect[1]) + " - + " + str(vandalism_score_detect[2].group()) + "\n"
     pywikibot.output(detected)
     pywikibot.output("Score : " + str(vandalism_score))
-    pywikibot.output("Diff : ")
+    #pywikibot.output("Diff : ")
     diff = page.get_diff()
-    pywikibot.output(diff)
+    #pywikibot.output(diff)
     prompt = f"""Est-ce du vandalisme (indiquer la probabilité que ce soit du vandalisme en % et analyser la modification) ?
 Wiki : {page.url}
 Page : {page.page_name}
