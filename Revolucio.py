@@ -1,34 +1,69 @@
 # -*- coding: utf-8 -*-
 
-import argparse, logging, os, threading
+import argparse
+import logging
+import os
+import threading
 
 from includes.wiki import get_wiki
 from includes.wiki_tasks import wiki_task
 from config import ver
 
-logging.basicConfig(filename="logs.log", encoding="utf-8", level=logging.DEBUG, format="%(asctime)s %(thread)d %(levelname)s:%(message)s")
+logging.basicConfig(
+    filename="logs.log",
+    encoding="utf-8",
+    level=logging.DEBUG,
+    format="%(asctime)s %(thread)d %(levelname)s:%(message)s",
+)
 logging.getLogger().addHandler(logging.StreamHandler())
 
-arg = argparse.ArgumentParser()
-arg.add_argument("--start_task_day", action="count")
-arg.add_argument("--start_task_month", action="count")
-arg.add_argument("--ignore_task_month", action="count")
-args = arg.parse_args()
+WIKIS = [
+    ("vikidia", "fr", "RevolucioBot"),
+    ("vikidia", "en", "RevolucioBot"),
+    ("dicoado", "dicoado", "RevolucioBot"),
+    # ("nomwiki", "langue", "utilisateur"),
+]
+#WIKIS = [
+#    ("localhost", "localhost", "RevolucioBot")
+#]
+
+def parse_args():
+    p = argparse.ArgumentParser()
+    p.add_argument("--start_task_day", action="count")
+    p.add_argument("--start_task_month", action="count")
+    p.add_argument("--ignore_task_month", action="count")
+    return p.parse_args()
+
+
+def ensure_workdir(dirname="files"):
+    os.makedirs(dirname, exist_ok=True)
+    os.chdir(dirname)
+
+
+def start_tasks(args):
+    threads = []
+    for family, lang, user in WIKIS:
+        site = get_wiki(family, lang, user)
+        task = wiki_task(site, args.start_task_day, args.start_task_month, args.ignore_task_month)
+        t = threading.Thread(
+            target=task.execute,
+            name=f"task:{family}:{lang}",
+            daemon=True,  # optionnel : le process s'arrête proprement
+        )
+        t.start()
+        threads.append(t)
+
+    # Optionnel : garder le main vivant (sinon daemon=True suffit)
+    for t in threads:
+        t.join()
+
+
+def main():
+    print(f"Revolució {ver}")
+    args = parse_args()
+    ensure_workdir()
+    start_tasks(args)
+
 
 if __name__ == "__main__":
-    print("Revolució %s" % ver)
-    if(not os.path.exists("files")):
-       os.mkdir("files")
-    os.chdir("files")
-    vikidiafr_site = get_wiki("vikidia", "fr", "RevolucioBot")
-    vikidiaen_site = get_wiki("vikidia", "en", "RevolucioBot")
-    dicoado_site = get_wiki("dicoado", "dicoado", "RevolucioBot")
-    #nomwiki_site = get_wiki("nomwiki", "langue", "utilisateur")
-    vikidiafr_task = wiki_task(vikidiafr_site, args.start_task_day, args.start_task_month, args.ignore_task_month)
-    vikidiaen_task = wiki_task(vikidiaen_site, args.start_task_day, args.start_task_month, args.ignore_task_month)
-    dicoado_task = wiki_task(dicoado_site, args.start_task_day, args.start_task_month, args.ignore_task_month)
-    #nomwiki_task = wiki_task(nomwiki_site, args.start_task_day, args.start_task_month, args.ignore_task_month)
-    threading.Thread(target=vikidiafr_task.execute).start()
-    threading.Thread(target=vikidiaen_task.execute).start()
-    threading.Thread(target=dicoado_task.execute).start()
-    #threading.Thread(target=nomwiki_task.execute).start()
+    main()
