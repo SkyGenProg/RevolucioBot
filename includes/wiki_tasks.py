@@ -1,12 +1,6 @@
 # -*- coding: utf-8 -*-
 """
 Scheduled tasks for the wiki bot.
-
-This version keeps the same behavior/public API (wiki_task.execute, etc.),
-but reduces repetition by:
-- centralizing webhook sending + chunking
-- consolidating language-dependent strings
-- extracting the DicoAdo maintenance block into helpers
 """
 
 from __future__ import annotations
@@ -196,7 +190,6 @@ class wiki_task:
     # ----------------------------
 
     def _dicoado_maintenance(self, page_name: str, page) -> None:
-        """Keep behavior of the long DicoAdo block, but factor the repeated patterns."""
         try:
             if page.isRedirectPage():
                 return

@@ -1,10 +1,6 @@
 # -*- coding: utf-8 -*-
 """
 Utilities around Pywikibot + MediaWiki API.
-
-This file keeps the original public API (get_wiki/get_page/get_category/request_site/regex_vandalism),
-but factors out repeated logic (config loading, API pagination, rule parsing) to make the code shorter
-and easier to maintain.
 """
 
 from __future__ import annotations
