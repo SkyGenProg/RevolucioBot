@@ -390,7 +390,7 @@ class wiki_task:
 
         diff = page.get_diff()
         if self.site.lang_bot == "fr":
-            prompt = f"""Analyser la modification, indiquer la probabilité que ce soit du vandalisme en % et résumer en 10 mots maximum la pertinence de la modification.
+            prompt = f"""Analyser la modification, indiquer la probabilité que ce soit du vandalisme en % et résumer en 3 mots maximum la pertinence de la modification.
 Date : {page.latest_revision.timestamp}
 Wiki : {page.url}
 Page : {page.page_name}
@@ -401,13 +401,13 @@ Format de réponse :
 Analyse de la modification :
 ...
 Probabilité de vandalisme : [probabilité] %
-Résumé : [résumé en 10 mots maximum]"""
+Résumé : [résumé en 3 mots maximum]"""
             proba_re = r"probabilité de vandalisme.*:[^0-9]*([\d\.,]+)[^0-9]*%"
             summary_re = r"résumé.*:\s*[^a-zA-ZÀ-ÿ0-9]*([^*]+)"
             title_base = f"Analyse de l'IA (Mistral) sur {self.site.lang}:{page.page_name}"
             fail_title = f"Analyse de l'IA (Mistral) échouée sur {self.site.lang}:{page.page_name}"
         else:
-            prompt = f"""Analyze the modification and indicate the probability that it is vandalism in % and summary in 10 words max the relevance of the modification.
+            prompt = f"""Analyze the modification and indicate the probability that it is vandalism in % and summary in 3 words max the relevance of the modification.
 Date: {page.latest_revision.timestamp}
 Wiki: {page.url}
 Page: {page.page_name}
@@ -418,7 +418,7 @@ Format of answer:
 Analysis of the modification:
 ...
 Probability of vandalism: [probability] %
-Summary: [summary in 10 words max]"""
+Summary: [summary in 3 words max]"""
             proba_re = r"probability of vandalism.*:[^0-9]*([\d\.,]+)[^0-9]*%"
             summary_re = r"summary.*:\s*[^a-zA-ZÀ-ÿ0-9]*([^*]+)"
             title_base = f"AI analysis (Mistral) on {self.site.lang}:{page.page_name}"

@@ -292,6 +292,7 @@ class get_page(pywikibot.Page):
         self.text_page_oldid2: Optional[str] = None
         self.vand_to_revert = False
         self.reverted = False
+        self.list_contributor_rights = None
 
         fullurl = self.source.site.siteinfo["general"]["server"] + self.source.site.siteinfo["general"]["articlepath"].replace("$1", self.page_name)
         self.protocol = (fullurl.split("/")[0] or "https:")
@@ -411,18 +412,20 @@ class get_page(pywikibot.Page):
         )
 
     def contributor_rights(self) -> List[str]:
-        url = _api_url(
-            self.protocol,
-            self.url,
-            self.scriptpath,
-            action="query",
-            list="users",
-            ususers=urllib.parse.quote(self.contributor_name),
-            usprop="rights",
-            format="json",
-        )
-        j = json.loads(request_site(url))
-        return j.get("query", {}).get("users", [{}])[0].get("rights", []) or []
+        if self.list_contributor_rights is None:
+            url = _api_url(
+                self.protocol,
+                self.url,
+                self.scriptpath,
+                action="query",
+                list="users",
+                ususers=urllib.parse.quote(self.contributor_name),
+                usprop="rights",
+                format="json",
+            )
+            j = json.loads(request_site(url))
+            self.list_contributor_rights = j.get("query", {}).get("users", [{}])[0].get("rights", []) or []
+        return self.list_contributor_rights
 
     def get_text_page_old(self, revision_oldid: Optional[int] = None, revision_oldid2: Optional[int] = None) -> None:
         """
