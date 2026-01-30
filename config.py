@@ -1,15 +1,17 @@
 # -*- coding: utf-8 -*-
 
-ver = "6.4.0-beta.1"
-release_date = "28/01/2026"
+ver = "6.4.0-beta.2"
+release_date = "30/01/2026"
 
 webhooks_url = {'localhost': "REMOVED",
+                'wikipedia': "REMOVED",
                 'vikidia': "REMOVED",
                 'dicoado': "REMOVED"} #Ajouter les nouveaux wikis
 
 webhooks_url_ai = {'localhost': "REMOVED",
-                'vikidia': "REMOVED",
-                'dicoado': "REMOVED"} #Ajouter les nouveaux wikis
+                   'wikipedia': "REMOVED",
+                   'vikidia': "REMOVED",
+                   'dicoado': "REMOVED"} #Ajouter les nouveaux wikis
 
 headers = {
     "content-type": "application/json",

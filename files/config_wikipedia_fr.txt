@@ -1,0 +1,1 @@
+{"lang_bot": "fr", "trusted_groups": "sysop|bot", "alert_page": "Project:Vandalisme en cours", "clear_talks": false, "check_WP": false, "correct_redirects": false}

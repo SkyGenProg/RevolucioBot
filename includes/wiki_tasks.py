@@ -133,9 +133,9 @@ class wiki_task:
 
                 if task_day and not page.isRedirectPage():
                     try:
-                        vandalism_score = page.vandalism_score(page_info["revid"], page_info["old_revid"])
+                        self.vandalism_score = page.vandalism_score(page_info["revid"], page_info["old_revid"])
                         detailed_diff_info = self.site.add_detailed_diff_info(
-                            detailed_diff_info, page_info, page.text_page_oldid, page.text_page_oldid2, vandalism_score
+                            detailed_diff_info, page_info, page.text_page_oldid, page.text_page_oldid2, self.vandalism_score
                         )
                     except Exception:
                         _safe_log_exc()
@@ -293,13 +293,13 @@ class wiki_task:
 
     def check_vandalism(self, page) -> None:
         page_name = page.page_name
-        vandalism_score = page.vandalism_get_score_current()
+        self.vandalism_score = page.vandalism_get_score_current()
 
         if page.vand_to_revert:
             page.revert()
 
-        if vandalism_score < 0 and webhooks_url.get(self.site.family):
-            vand_prob = min(100, vand_f(abs(vandalism_score)))
+        if self.vandalism_score < 0 and webhooks_url.get(self.site.family):
+            vand_prob = min(100, vand_f(abs(self.vandalism_score)))
 
             detected_lines: List[str] = []
             for kind, score, payload in getattr(page, "vandalism_score_detect", []):
@@ -329,7 +329,7 @@ class wiki_task:
                     else "This edit has been detected as unconstructive"
                 )
                 color = 13371938
-            elif vandalism_score <= page.limit2:
+            elif self.vandalism_score <= page.limit2:
                 title = (
                     f"Modification suspecte sur {self.site.lang}:{page_name}"
                     if self.site.lang_bot == "fr"
@@ -361,7 +361,7 @@ class wiki_task:
             )
 
             fields = [
-                {"name": "Score", "value": str(vandalism_score), "inline": True},
+                {"name": "Score", "value": str(self.vandalism_score), "inline": True},
                 {"name": prob_field_name, "value": f"{round(vand_prob, 2)} %", "inline": True},
             ]
 
@@ -442,25 +442,25 @@ Summary: [summary in 10 words max]"""
             return
 
         m = re.search(proba_re, result_ai.lower())
-        proba_ai = float(m.group(1).replace(",", ".")) if m else 0.0
+        self.proba_ai = float(m.group(1).replace(",", ".")) if m else 0.0
 
         m = re.search(summary_re, result_ai.lower())
-        summary_ai = m.group(1) if m else None
+        self.summary_ai = m.group(1) if m else None
 
         user_rights = page.contributor_rights()
 
-        if proba_ai >= page.limit_ai and "autoconfirmed" not in user_rights:
+        if self.proba_ai >= page.limit_ai and "autoconfirmed" not in user_rights:
             if not page.reverted:
-                page.revert(summary_ai)
+                page.revert(self.summary_ai)
             color = 13371938
-        elif proba_ai >= page.limit_ai2 and "autoconfirmed" not in user_rights:
+        elif self.proba_ai >= page.limit_ai2 and "autoconfirmed" not in user_rights:
             page.get_warnings_user()
             if page.warn_level > 0 and not page.reverted:
-                page.revert(summary_ai)
+                page.revert(self.summary_ai)
                 color = 13371938
             else:
                 color = 12138760
-        elif proba_ai >= page.limit_ai3:
+        elif self.proba_ai >= page.limit_ai3:
             color = 12138760
         else:
             color = 12161032

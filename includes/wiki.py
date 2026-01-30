@@ -352,9 +352,9 @@ class get_page(pywikibot.Page):
         t = self.talk.text.lower()
 
         # Rough heuristic based on templates/comments.
-        has_lvl1 = any(k in t for k in ("averto-1", "niveau=1", "level=1"))
-        has_lvl2 = any(k in t for k in ("averto-2", "niveau=2", "level=2"))
-        has_lvl0 = any(k in t for k in ("averto-0", "niveau=0", "level=0"))
+        has_lvl0 = any(k in t for k in ("averto-0", "niveau=0", "level=0", "avertissement-niveau-0"))
+        has_lvl1 = any(k in t for k in ("averto-1", "niveau=1", "level=1", "avertissement-niveau-1"))
+        has_lvl2 = any(k in t for k in ("averto-2", "niveau=2", "level=2", "avertissement-niveau-2"))
 
         if has_lvl1 and not has_lvl2:
             self.warn_level = 2  # already warned once -> next is level 2
