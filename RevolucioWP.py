@@ -3,8 +3,8 @@
 import os
 
 from includes.wiki import get_wiki
-from includes.wiki_tasks import wiki_task, _safe_log_exc
-from config import ver
+from includes.wiki_tasks import wiki_task, _safe_log_exc, _send_webhook
+from config import webhooks_url, ver
 
 from pywikibot.comms.eventstreams import EventStreams
 
@@ -23,6 +23,11 @@ def main():
 
     for change in stream:
         try:
+            if site.bot_stopped():
+                task.send_message_bot_stopped()
+                print("Le bot a été arrêté.")
+                break
+
             if change.get("wiki") != "frwiki":
                 continue
             if change.get("bot"):
@@ -50,6 +55,7 @@ def main():
                 task.check_vandalism_ai(page)
                 print(f"Probabilité de vandalisme (IA) : {task.proba_ai} %")
                 print(f"Analyse (IA) : {task.summary_ai}")
+
         except Exception:
             _safe_log_exc()
 

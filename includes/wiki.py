@@ -118,6 +118,10 @@ class get_wiki:
 
     # ---- API queries
 
+    def bot_stopped(self) -> bool:
+        talk_page = pywikibot.Page(self.site, f"User Talk:{self.user_wiki}")
+        return talk_page.text.lower() != "{{/stop}}"
+
     def get_trusted(self) -> None:
         trusted_groups = self.config.get("trusted_groups", "sysop")
         url = _api_url(

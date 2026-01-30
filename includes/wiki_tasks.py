@@ -66,6 +66,15 @@ class wiki_task:
 
         self.datetime_utcnow = datetime.datetime.utcnow()
 
+    def send_message_bot_stopped(self) -> None:
+        if self.site.lang_bot == "fr":
+            title = "Bot arrêté"
+            desc = "Un utilisateur a arrêté le bot."
+        else:
+            title = "Bot stopped"
+            desc = "An user stopped the bot."
+        _send_webhook(webhooks_url[self.site.family], {"embeds": [{"title": title, "description": desc, "color": 13371938}]})
+
     # ----------------------------
     # Monthly / daily / periodic
     # ----------------------------
@@ -661,6 +670,10 @@ Summary: [summary in 3 words max]"""
         while True:
             self.datetime_utcnow = datetime.datetime.utcnow()
             try:
+                if self.site.bot_stopped():
+                    self.send_message_bot_stopped()
+                    print("Le bot a été arrêté.")
+                    break
                 if not self.ignore_task_month and (self.start_task_month or int(self.datetime_utcnow.strftime("%m")) != month):
                     self.task_every_month()
                     self.start_task_month = False
