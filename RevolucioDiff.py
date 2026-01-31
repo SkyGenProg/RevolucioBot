@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-import argparse, os, pywikibot
+import argparse, os, pywikibot, difflib
 
 from includes.wiki import get_wiki
 from config import api_key, model
@@ -48,17 +48,20 @@ if __name__ == "__main__":
     pywikibot.output(detected)
     pywikibot.output("Score : " + str(vandalism_score))
     #pywikibot.output("Diff : ")
-    diff = page.get_diff()
+    revision1 = page.get_revision(int(args.oldid))
+    revision2 = page.get_revision(int(args.diff))
+    diff = difflib.unified_diff((revision1["text"] or "").splitlines(), (revision2["text"] or "").splitlines())
+    diff_text = "\n".join(diff)
     #pywikibot.output(diff)
     prompt = f"""Analyser la modification, indiquer la probabilité que ce soit du vandalisme en % et résumer en 3 mots maximum la pertinence de la modification.
 Si la modification est une révocation de vandalisme, mettre la probabilité de vandalisme à 0 %.
-Si la modification est une annonce de décès, si la date annoncée est ultérieure à la date de dernière mise à jour du modèle de langage, ne pas considérer la modification comme un vandalisme.
+Si la modification est une annonce de décès, ne pas considérer la modification comme un vandalisme.
 Date : {page.latest_revision.timestamp}
 Wiki : {page.url}
 Page : {page.page_name}
 Diff :
-{diff}
-Résumé de modification : {page.latest_revision.comment}
+{diff_text}
+Résumé de modification : {revision2.comment}
 Format de réponse :
 Analyse de la modification :
 ...
