@@ -38,9 +38,7 @@ def main():
                 continue
 
             rights = page.contributor_rights()
-            is_revert = any(tag in change.get("tags", []) for tag in ("mw-undo", "mw-rollback", "mw-manual-revert"))
-
-            if not is_revert and "autoconfirmed" not in rights:
+            if "autoconfirmed" not in rights:
                 if site.bot_stopped():
                     task.send_message_bot_stopped()
                     print("Le bot a été arrêté.")
