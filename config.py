@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
-ver = "6.4.0"
-release_date = "30/01/2026"
+ver = "6.4.2"
+release_date = "31/01/2026"
 
 webhooks_url = {'localhost': "REMOVED",
                 'wikipedia': "REMOVED",
@@ -18,5 +18,5 @@ headers = {
     "user-agent": "Mozilla/5.0 Revolucio",
 }
 
-api_key = ""
+api_key = "REMOVED"
 model = "mistral-large-latest"
