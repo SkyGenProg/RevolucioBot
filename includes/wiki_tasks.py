@@ -140,7 +140,8 @@ class wiki_task:
 
                 pywikibot.output("Page : " + page_name)
 
-                if task_day and not page.isRedirectPage():
+                is_redirect = page.isRedirectPage()
+                if task_day and not is_redirect:
                     try:
                         self.vandalism_score = page.vandalism_score(page_info["revid"], page_info["old_revid"])
                         detailed_diff_info = self.site.add_detailed_diff_info(
@@ -153,7 +154,7 @@ class wiki_task:
                     continue
                 pages_checked.add(page_name)
 
-                if page.isRedirectPage():
+                if is_redirect:
                     if self.site.config.get("correct_redirects"):
                         pywikibot.output("Correction de redirection sur la page " + str(page))
                         page.redirects()
@@ -161,7 +162,7 @@ class wiki_task:
                         pywikibot.output(f"La page {page} est une redirection.")
                     continue
 
-                is_revert = any(tag in page_info.get("tags", []) for tag in ("mw-undo", "mw-rollback", "mw-manual-revert"))
+                is_revert = page.is_revert()
 
                 if not is_revert and not self.site.config.get("disable_vandalism", False):
                     self.check_vandalism(page)
@@ -400,6 +401,8 @@ class wiki_task:
         diff = page.get_diff()
         if self.site.lang_bot == "fr":
             prompt = f"""Analyser la modification, indiquer la probabilité que ce soit du vandalisme en % et résumer en 3 mots maximum la pertinence de la modification.
+Si la modification est une révocation de vandalisme, mettre la probabilité de vandalisme à 0 %.
+Si la modification est une annonce de décès, si la date annoncée est ultérieure à la date de dernière mise à jour du modèle de langage, ne pas considérer la modification comme un vandalisme.
 Date : {page.latest_revision.timestamp}
 Wiki : {page.url}
 Page : {page.page_name}
@@ -417,6 +420,8 @@ Résumé : [résumé en 3 mots maximum]"""
             fail_title = f"Analyse de l'IA (Mistral) échouée sur {self.site.lang}:{page.page_name}"
         else:
             prompt = f"""Analyze the modification and indicate the probability that it is vandalism in % and summary in 3 words max the relevance of the modification.
+If the edit is a revert of vandalism, set the probability of vandalism to 0%.
+If the change is a death announcement and the announced date is later than the language model’s last update date, do not consider the change to be vandalism.
 Date: {page.latest_revision.timestamp}
 Wiki: {page.url}
 Page: {page.page_name}
@@ -458,7 +463,7 @@ Summary: [summary in 3 words max]"""
 
         user_rights = page.contributor_rights()
 
-        if self.proba_ai >= page.limit_ai and "autoconfirmed" not in user_rights:
+        if (page.page_ns == 0 and self.proba_ai >= page.limit_ai and "autoconfirmed" not in user_rights) or (page.page_ns != 0 and self.proba_ai >= page.limit_ai_no_ns_0 and "autoconfirmed" not in user_rights):
             if not page.reverted:
                 page.revert(self.summary_ai)
             color = 13371938
@@ -504,7 +509,7 @@ Summary: [summary in 3 words max]"""
         embed = {
             "title": title,
             "description": desc,
-            "url": page.protocol + "//" + page.url + page.articlepath + page.alert_page,
+            "url": page.protocol + "//" + page.url + page.articlepath + page.alert_page.replace(" ", "_"),
             "author": {"name": page.contributor_name},
             "color": 16711680,
         }

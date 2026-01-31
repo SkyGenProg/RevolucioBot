@@ -7,7 +7,7 @@ import threading
 
 from includes.wiki import get_wiki
 from includes.wiki_tasks import wiki_task
-from config import ver
+from version import ver
 
 logging.basicConfig(
     filename="logs.log",

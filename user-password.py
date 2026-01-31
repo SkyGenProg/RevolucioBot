@@ -1,5 +1,0 @@
-('localhost', 'localhost', 'RevolucioBot', BotPassword('Revolucio', 'REMOVED'))
-('fr', 'vikidia', 'RevolucioBot', BotPassword('Revolucio', 'REMOVED'))
-('en', 'vikidia', 'RevolucioBot', BotPassword('Revolucio', 'REMOVED'))
-('dicoado', 'dicoado', 'RevolucioBot', BotPassword('Revolucio', 'REMOVED'))
-('fr', 'wikipedia', 'RevolucioBot', BotPassword('Revolucio', 'REMOVED'))
