@@ -3,8 +3,8 @@
 import os
 
 from includes.wiki import get_wiki
-from includes.wiki_tasks import wiki_task, _safe_log_exc, _send_webhook
-from config import webhooks_url, ver
+from includes.wiki_tasks import wiki_task, _safe_log_exc
+from version import ver
 
 from pywikibot.comms.eventstreams import EventStreams
 
@@ -27,8 +27,6 @@ def main():
                 continue
             if change.get("bot"):
                 continue
-            if change.get("namespace") != 0:
-                continue
             if change.get("type") not in ("edit", "new"):
                 continue
 
@@ -38,7 +36,8 @@ def main():
                 continue
 
             rights = page.contributor_rights()
-            if "autoconfirmed" not in rights:
+            is_revert = page.is_revert()
+            if not is_revert and "autoconfirmed" not in rights:
                 if site.bot_stopped():
                     task.send_message_bot_stopped()
                     print("Le bot a été arrêté.")

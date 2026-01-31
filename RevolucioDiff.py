@@ -3,7 +3,8 @@
 import argparse, os, pywikibot
 
 from includes.wiki import get_wiki
-from config import api_key, model, ver
+from config import api_key, model
+from version import ver
 from mistralai import Mistral
 
 arg = argparse.ArgumentParser()
@@ -49,12 +50,20 @@ if __name__ == "__main__":
     #pywikibot.output("Diff : ")
     diff = page.get_diff()
     #pywikibot.output(diff)
-    prompt = f"""Est-ce du vandalisme (indiquer la probabilité que ce soit du vandalisme en % et analyser la modification) ?
+    prompt = f"""Analyser la modification, indiquer la probabilité que ce soit du vandalisme en % et résumer en 3 mots maximum la pertinence de la modification.
+Si la modification est une révocation de vandalisme, mettre la probabilité de vandalisme à 0 %.
+Si la modification est une annonce de décès, si la date annoncée est ultérieure à la date de dernière mise à jour du modèle de langage, ne pas considérer la modification comme un vandalisme.
+Date : {page.latest_revision.timestamp}
 Wiki : {page.url}
 Page : {page.page_name}
 Diff :
 {diff}
-"""
+Résumé de modification : {page.latest_revision.comment}
+Format de réponse :
+Analyse de la modification :
+...
+Probabilité de vandalisme : [probabilité] %
+Résumé : [résumé en 3 mots maximum]"""
     pywikibot.output("Prompt :")
     pywikibot.output(prompt)
     pywikibot.output("Analyse de l'IA : ")

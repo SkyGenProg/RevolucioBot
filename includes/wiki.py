@@ -319,7 +319,8 @@ class get_page(pywikibot.Page):
         # thresholds
         self.limit = -50
         self.limit2 = -30
-        self.limit_ai = 98
+        self.limit_ai = 95
+        self.limit_ai_no_ns_0 = 98
         self.limit_ai2 = 90
         self.limit_ai3 = 50
 
@@ -465,6 +466,10 @@ class get_page(pywikibot.Page):
     def get_diff(self) -> str:
         diff = difflib.unified_diff((self.text_page_oldid2 or "").splitlines(), (self.text_page_oldid or "").splitlines())
         return "\n".join(diff)
+
+    def is_revert(self) -> bool:
+        return any(tag in self.latest_revision.tags for tag in ("mw-undo", "mw-rollback", "mw-manual-revert")) \
+            or any(k in self.latest_revision.comment for k in ("revert", "révoc", "cancel", "annul"))
 
     @staticmethod
     def _parse_scored_lines(lines: Iterable[str]) -> List[Tuple[str, int]]:
