@@ -398,16 +398,16 @@ class wiki_task:
         if page.contributor_is_trusted():
             return
 
-        diff = page.get_diff()
+        diff_text = page.get_diff()
         if self.site.lang_bot == "fr":
             prompt = f"""Analyser la modification, indiquer la probabilité que ce soit du vandalisme en % et résumer en 3 mots maximum la pertinence de la modification.
 Si la modification est une révocation de vandalisme, mettre la probabilité de vandalisme à 0 %.
-Si la modification est une annonce de décès, si la date annoncée est ultérieure à la date de dernière mise à jour du modèle de langage, ne pas considérer la modification comme un vandalisme.
+Si la modification est une annonce de décès, ne pas considérer la modification comme un vandalisme.
 Date : {page.latest_revision.timestamp}
 Wiki : {page.url}
 Page : {page.page_name}
 Diff :
-{diff}
+{diff_text}
 Résumé de modification : {page.latest_revision.comment}
 Format de réponse :
 Analyse de la modification :
@@ -421,12 +421,12 @@ Résumé : [résumé en 3 mots maximum]"""
         else:
             prompt = f"""Analyze the modification and indicate the probability that it is vandalism in % and summary in 3 words max the relevance of the modification.
 If the edit is a revert of vandalism, set the probability of vandalism to 0%.
-If the change is a death announcement and the announced date is later than the language model’s last update date, do not consider the change to be vandalism.
+If the change is a death announcement, do not consider the change to be vandalism.
 Date: {page.latest_revision.timestamp}
 Wiki: {page.url}
 Page: {page.page_name}
 Diff:
-{diff}
+{diff_text}
 Edit summary: {page.latest_revision.comment}
 Format of answer:
 Analysis of the modification:
