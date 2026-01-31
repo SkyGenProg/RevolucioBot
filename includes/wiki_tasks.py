@@ -400,7 +400,7 @@ class wiki_task:
 
         diff_text = page.get_diff()
         if self.site.lang_bot == "fr":
-            prompt = f"""Analyser la modification, indiquer la probabilité que ce soit du vandalisme en % et résumer en 3 mots maximum la pertinence de la modification.
+            prompt = f"""Analyser la modification, indiquer la probabilité que cette modification soit du vandalisme en % et résumer en 3 mots maximum la pertinence de la modification.
 Si la modification est une révocation de vandalisme, mettre la probabilité de vandalisme à 0 %.
 Si la modification est une annonce de décès, ne pas considérer la modification comme un vandalisme.
 Date : {page.latest_revision.timestamp}
@@ -419,7 +419,7 @@ Résumé : [résumé en 3 mots maximum]"""
             title_base = f"Analyse de l'IA (Mistral) sur {self.site.lang}:{page.page_name}"
             fail_title = f"Analyse de l'IA (Mistral) échouée sur {self.site.lang}:{page.page_name}"
         else:
-            prompt = f"""Analyze the modification and indicate the probability that it is vandalism in % and summary in 3 words max the relevance of the modification.
+            prompt = f"""Analyze the modification and indicate the probability that this edit is vandalism in % and summary in 3 words max the relevance of the modification.
 If the edit is a revert of vandalism, set the probability of vandalism to 0%.
 If the change is a death announcement, do not consider the change to be vandalism.
 Date: {page.latest_revision.timestamp}

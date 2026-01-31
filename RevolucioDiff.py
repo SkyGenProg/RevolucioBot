@@ -53,7 +53,7 @@ if __name__ == "__main__":
     diff = difflib.unified_diff((revision1["text"] or "").splitlines(), (revision2["text"] or "").splitlines())
     diff_text = "\n".join(diff)
     #pywikibot.output(diff)
-    prompt = f"""Analyser la modification, indiquer la probabilité que ce soit du vandalisme en % et résumer en 3 mots maximum la pertinence de la modification.
+    prompt = f"""Analyser la modification, indiquer la probabilité que cette modification soit du vandalisme en % et résumer en 3 mots maximum la pertinence de la modification.
 Si la modification est une révocation de vandalisme, mettre la probabilité de vandalisme à 0 %.
 Si la modification est une annonce de décès, ne pas considérer la modification comme un vandalisme.
 Date : {page.latest_revision.timestamp}
