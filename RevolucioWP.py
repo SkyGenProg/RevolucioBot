@@ -23,11 +23,6 @@ def main():
 
     for change in stream:
         try:
-            if site.bot_stopped():
-                task.send_message_bot_stopped()
-                print("Le bot a été arrêté.")
-                break
-
             if change.get("wiki") != "frwiki":
                 continue
             if change.get("bot"):
@@ -44,17 +39,23 @@ def main():
 
             rights = page.contributor_rights()
             is_revert = any(tag in change.get("tags", []) for tag in ("mw-undo", "mw-rollback", "mw-manual-revert"))
-    
-            if not is_revert and "autoconfirmed" not in rights and not task.site.config.get("disable_vandalism", False):
-                print(f"Calcul du score de vandalisme sur {page_name}...")
-                task.check_vandalism(page)
-                print(f"Score de vandalisme : {task.vandalism_score}")
 
-            if not is_revert and "autoconfirmed" not in rights and not task.site.config.get("disable_ai", False):
-                print(f"Calcul du score de vandalisme (IA) sur {page_name}...")
-                task.check_vandalism_ai(page)
-                print(f"Probabilité de vandalisme (IA) : {task.proba_ai} %")
-                print(f"Analyse (IA) : {task.summary_ai}")
+            if not is_revert and "autoconfirmed" not in rights:
+                if site.bot_stopped():
+                    task.send_message_bot_stopped()
+                    print("Le bot a été arrêté.")
+                    break
+
+                if not task.site.config.get("disable_vandalism", False):
+                    print(f"Calcul du score de vandalisme sur {page_name}...")
+                    task.check_vandalism(page)
+                    print(f"Score de vandalisme : {task.vandalism_score}")
+
+                if not task.site.config.get("disable_ai", False):
+                    print(f"Calcul du score de vandalisme (IA) sur {page_name}...")
+                    task.check_vandalism_ai(page)
+                    print(f"Probabilité de vandalisme (IA) : {task.proba_ai} %")
+                    print(f"Analyse (IA) : {task.summary_ai}")
 
         except Exception:
             _safe_log_exc()
