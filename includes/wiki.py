@@ -88,12 +88,11 @@ def regex_vandalism(regex: str, text_page1: str, text_page2: str, ignorecase: bo
     return re1 if re1 and not re2 else None
 
 
-def prompt_ai(lang, url_wiki, page_name, diff_text, comment):
+def prompt_ai(lang, date, url_wiki, page_name, diff_text, comment):
     if lang == "fr":
         comment_line = f"Résumé de modification : {comment}" if comment else ""
         return f"""Analyser la modification et indiquer la probabilité que cette modification soit du vandalisme en %.
-Si la modification est une révocation ou une suppression de contenu non-constructif, mettre la probabilité de vandalisme à 0 %.
-Si la modification concerne un événement ultérieur à votre base de connaissances, ne pas considérer la modification comme un vandalisme.
+Date et heure : {date}
 Wiki : {url_wiki}
 Page modifiée : {page_name}
 Diff de la modification :
@@ -106,8 +105,7 @@ Probabilité de vandalisme : [probabilité] %"""
     else:
         comment_line = f"Edit summary: {comment}" if comment else ""
         return f"""Analyze the modification and indicate the probability that this edit is vandalism in %.
-If the edit is a revert or a deletion of unconstructive content, set the probability of vandalism to 0%.
-If the modification concerns an event that occurred after your knowledge base, do not consider the modification to be vandalism.
+Date and time: {date}
 Wiki: {url_wiki}
 Edited page: {page_name}
 Edit diff:
@@ -349,8 +347,7 @@ class get_page(pywikibot.Page):
         # thresholds
         self.limit = self.source.config.get("limit", -50)
         self.limit2 = self.source.config.get("limit2", -30)
-        self.limit_ai = self.source.config.get("limit_ai", 95)
-        self.limit_ai_no_ns_0 = self.source.config.get("limit_ai_no_ns_0", 100)
+        self.limit_ai = self.source.config.get("limit_ai", 100)
         self.limit_ai2 = self.source.config.get("limit_ai2", 90)
         self.limit_ai3 = self.source.config.get("limit_ai3", 50)
 
@@ -366,7 +363,7 @@ class get_page(pywikibot.Page):
 
     # ---- revert + warnings
 
-    def revert(self, summary: str = "", test = False) -> None:
+    def revert(self, summary: str = "", test = False, result_ai = "") -> None:
         if test:
             test_page = pywikibot.Page(self.source.site, f"User:{self.user_wiki}/Tests")
             test_page.text = f"""{test_page.text}
@@ -374,7 +371,11 @@ class get_page(pywikibot.Page):
 * Page : {self.page_name}
 * Utilisateur : {self.contributor_name}
 * Diff : [[Special:Diff/{self.oldid}]]
-* {summary}"""
+* {summary}
+* Détection de l'IA :
+<pre>
+{result_ai}
+</pre>"""
             test_page.save("Ajout vandalisme", bot=False, minor=False)
         else:
             self.only_revert(summary)

@@ -53,7 +53,7 @@ if __name__ == "__main__":
     diff = difflib.unified_diff((revision1["text"] or "").splitlines(), (revision2["text"] or "").splitlines())
     diff_text = "\n".join(diff)
     #pywikibot.output(diff)
-    prompt = prompt_ai(args.lang, page.url, page.page_name, diff_text, revision2.comment)
+    prompt = prompt_ai(args.lang, revision2.timestamp, page.url, page.page_name, diff_text, revision2.comment)
     pywikibot.output("Prompt :")
     pywikibot.output(prompt)
     pywikibot.output("Analyse de l'IA : ")

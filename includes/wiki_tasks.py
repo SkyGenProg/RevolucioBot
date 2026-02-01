@@ -404,7 +404,7 @@ class wiki_task:
             return
 
         diff_text = page.get_diff()
-        prompt = prompt_ai(self.site.lang_bot, page.url, page.page_name, diff_text, page.latest_revision.comment)
+        prompt = prompt_ai(self.site.lang_bot, page.latest_revision.timestamp, page.url, page.page_name, diff_text, page.latest_revision.comment)
         if self.site.lang_bot == "fr":
             proba_re = r"probabilité de vandalisme.*:[^0-9]*([\d\.,]+)[^0-9]*%"
             title_base = f"Analyse de l'IA (Mistral) sur {self.site.lang}:{page.page_name}"
@@ -436,14 +436,14 @@ class wiki_task:
 
         user_rights = page.contributor_rights()
 
-        if (page.page_ns == 0 and self.proba_ai >= page.limit_ai and "autoconfirmed" not in user_rights) or (page.page_ns != 0 and self.proba_ai >= page.limit_ai_no_ns_0 and "autoconfirmed" not in user_rights):
+        if self.proba_ai >= page.limit_ai and "autoconfirmed" not in user_rights:
             if not page.reverted:
-                page.revert(f"Modification non-constructive détectée par IA à {self.proba_ai} %", test)
+                page.revert(f"Modification non-constructive détectée par IA à {self.proba_ai} %", test, result_ai)
             color = 13371938
         elif self.proba_ai >= page.limit_ai2 and "autoconfirmed" not in user_rights:
             page.get_warnings_user()
             if page.warn_level > 0 and not page.reverted:
-                page.revert(f"Non-constructive edit detected by AI ({self.proba_ai} %)", test)
+                page.revert(f"Non-constructive edit detected by AI ({self.proba_ai} %)", test, result_ai)
                 color = 13371938
             else:
                 color = 12138760
