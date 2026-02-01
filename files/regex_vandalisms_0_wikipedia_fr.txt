@@ -424,9 +424,9 @@ onche? onche?:-30
 \bW\d00\b:-30
 ([a-fA-F])\1{10}:-10
 ([g-zG-Z])\1{5}:-10
-([a-zA-Z0-9 ]{1,10})\1{5}:-10
+([a-zA-Z0-9]{1,10})\1{5}:-10
 [xX]{5}:+10
-([a-zA-Z0-9 ]{1,10})\1{10}:-20
+([a-zA-Z0-9]{1,10})\1{10}:-20
 [xX]{10}:+20
 ,{10}:-30
 [A-Za-z]{30}:-3
@@ -437,7 +437,7 @@ onche? onche?:-30
 \&nbsp:+1
 [bcdfghjklmnpqrstvwxz]{7,9}:-3
 [bcdfghjklmnpqrstvwxz]{10,19}:-10
-[bcdfghjklmnpqrstvwxz\s]{20}:-20
+[bcdfghjklmnpqrstvwxz]{20}:-20
 \b[bcdfghjklmnpqrstvwxz]{7,}\b:-3
 \b[bcdfghjklmnpqrstvwxz]{10,}\b:-20
 [a-z]\s+[a-z]\s+[a-z]\s+[a-z]\s+:-10

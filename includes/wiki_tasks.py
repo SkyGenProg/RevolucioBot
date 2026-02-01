@@ -16,7 +16,7 @@ import pywikibot
 from mistralai import Mistral
 
 from config import api_key, headers, model, webhooks_url, webhooks_url_ai
-from includes.wiki import request_site
+from includes.wiki import request_site, prompt_ai
 
 client = Mistral(api_key=api_key)
 
@@ -301,12 +301,17 @@ class wiki_task:
     # Vandalism detection (non-AI)
     # ----------------------------
 
-    def check_vandalism(self, page) -> None:
+    def check_vandalism(self, page, test = False) -> None:
         page_name = page.page_name
         self.vandalism_score = page.vandalism_get_score_current()
 
         if page.vand_to_revert:
-            page.revert()
+            page.revert(
+                f"Modification non-constructive détectée par expressions rationnelles (score : {self.vandalism_score})"
+                if self.site.lang_bot == "fr"
+                else f"Unconstructive edit reverted by regex (score: {self.vandalism_score})",
+                test
+            )
 
         if self.vandalism_score < 0 and webhooks_url.get(self.site.family):
             vand_prob = min(100, vand_f(abs(self.vandalism_score)))
@@ -327,7 +332,7 @@ class wiki_task:
 
             detected = "\n".join(detected_lines)
 
-            if page.vand_to_revert:
+            if not test and page.vand_to_revert:
                 title = (
                     f"Modification non-constructive révoquée sur {self.site.lang}:{page_name}"
                     if self.site.lang_bot == "fr"
@@ -387,54 +392,25 @@ class wiki_task:
             _send_webhook(webhooks_url[self.site.family], {"embeds": [embed_base]})
             _send_embed_chunked(webhooks_url[self.site.family], {k: v for k, v in embed_base.items() if k != "fields"}, detected)
 
-        if webhooks_url.get(self.site.family) and page.alert_request:
+        if not test and webhooks_url.get(self.site.family) and page.alert_request:
             self.block_alert(page)
 
     # ----------------------------
     # Vandalism detection (AI)
     # ----------------------------
 
-    def check_vandalism_ai(self, page) -> None:
+    def check_vandalism_ai(self, page, test = False) -> None:
         if page.contributor_is_trusted():
             return
 
         diff_text = page.get_diff()
+        prompt = prompt_ai(self.site.lang_bot, page.latest_revision.timestamp, page.url, page.page_name, diff_text, page.latest_revision.comment)
         if self.site.lang_bot == "fr":
-            prompt = f"""Analyser la modification, indiquer la probabilité que ce soit du vandalisme en % et résumer en 3 mots maximum la pertinence de la modification.
-Si la modification est une révocation de vandalisme, mettre la probabilité de vandalisme à 0 %.
-Si la modification est une annonce de décès, ne pas considérer la modification comme un vandalisme.
-Date : {page.latest_revision.timestamp}
-Wiki : {page.url}
-Page : {page.page_name}
-Diff :
-{diff_text}
-Résumé de modification : {page.latest_revision.comment}
-Format de réponse :
-Analyse de la modification :
-...
-Probabilité de vandalisme : [probabilité] %
-Résumé : [résumé en 3 mots maximum]"""
             proba_re = r"probabilité de vandalisme.*:[^0-9]*([\d\.,]+)[^0-9]*%"
-            summary_re = r"résumé.*:\s*[^a-zA-ZÀ-ÿ0-9]*([^*]+)"
             title_base = f"Analyse de l'IA (Mistral) sur {self.site.lang}:{page.page_name}"
             fail_title = f"Analyse de l'IA (Mistral) échouée sur {self.site.lang}:{page.page_name}"
         else:
-            prompt = f"""Analyze the modification and indicate the probability that it is vandalism in % and summary in 3 words max the relevance of the modification.
-If the edit is a revert of vandalism, set the probability of vandalism to 0%.
-If the change is a death announcement, do not consider the change to be vandalism.
-Date: {page.latest_revision.timestamp}
-Wiki: {page.url}
-Page: {page.page_name}
-Diff:
-{diff_text}
-Edit summary: {page.latest_revision.comment}
-Format of answer:
-Analysis of the modification:
-...
-Probability of vandalism: [probability] %
-Summary: [summary in 3 words max]"""
             proba_re = r"probability of vandalism.*:[^0-9]*([\d\.,]+)[^0-9]*%"
-            summary_re = r"summary.*:\s*[^a-zA-ZÀ-ÿ0-9]*([^*]+)"
             title_base = f"AI analysis (Mistral) on {self.site.lang}:{page.page_name}"
             fail_title = f"AI analysis (Mistral) failed on {self.site.lang}:{page.page_name}"
 
@@ -458,19 +434,16 @@ Summary: [summary in 3 words max]"""
         m = re.search(proba_re, result_ai.lower())
         self.proba_ai = float(m.group(1).replace(",", ".")) if m else 0.0
 
-        m = re.search(summary_re, result_ai.lower())
-        self.summary_ai = m.group(1) if m else None
-
         user_rights = page.contributor_rights()
 
-        if (page.page_ns == 0 and self.proba_ai >= page.limit_ai and "autoconfirmed" not in user_rights) or (page.page_ns != 0 and self.proba_ai >= page.limit_ai_no_ns_0 and "autoconfirmed" not in user_rights):
+        if self.proba_ai >= page.limit_ai and "autoconfirmed" not in user_rights:
             if not page.reverted:
-                page.revert(self.summary_ai)
+                page.revert(f"Modification non-constructive détectée par IA à {self.proba_ai} %", test, result_ai)
             color = 13371938
         elif self.proba_ai >= page.limit_ai2 and "autoconfirmed" not in user_rights:
             page.get_warnings_user()
             if page.warn_level > 0 and not page.reverted:
-                page.revert(self.summary_ai)
+                page.revert(f"Non-constructive edit detected by AI ({self.proba_ai} %)", test, result_ai)
                 color = 13371938
             else:
                 color = 12138760
@@ -491,7 +464,7 @@ Summary: [summary in 3 words max]"""
         }
         _send_embed_chunked(webhooks_url_ai.get(self.site.family), embed_base, result_ai)
 
-        if webhooks_url.get(self.site.family) and page.alert_request:
+        if not test and webhooks_url.get(self.site.family) and page.alert_request:
             self.block_alert(page)
 
     # ----------------------------

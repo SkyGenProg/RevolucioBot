@@ -1,12 +1,16 @@
 # -*- coding: utf-8 -*-
 
-import os
+import argparse, os
 
 from includes.wiki import get_wiki
 from includes.wiki_tasks import wiki_task, _safe_log_exc
 from version import ver
 
 from pywikibot.comms.eventstreams import EventStreams
+
+arg = argparse.ArgumentParser()
+arg.add_argument("--test")
+args = arg.parse_args()
 
 def ensure_workdir(dirname="files"):
     os.makedirs(dirname, exist_ok=True)
@@ -45,14 +49,13 @@ def main():
 
                 if not task.site.config.get("disable_vandalism", False):
                     print(f"Calcul du score de vandalisme sur {page_name}...")
-                    task.check_vandalism(page)
+                    task.check_vandalism(page, args.test)
                     print(f"Score de vandalisme : {task.vandalism_score}")
 
                 if not task.site.config.get("disable_ai", False):
                     print(f"Calcul du score de vandalisme (IA) sur {page_name}...")
-                    task.check_vandalism_ai(page)
+                    task.check_vandalism_ai(page, args.test)
                     print(f"Probabilité de vandalisme (IA) : {task.proba_ai} %")
-                    print(f"Analyse (IA) : {task.summary_ai}")
 
         except Exception:
             _safe_log_exc()

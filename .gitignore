@@ -2,6 +2,7 @@
 *pycache*
 *.pyc
 *.sqlite3
+/files/ia_wiki_results.csv
 /files/rc_*.json
 /files/tasks_time_*.txt
 /files/vand_*.txt
