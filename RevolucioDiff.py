@@ -2,7 +2,7 @@
 
 import argparse, os, pywikibot, difflib
 
-from includes.wiki import get_wiki
+from includes.wiki import get_wiki, prompt_ai
 from config import api_key, model
 from version import ver
 from mistralai import Mistral
@@ -53,20 +53,7 @@ if __name__ == "__main__":
     diff = difflib.unified_diff((revision1["text"] or "").splitlines(), (revision2["text"] or "").splitlines())
     diff_text = "\n".join(diff)
     #pywikibot.output(diff)
-    prompt = f"""Analyser la modification, indiquer la probabilité que cette modification soit du vandalisme en % et résumer en 3 mots maximum la pertinence de la modification.
-Si la modification est une révocation de vandalisme, mettre la probabilité de vandalisme à 0 %.
-Si la modification est une annonce de décès, ne pas considérer la modification comme un vandalisme.
-Date : {page.latest_revision.timestamp}
-Wiki : {page.url}
-Page : {page.page_name}
-Diff :
-{diff_text}
-Résumé de modification : {revision2.comment}
-Format de réponse :
-Analyse de la modification :
-...
-Probabilité de vandalisme : [probabilité] %
-Résumé : [résumé en 3 mots maximum]"""
+    prompt = prompt_ai("fr", revision2.timestamp, page.url, page.page_name, diff_text, revision2.comment)
     pywikibot.output("Prompt :")
     pywikibot.output(prompt)
     pywikibot.output("Analyse de l'IA : ")
