@@ -365,6 +365,13 @@ class get_page(pywikibot.Page):
 
     def revert(self, summary: str = "", test = False, result_ai = "") -> None:
         if test:
+            if result_ai != "":
+                field_ai = f"""* Détection de l'IA :
+<pre>
+{result_ai}
+</pre>"""
+            else:
+                field_ai = ""
             test_page = pywikibot.Page(self.source.site, f"User:{self.user_wiki}/Tests")
             test_page.text = f"""{test_page.text}
 == Vandalisme détecté (diff : {self.oldid}) ==
@@ -372,10 +379,7 @@ class get_page(pywikibot.Page):
 * Utilisateur : {self.contributor_name}
 * Diff : [[Special:Diff/{self.oldid}]]
 * {summary}
-* Détection de l'IA :
-<pre>
-{result_ai}
-</pre>"""
+{field_ai}"""
             test_page.save("Ajout vandalisme", bot=False, minor=False)
         else:
             self.only_revert(summary)
