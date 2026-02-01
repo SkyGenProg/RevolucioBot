@@ -88,13 +88,12 @@ def regex_vandalism(regex: str, text_page1: str, text_page2: str, ignorecase: bo
     return re1 if re1 and not re2 else None
 
 
-def prompt_ai(lang, date, url_wiki, page_name, diff_text, comment):
+def prompt_ai(lang, url_wiki, page_name, diff_text, comment):
     if lang == "fr":
         comment_line = f"Résumé de modification : {comment}" if comment else ""
         return f"""Analyser la modification et indiquer la probabilité que cette modification soit du vandalisme en %.
 Si la modification est une révocation ou une suppression de contenu non-constructif, mettre la probabilité de vandalisme à 0 %.
 Si la modification concerne un événement ultérieur à votre base de connaissances, ne pas considérer la modification comme un vandalisme.
-Date de la modification : {date}
 Wiki : {url_wiki}
 Page modifiée : {page_name}
 Diff de la modification :
@@ -109,7 +108,6 @@ Probabilité de vandalisme : [probabilité] %"""
         return f"""Analyze the modification and indicate the probability that this edit is vandalism in %.
 If the edit is a revert or a deletion of unconstructive content, set the probability of vandalism to 0%.
 If the modification concerns an event that occurred after your knowledge base, do not consider the modification to be vandalism.
-Edit date: {date}
 Wiki: {url_wiki}
 Edited page: {page_name}
 Edit diff:
