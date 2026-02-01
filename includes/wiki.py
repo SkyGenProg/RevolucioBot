@@ -90,27 +90,31 @@ def regex_vandalism(regex: str, text_page1: str, text_page2: str, ignorecase: bo
 
 def prompt_ai(lang, date, url_wiki, page_name, diff_text, comment):
     if lang == "fr":
+        comment_line = f"Résumé de modification : {comment}" if comment else ""
         return f"""Analyser la modification et indiquer la probabilité que cette modification soit du vandalisme en %.
 Si la modification est une révocation ou une suppression de contenu non-constructif, mettre la probabilité de vandalisme à 0 %.
-Date : {date}
+Si la modification concerne un événement ultérieur à votre base de connaissances, ne pas considérer la modification comme un vandalisme.
+Date de la modification : {date}
 Wiki : {url_wiki}
-Page : {page_name}
-Diff :
+Page modifiée : {page_name}
+Diff de la modification :
 {diff_text}
-Résumé de modification : {comment}
+{comment_line}
 Format de réponse :
 Analyse de la modification :
 ...
 Probabilité de vandalisme : [probabilité] %"""
     else:
+        comment_line = f"Edit summary: {comment}" if comment else ""
         return f"""Analyze the modification and indicate the probability that this edit is vandalism in %.
 If the edit is a revert or a deletion of unconstructive content, set the probability of vandalism to 0%.
-Date: {date}
+If the modification concerns an event that occurred after your knowledge base, do not consider the modification to be vandalism.
+Edit date: {date}
 Wiki: {url_wiki}
-Page: {page_name}
-Diff:
+Edited page: {page_name}
+Edit diff:
 {diff_text}
-Edit summary: {comment}
+{comment_line}
 Format of answer:
 Analysis of the modification:
 ...
@@ -348,7 +352,7 @@ class get_page(pywikibot.Page):
         self.limit = self.source.config.get("limit", -50)
         self.limit2 = self.source.config.get("limit2", -30)
         self.limit_ai = self.source.config.get("limit_ai", 95)
-        self.limit_ai_no_ns_0 = self.source.config.get("limit_ai_no_ns_0", 98)
+        self.limit_ai_no_ns_0 = self.source.config.get("limit_ai_no_ns_0", 100)
         self.limit_ai2 = self.source.config.get("limit_ai2", 90)
         self.limit_ai3 = self.source.config.get("limit_ai3", 50)
 
