@@ -92,6 +92,7 @@ def prompt_ai(lang, date, url_wiki, page_name, diff_text, comment):
     if lang == "fr":
         comment_line = f"Résumé de modification : {comment}" if comment else ""
         return f"""Analyser la modification et indiquer la probabilité que cette modification soit du vandalisme en %.
+Si la modification est une révocation ou une suppression de contenu non-constructif, mettre la probabilité de vandalisme à 0 %.
 Date et heure : {date}
 Wiki : {url_wiki}
 Page modifiée : {page_name}
@@ -105,6 +106,7 @@ Probabilité de vandalisme : [probabilité] %"""
     else:
         comment_line = f"Edit summary: {comment}" if comment else ""
         return f"""Analyze the modification and indicate the probability that this edit is vandalism in %.
+If the edit is a revert or a deletion of unconstructive content, set the probability of vandalism to 0%.
 Date and time: {date}
 Wiki: {url_wiki}
 Edited page: {page_name}
