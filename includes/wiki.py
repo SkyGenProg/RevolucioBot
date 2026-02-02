@@ -543,13 +543,13 @@ class get_page(pywikibot.Page):
 
         fam, lang = self.source.family, self.lang
         files = {
-            "add_regex": ["regex_vandalisms_0.txt", f"regex_vandalisms_0_{fam}_{lang}.txt"],
-            "del_regex": ["regex_vandalisms_del_0.txt", f"regex_vandalisms_del_0_{fam}_{lang}.txt"],
-            "size": [f"size_vandalisms_0_{fam}_{lang}.txt"],
-            "diff": [f"diff_vandalisms_0_{fam}_{lang}.txt"],
+            "add_regex": f"regex_vandalisms_0_{fam}_{lang}.txt",
+            "del_regex": f"regex_vandalisms_del_0_{fam}_{lang}.txt",
+            "size": f"size_vandalisms_0_{fam}_{lang}.txt",
+            "diff": f"diff_vandalisms_0_{fam}_{lang}.txt",
         }
-        for f in sum(files.values(), []):
-            _ensure_file(f)
+        for f_type in files:
+            _ensure_file(files[f_type])
 
         vand = 0
         text_new = self.text_page_oldid or ""
@@ -569,15 +569,14 @@ class get_page(pywikibot.Page):
         new_lines_edited_join = "\r\n".join(new_lines_edited)
 
         # add regex
-        for fname in files["add_regex"]:
-            for pattern, score in self._parse_scored_lines(_read_lines(fname)):
-                hit = regex_vandalism(pattern, new_lines_edited_join, old_lines_edited_join)
-                if hit:
-                    self.vandalism_score_detect.append(["add_regex", score, hit])
-                    vand += score
+        for pattern, score in self._parse_scored_lines(_read_lines(files["add_regex"])):
+            hit = regex_vandalism(pattern, new_lines_edited_join, old_lines_edited_join)
+            if hit:
+                self.vandalism_score_detect.append(["add_regex", score, hit])
+                vand += score
 
         # size rules
-        for size_s, score in self._parse_scored_lines(_read_lines(files["size"][0])):
+        for size_s, score in self._parse_scored_lines(_read_lines(files["size"])):
             try:
                 size = int(size_s)
             except ValueError:
@@ -587,7 +586,7 @@ class get_page(pywikibot.Page):
                 vand += score
 
         # diff rules
-        for diff_s, score in self._parse_scored_lines(_read_lines(files["diff"][0])):
+        for diff_s, score in self._parse_scored_lines(_read_lines(files["diff"])):
             try:
                 d = int(diff_s)
             except ValueError:
@@ -598,12 +597,11 @@ class get_page(pywikibot.Page):
                 vand += score
 
         # delete regex (pattern removed between old->new)
-        for fname in files["del_regex"]:
-            for pattern, score in self._parse_scored_lines(_read_lines(fname)):
-                hit = regex_vandalism(pattern, old_lines_edited_join, new_lines_edited_join)
-                if hit:
-                    self.vandalism_score_detect.append(["del_regex", score, hit])
-                    vand += score
+        for pattern, score in self._parse_scored_lines(_read_lines(files["del_regex"])):
+            hit = regex_vandalism(pattern, old_lines_edited_join, new_lines_edited_join)
+            if hit:
+                self.vandalism_score_detect.append(["del_regex", score, hit])
+                vand += score
 
         return vand
 
