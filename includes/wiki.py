@@ -543,8 +543,8 @@ class get_page(pywikibot.Page):
         files = {
             "add_regex": ["regex_vandalisms_0.txt", f"regex_vandalisms_0_{fam}_{lang}.txt"],
             "del_regex": ["regex_vandalisms_del_0.txt", f"regex_vandalisms_del_0_{fam}_{lang}.txt"],
-            "size": ["size_vandalisms_0.txt"],
-            "diff": ["diff_vandalisms_0.txt"],
+            "size": [f"size_vandalisms_0_{fam}_{lang}.txt"],
+            "diff": [f"diff_vandalisms_0_{fam}_{lang}.txt"],
         }
         for f in sum(files.values(), []):
             _ensure_file(f)
@@ -552,11 +552,24 @@ class get_page(pywikibot.Page):
         vand = 0
         text_new = self.text_page_oldid or ""
         text_old = self.text_page_oldid2 or ""
+        unified_diff = difflib.unified_diff(text_old.splitlines(), text_new.splitlines(), lineterm="")
+
+        old_lines_edited = []
+        new_lines_edited = []
+
+        for line in unified_diff:
+            if line.startswith("-") and not line.startswith("---"):
+                old_lines_edited.append(line[1:])
+            elif line.startswith("+") and not line.startswith("+++"):
+                new_lines_edited.append(line[1:])
+
+        old_lines_edited_join = "\r\n".join(old_lines_edited)
+        new_lines_edited_join = "\r\n".join(new_lines_edited)
 
         # add regex
         for fname in files["add_regex"]:
             for pattern, score in self._parse_scored_lines(_read_lines(fname)):
-                hit = regex_vandalism(pattern, text_new, text_old)
+                hit = regex_vandalism(pattern, new_lines_edited_join, old_lines_edited_join)
                 if hit:
                     self.vandalism_score_detect.append(["add_regex", score, hit])
                     vand += score
@@ -585,7 +598,7 @@ class get_page(pywikibot.Page):
         # delete regex (pattern removed between old->new)
         for fname in files["del_regex"]:
             for pattern, score in self._parse_scored_lines(_read_lines(fname)):
-                hit = regex_vandalism(pattern, text_old, text_new)
+                hit = regex_vandalism(pattern, old_lines_edited_join, new_lines_edited_join)
                 if hit:
                     self.vandalism_score_detect.append(["del_regex", score, hit])
                     vand += score
