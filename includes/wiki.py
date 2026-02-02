@@ -347,8 +347,8 @@ class get_page(pywikibot.Page):
                 self.size = None
 
         # thresholds
-        self.limit = self.source.config.get("limit", -50)
-        self.limit2 = self.source.config.get("limit2", -30)
+        self.limit = self.source.config.get("limit", -20)
+        self.limit2 = self.source.config.get("limit2", -10)
         self.limit_ai = self.source.config.get("limit_ai", 100)
         self.limit_ai2 = self.source.config.get("limit_ai2", 90)
         self.limit_ai3 = self.source.config.get("limit_ai3", 50)
@@ -365,8 +365,15 @@ class get_page(pywikibot.Page):
 
     # ---- revert + warnings
 
-    def revert(self, summary: str = "", test = False, result_ai = "") -> None:
+    def revert(self, summary: str = "", test = False, result_regex = "", result_ai = "") -> None:
         if test:
+            if result_regex != "":
+                field_regex = f"""* Détection (expressions rationnelles) :
+<pre>
+{result_regex}
+</pre>"""
+            else:
+                field_regex = ""
             if result_ai != "":
                 field_ai = f"""* Détection de l'IA :
 <pre>
@@ -381,6 +388,7 @@ class get_page(pywikibot.Page):
 * Utilisateur : {self.contributor_name}
 * Diff : [[Special:Diff/{self.oldid}]]
 * {summary}
+{field_regex}
 {field_ai}"""
             test_page.save("Ajout vandalisme", bot=False, minor=False)
         else:
