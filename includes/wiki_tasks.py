@@ -223,7 +223,7 @@ class wiki_task:
                     _safe_log_exc()
 
             def _bold_title(s: str) -> str:
-                s = re.sub(r"(\s|[=#'])(?!'{3,})\b(" + re.escape(page_name) + r")(\w{0,})\b(?!'{3,})", r"'''\2\3'''", s)
+                s = re.sub(r"(\s|[=#'])(?!'{3,})\b(" + re.escape(page_name) + r")(\w{0,})\b(?!'{3,})", r"\1'''\2\3'''", s)
                 return re.sub(r'\B(?!{{\"\|)\"\b([^\"]*)\b\"(?!}})\B', r'{{"|\1}}', s)
 
             def _capitalize_first(s: str) -> str:
