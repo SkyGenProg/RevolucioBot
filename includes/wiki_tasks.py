@@ -20,14 +20,6 @@ from includes.wiki import request_site, prompt_ai
 
 client = Mistral(api_key=api_key)
 
-
-def curve(x: float, a: float, b: float, c: float, d: float) -> float:
-    return d + (a - d) / (1 + (x / c) ** b)
-
-
-vand_f = lambda x: curve(x, 5.57778, 1.931107, 9.042732, 101.2391)
-
-
 def _safe_log_exc() -> None:
     try:
         pywikibot.error(traceback.format_exc())
@@ -305,33 +297,32 @@ class wiki_task:
         page_name = page.page_name
         self.vandalism_score = page.vandalism_get_score_current()
 
+        detected_lines: List[str] = []
+        for kind, score, payload in getattr(page, "vandalism_score_detect", []):
+            if kind == "add_regex":
+                detected_lines.append(f"{score} - + {payload.group()}")
+            elif kind == "del_regex":
+                detected_lines.append(f"{score} - - {payload.group()}")
+            elif kind == "size":
+                detected_lines.append(f"{score} - size = {page.size} < {payload}")
+            elif kind == "diff":
+                op = ">" if int(payload) > 0 else "<"
+                detected_lines.append(f"{score} - diff {op} {payload}")
+            else:
+                detected_lines.append(f"{score} - + {payload.group()}")
+
+        detected = "\n".join(detected_lines)
+
         if page.vand_to_revert:
             page.revert(
                 f"Modification non-constructive détectée par expressions rationnelles (score : {self.vandalism_score})"
                 if self.site.lang_bot == "fr"
                 else f"Unconstructive edit reverted by regex (score: {self.vandalism_score})",
-                test
+                test,
+                result_regex=detected
             )
 
         if self.vandalism_score < 0 and webhooks_url.get(self.site.family):
-            vand_prob = min(100, vand_f(abs(self.vandalism_score)))
-
-            detected_lines: List[str] = []
-            for kind, score, payload in getattr(page, "vandalism_score_detect", []):
-                if kind == "add_regex":
-                    detected_lines.append(f"{score} - + {payload.group()}")
-                elif kind == "del_regex":
-                    detected_lines.append(f"{score} - - {payload.group()}")
-                elif kind == "size":
-                    detected_lines.append(f"{score} - size = {page.size} < {payload}")
-                elif kind == "diff":
-                    op = ">" if int(payload) > 0 else "<"
-                    detected_lines.append(f"{score} - diff {op} {payload}")
-                else:
-                    detected_lines.append(f"{score} - + {payload.group()}")
-
-            detected = "\n".join(detected_lines)
-
             if not test and page.vand_to_revert:
                 title = (
                     f"Modification non-constructive révoquée sur {self.site.lang}:{page_name}"
@@ -369,15 +360,8 @@ class wiki_task:
                 )
                 color = 12161032
 
-            prob_field_name = (
-                "Probabilité qu'il s'agisse d'une modification non-constructive"
-                if self.site.lang_bot == "fr"
-                else "Probability it's an unconstructive edit"
-            )
-
             fields = [
                 {"name": "Score", "value": str(self.vandalism_score), "inline": True},
-                {"name": prob_field_name, "value": f"{round(vand_prob, 2)} %", "inline": True},
             ]
 
             embed_base = {
@@ -438,12 +422,12 @@ class wiki_task:
 
         if self.proba_ai >= page.limit_ai and "autoconfirmed" not in user_rights:
             if not page.reverted:
-                page.revert(f"Modification non-constructive détectée par IA à {self.proba_ai} %", test, result_ai)
+                page.revert(f"Modification non-constructive détectée par IA à {self.proba_ai} %" if self.site.lang_bot == "fr" else f"Non-constructive edit detected by AI ({self.proba_ai} %)", test, result_ai)
             color = 13371938
         elif self.proba_ai >= page.limit_ai2 and "autoconfirmed" not in user_rights:
             page.get_warnings_user()
             if page.warn_level > 0 and not page.reverted:
-                page.revert(f"Non-constructive edit detected by AI ({self.proba_ai} %)", test, result_ai)
+                page.revert(f"Modification non-constructive détectée par IA à {self.proba_ai} %" if self.site.lang_bot == "fr" else f"Non-constructive edit detected by AI ({self.proba_ai} %)", test, result_ai)
                 color = 13371938
             else:
                 color = 12138760

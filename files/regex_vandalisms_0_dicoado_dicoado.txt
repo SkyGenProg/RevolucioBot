@@ -1,0 +1,540 @@
+\b(je|j')\b:-1
+\bj'ai lu\b:+10
+\[j'ai lu\]:+10
+\b(tu|t')\b:-1
+\b(ma|mon|mes|moi)\b:-1
+\b(ta|ton|tes|toi)\b:-1
+\bvous\b:-1
+\bnous\b:-1
+\bdedicace\b:-1
+\bvive\b:-1
+\bstar\b:-1
+fin du monde:-1
+\bnon\b:-1
+\bnon-:+1
+\boui\b:-1
+\bet aussi\b:-1
+\b(beau|belle) :-1
+\bje (me|m')\b:-3
+un gars:-3
+une? gros(se)?\b:-3
+\bvou\b:-3
+\bnou\b:-3
+\bsai\b:-3
+\btro\b:-3
+\bpa\b:-3
+\b[mt]wa\b:-3
+\btchat\b:-3
+\b(bla+)+\b:-3
+\bdle\b:-3
+\bdla\b:-3
+\bah\b:-3
+\bkif+e?\b:-3
+\bvoleu(r|rs|se):-3
+charmant:-3
+magnifique:-3
+\bhey\b:-3
+\bbravo\b:-3
+\{\{oui\}\}:+10
+\bc'est vraiment\b:-3
+\bsales?\b:-3
+:[a-z]{3,}::-3
+\blabrute\.fr\b:-3
+\bfessee?s?\b:-3
+\bje suis:-3
+\btu es:-3
+tete de mort:-3
+\bplop\b:-3
+\bw(oo|00)t\b:-3
+\blo+l+\b:-3
+\blo+l+i+l+:-3
+!!!:-3
+\bmaman\b:-3
+\bpapa\b:-3
+\;\):-3
+\:\):-3
+\bXD\b:-3
+\byes\b:-3
+\bcrotte\b:-3
+\baime bien\b:-3
+\bvisite[rz] [cl]e site:-3
+cliquez ici:-3
+sur ce lien:-3
+\best? bete:-3
+\bchui\b:-3
+\bmes best:-3
+\bah bon\b:-5
+\bc (pas|du|un|le|la|moi|mon|ma|mes|tro|super):-5
+bonjour:-5
+\bsalut\b:-5
+[a-z] salut:+6
+\bslt\b:-5
+\bcoucou\b:-5
+\bkikoo:-5
+\bk[aeiu]\s:-5
+\bko[ain]\b:-5
+\bkeske\b:-5
+\bmecs?\b:-5
+\bn(oo+|00+)bs?\b:-5
+\byo\b:-5
+yo yo ma:+10
+\bjte\b:-5
+\bmoches?\b:-5
+\bhorribles?\b:-5
+\bnon mais\b:-5
+\bmarr+e\b:-5
+\bva bien\b:-5
+\bmerci\b:-5
+\bremercie?ments?\b:-5
+\bmes potes\b:-5
+\bn'importe quoi\b:-5
+\bzut\b:-5
+\byeah\b:-5
+\ballez (les?|la|l)\b:-5
+\bi like\b:-5
+\bbisou:-5
+\bouais?\b:-5
+\bca va\b:-5
+trop fort:-5
+\bpouet:-5
+\bchers? lecteurs?:-5
+\bbouffon:-5
+\bvous etes:-5
+je te?\b:-5
+\bbroubrou\b:-5
+\bje sui\b:-5
+\bwesh\b:-5
+\bbon a rien\b:-5
+\bouii+:-10
+\bmdr+\b:-10
+\bj'?aime\b:-10
+\bje remerci:-10
+!{5,}:-10
+(h[aeiou] ?)\1{2,}:-10
+\bl+o+l+o*l*\b:-10
+[hw]a{3,}:-10
+\bchier\b:-10
+\bchiante?s?\b:-10
+plus (beau|belle) du monde:-10
+\bc bon\b:-10
+\bde reve\b:-10
+\bgros gros:-10
+[^\s]XD\b:-10
+[^\s]\:p\b:-10
+[^\s]=D\b:-10
+[^\s]\:D\b:-10
+rofl\b:-10
+\boh (oui|non):-10
+\btes com+s?\b:-10
+\bdeux balles:-10
+trop (bien|nul):-10
+\bpff+\b:-10
+\bbeurk\b:-10
+\brot?fl:-10
+\bva te\b:-10
+\bosela\b:-10
+\bptdr+\b:-10
+\bmouhaha:-10
+\bcouill(u|on):-10
+\bbogoss\b:-10
+\bbouh\b:-10
+\bje t'a+i+m+e+\b:-20
+ah{3,}:-20
+\bsuis con\b:-20
+LeStudio1\.com:-20
+\b(qui |)crache (le|du) feu\b:-20
+\bnoelis[mt]e:-20
+\bn\)oel:-20
+lamasticot:-20
+\bsert a rien\b:-20
+c[' ]est nul:-20
+\bs'en fou:-20
+\bosef\b:-20
+\byo man\b:-20
+[mt][ ']en fou[st]\b:-20
+\bspeciale? dedicace\b:-20
+\b(mon|ma) (ange|cheri):-20
+\b(une?|le|la) con(ne)?\b:-20
+\b[dl]es cons\b:-20
+\bfai?s chier\b:-20
+\bsalebot\b:-30
+\bgribeco\b:-30
+\bbradipus\b:-30
+\bclem23\b:-30
+hegesippe cormier:-30
+\belfix\b:-30
+\?{3,}:-3
+\bwé\b:-3
+\^\^:-3
+\bfrenchi?e?s?\b:-1
+\bugly\b:-1
+stupid:-3
+\bomg:-3
+\bcock:-3
+\bass\b:-3
+\bpoop\b:-3
+hey ?hey:-5
+\bsuck:-5
+\bshit:-5
+\bpimp\b:-5
+\b1337\b:-5
+\bgay\b:-5
+\bno-?lifes?\b:-5
+\bbitch(es)?\b:-10
+\basshole:-10
+\bfuck:-10
+\bfuck fuck:-10
+\bwtf\b:-10
+\bin hell\b:-10
+\bsux+e?\b:-20
+\bbig (\w+ )?cock\b:-30
+\b(is|are) gay\b:-30
+\bfuck (you|that):-30
+what the fuck:-30
+\bsurrender monkey:-30
+\bfaggot\b:-30
+\b(mother|mutha)fuck(er|ing):-30
+shut up:-30
+assmonkey:-30
+\bnigg(er|a):-30
+thanks for sharing:-30
+i laugh at:-30
+Пидор:-30
+Пиздец:-30
+педераст:-30
+Пиздец:-30
+говно:-30
+ХУЙНЯ:-30
+Хуйло:-30
+хуй:-30
+Гамнюк:-30
+Пиздец:-30
+Хуйло:-30
+Половой член:-30
+БЛаблабла:-30
+ТЫ ПЕДЕРАСТ:-30
+Пидор:-30
+\banes?\b:-1
+\bcopine:-1
+\bbatard:-1
+\bsales?\b:-1
+\bcon\b:-1
+\bpogne:-1
+\bbai[sz]e(r|s|nt)?\b:-1
+\bchattes?\b:-1
+\bparasites?\b:-1
+\bfumiste\b:-1
+\bmeprisant\b:-1
+\bprofiteur\b:-1
+\bperver[st]\b:-1
+\bassassin:-1
+\blachete:-1
+\bperfidie:-1
+\bhypocri(te|sie):-1
+\bbidons?\b:-1
+\bnullite\b:-1
+\binfecte?s?\b:-1
+\bpenis\b:-3
+\bsexe\b:-3
+\banus\b:-3
+\bvagin\b:-3
+\bsodomi:-3
+\bpourrit?e?s?\b:-3
+\bsuce\b:-3
+\bbeauf\b:-3
+\bstun\b:-3
+\bbranle:-3
+\bmeuf(s)?\b:-3
+\bculs?\b:-3
+\bpd\b:-3
+\bpede\b:-3
+\babruti:-3
+\bimbecile:-3
+\binculte:-3
+\bincompeten:-3
+\bdebile?s?\b:-3
+\bcretin:-3
+\blapins? cretin:+10
+\btapette:-3
+\bidiot\b:-3
+\bfoute?(nt)?\b:-3
+\bpowa+\b:-3
+\bpour+aves?:-3
+\bchiot+es?\b:-3
+pedophile:-3
+\bsuce(use)\b:-3
+\bsodomi:-3
+\bobsede:-3
+\bvomi\b:-3
+\bface de\b:-3
+\bbander\b:-3
+\bteub\b:-5
+\bbi+t+e:-5
+\bcon+erie:-5
+\bsaloperie:-5
+\bpu?ta?in:-5
+\bchie(r|nt|s)?\b:-5
+\btrop nul\b:-5
+\brien a rien\b:-5
+\bai marre\b:-5
+\bglandus?\b:-5
+\bcapos?\b:-5
+\bputes?\b:-10
+\bputains?\b:-10
+\bsal(aud|ope):-10
+\bosti\b:-10
+\btabarna:-10
+\bcriss+\b:-10
+\bfif\b:-10
+\b(de)?caliss:-10
+\bemm?erde:-10
+\bcaca\b:-10
+\bpipi\b:-10
+\bzizis?\b:-10
+\bprout:-10
+\bcrétin\b:-10
+\bfdp\b:-10
+\bpetasses?:-20
+\bpuputes?\b:-20
+\bco+n+a+(r+|s+):-20
+\bconnes?\b:-20
+(alain|georges) connes:+30
+\bcons\b:-20
+\{\{cons\}\}:+20
+\bput1:-20
+\bd(e )?la balle\b:-20
+\b(un|mon|son|ton|de|du|le|fait) caca\b:-20
+\bm[ae]+rdr?es?\b:-20
+\bmadres?\b:+20
+\bmerdi(que|er):-20
+\bta mere\b:-20
+\bla mere a\b:-20
+\sniquer?s?\b:-20
+\snike(r|nt)\b:-20
+\bnik\b:-20
+\bencule:-20
+\bcouil+e:-20
+\bsen fou\b:-20
+\btres stupide\b:-20
+gros nul:-20
+\bgros tas\b:-20
+\bgrosse pine\b:-20
+\bqui pue?\b:-20
+\benfoire\b:-20
+'enfoires\b:-20
+\bcasse\s+toi:-20
+\btarlou[sz]e:-20
+\bpisse(r|nt)?\b:-20
+t'?es laid:-20
+t'?es moche:-20
+\bfoufoune:-20
+ta gueule:-20
+fil?s de pute?:-20
+\bpeniss+\b:-20
+\bni(k|qu)e? ta mere\b:-30
+\b(ma|ta) bit+e\b:-30
+\b(mon|ton|du) (anus|cul?)\b:-30
+\bta mere en\b:-30
+(de|de la|dla|grosses?) m[ae]+r+de\b:-30
+\b(pauvre|sombre|gros|petit) crétin\b:-30
+(de|petites?|grosses?) tapette:-30
+(de|petits?|gros|sales?|vrais?|pauvres?) cons?\b:-30
+(grosse|sale|vieille)s? putes?:-30
+pauv[' ]cons?\b:-30
+\best une? con(ne)?\b:-30
+\btu pue?s?\b:-30
+gros (naze|caca):-30
+grosses? salopes?:-30
+\bde pute\b:-30
+faire foutre:-30
+trous? d[eu] cul:-30
+\bbougnoul:-30
+\byoupin:-30
+\bsuce des bite:-30
+\b(je|tu) suces?:-30
+\btu couches?\b:-30
+\bvien[st]? coucher?:-30
+\bta gu?eu?le?\b:-30
+\best gay\b:-30
+\bpauvre? daube:-30
+\bsalebite\b:-30
+\bfnord\b:-100
+petit polisson:-30
+thesard stagiaire:-30
+\bajaan\b:-30
+mario scolas:-30
+christian de clerck:-30
+mehdi g(ha|ah)zouz:-30
+tonton elio:-30
+tonton bradipus:-30
+\bolmeclem\b:-30
+\:noel\::-30
+\:hap\::-30
+\bcisla\b:-30
+reseau [ck]ormier:-30
+polynomes? de boubak+er:-30
+nezumi\.dumousseau\.free\.fr:-30
+Obama_in_08:-30
+\bgrawp:-30
+nazma f....e:-30
+\bhotel morro de sao paulo:-30
+a message from god almighty:-30
+saezlive:-30
+atasantesaez:-30
+franck laroze:-30
+wikipedia.+google.+pedophil:-30
+luligu:-30
+penisbird:-30
+clem\S*wiki:-30
+\bsophonpanich:-30
+clotilde chambragne:-30
+victor hugo*poitiers:-30
+claudine bourdeau:-30
+latino? moderne:-30
+pelican shit:-30
+www\.evidenz\.fr:-30
+murder suspect:-30
+ernst12:-30
+thierry olmec:-30
+bobonne elfix:-30
+chasseur de pedophiles:-30
+depeceur de bergen:-30
+adrienne serein:-30
+janseniste de carnaval:-30
+nous sommes des musulmans qui sont tres attaches a leur religion:-30
+redoutable psychopathe bien connu:-30
+madame nazma:-30
+recemment dans une? asile psychiatrique :-30
+toute la splendeur de la culture pornographique:-30
+penis*\.jpg:-30
+ejaculation*\.jpg:-30
+les photos de mon sexe:-30
+la Nazma:-30
+se mansturpant dessus:-30
+gros volatile originaire du Pakistan:-30
+\bbalg[Oo0]r\b:-30
+interdiction de diff[iu]sion sur ce site:-30
+texte sous copyright dont ompi:-30
+assirifix armand:-30
+Sulandav:-25
+onche? onche?:-30
+\bjav[ea]d rame?zani\b:-30
+\bCONCHITA:-30
+==INFRINGEMENT==:-30
+\bW\d00\b:-30
+([a-fA-F])\1{10}:-10
+([g-zG-Z])\1{5}:-10
+([a-zA-Z0-9]{1,10})\1{5}:-10
+[xX]{5}:+10
+([a-zA-Z0-9]{1,10})\1{10}:-20
+[xX]{10}:+20
+,{10}:-30
+[A-Za-z]{30}:-3
+\b[A-Z]{20}\b:-10
+[A-Z\s]{40}:-10
+[iou]{4}:-5
+[ae]{7}:-5
+\&nbsp:+1
+[bcdfghjklmnpqrstvwxz]{7,9}:-3
+[bcdfghjklmnpqrstvwxz]{10,19}:-10
+[bcdfghjklmnpqrstvwxz]{20}:-20
+\b[bcdfghjklmnpqrstvwxz]{7,}\b:-3
+\b[bcdfghjklmnpqrstvwxz]{10,}\b:-20
+[a-z]\s+[a-z]\s+[a-z]\s+[a-z]\s+:-10
+[^a-z]{200}:-10
+[^A-Z]{300}:-3
+!{5}:-3
+\.{5}:-3
+\.{10}:-10
+\.{20}:-20
+[^\.\?,;:|\(\)"«»]{200}:-1
+^[A-Z][a-z].*[.?]\b:+1
+'':+1
+==:+3
+cite web:+3
+\[\[.+\]\]:+1
+^\*\*? :+1
+\[\[\w{2,3}\:.+\]\]:+10
+\[\[[Cc]ategorie\:.+\]\]:+10
+&lt;ref:+10
+\{\{.+\}\}:+2
+\{\{[Ss]uppression\}\}:+5
+\{\{[Pp]ortail:+5
+\{\{Ébauche:+3
+\{\{À supprimer:+5
+\{\{[Ii]nfobox:+10
+<math>:+10
+«:+2
+»:+2
+":+1
+REDIRECT:+5
+Votre modification a ete annulee par un \[\[Wikipedia:Bot:-20
+visibility:\s+hidden:-20
+\|\d{5,}px(\||\]\]):-20
+&lt;ref\b:+10
+\.edu:+5
+\.gov:+5
+\.imdb\.com:+5
+\.gouv\.fr:+5
+\.gov\.ca:+5
+\.gouv\.qc\.ca:+5
+google\.:+5
+wikipedia\.org:+10
+wikimedia\.:+10
+wikisource\.org:+10
+wikiquote\.org:+10
+site.*=:+10
+[Ss]ite officiel:+5
+\.pdf:+1
+tres bon:-1
+complet:-1
+gratuit:-1
+forum:-1
+chat:-1
+blog:-1
+portail:-1
+yahoo:-5
+blogspot:-5
+youtube:-5
+myspace:-5
+skyrock:-10
+skyblog:-10
+geocities:-5
+hautetfort:-5
+free\.fr:-5
+orange\.fr:-5
+# element [1-3]\b:-25
+\* element [A-C]\b:-25
+[Tt]exte de sous-titre:-25
+(Fichier|Image):Exemple\d?\.jpg:-25
+\[\[(Fichier|Image):\]\]:-25
+\[\[Media:Exemple\.ogg\]\]:-25
+\[Remplacez cette mention:-25
+Inserez (le|un) texte a mettre:-25
+\[\[Titre du lien\]\]:-25
+\[\[nom de la destination\]\]:-25
+\[\[Categorie:nom de la categorie\]\]:-25
+Entrez votre formule ici:-25
+Entrez le texte non formate ici:-25
+{{Modele ou page a inclure}}:-25
+&lt;ref&lt;reference, citation ou lien:-25
+\[\[À remplacer\]\]:-25
+\[\[(Fichier|Image):http:-25
+\[\[(Fichier|Image):*\\:-25
+'''Texte gras''':-25
+''Texte italique'':-25
+\[\[Special:Contributions:-25
+\[\[[Uu]tilisateur::-25
+\[\[[Uu]ser::-25
+\b0?\d\W\d\d\W\d\d\W\d\d\W\d\d\b:-5
+\S+@\S+\.[a-z]+:-5
+\bmeurt\b:-1
+\bdecedee?\b:-1
+\bmorte?\b:-1
+\bassassin:-1
+\btuee?\b:-1
+\bdeces\b:-1
+\btrepasse\b:-1
+\bdeceda\b:-1
+\best eteint:-1
+\bemporte par:-1
