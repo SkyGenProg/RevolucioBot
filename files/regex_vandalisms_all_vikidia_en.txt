@@ -1,0 +1,51 @@
+\bfrenchi?e?s?\b:-1
+\bugly\b:-1
+stupid:-3
+\bomg:-3
+\bcock:-3
+\bass\b:-3
+\bpoop\b:-3
+hey ?hey:-5
+\bsuck:-5
+\bshit:-5
+\bpimp\b:-5
+\b1337\b:-5
+\bgay\b:-5
+\bno-?lifes?\b:-5
+\bbitch(es)?\b:-10
+\basshole:-10
+\bfuck:-10
+\bfuck fuck:-10
+\bwtf\b:-10
+\bin hell\b:-10
+\bsux+e?\b:-20
+\bbig (\w+ )?cock\b:-30
+\b(is|are) gay\b:-30
+\bfuck (you|that):-30
+what the fuck:-30
+\bsurrender monkey:-30
+\bfaggot\b:-30
+\b(mother|mutha)fuck(er|ing):-30
+shut up:-30
+assmonkey:-30
+\bnigg(er|a):-30
+thanks for sharing:-30
+i laugh at:-30
+Пидор:-30
+Пиздец:-30
+педераст:-30
+Пиздец:-30
+говно:-30
+ХУЙНЯ:-30
+Хуйло:-30
+хуй:-30
+Гамнюк:-30
+Пиздец:-30
+Хуйло:-30
+Половой член:-30
+БЛаблабла:-30
+ТЫ ПЕДЕРАСТ:-30
+Пидор:-30
+\bCONCHITA:-30
+==INFRINGEMENT==:-30
+\bW\d00\b:-30

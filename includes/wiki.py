@@ -546,11 +546,9 @@ class get_page(pywikibot.Page):
         self.vandalism_score_detect: List[List[Any]] = []
         self.get_text_page_old(revision_oldid, revision_oldid2)
 
-        if self.page_ns != 0:
-            return 0
-
         fam, lang = self.source.family, self.lang
         files = {
+            "add_regex_ns_all": f"regex_vandalisms_all_{fam}_{lang}.txt",
             "add_regex": f"regex_vandalisms_0_{fam}_{lang}.txt",
             "add_regex_no_ignore_case": f"regex_vandalisms_0_{fam}_{lang}_no_ignore_case.txt",
             "del_regex": f"regex_vandalisms_del_0_{fam}_{lang}.txt",
@@ -577,47 +575,54 @@ class get_page(pywikibot.Page):
         old_lines_edited_join = "\r\n".join(old_lines_edited)
         new_lines_edited_join = "\r\n".join(new_lines_edited)
 
-        # add regex
-        for pattern, score in self._parse_scored_lines(_read_lines(files["add_regex"])):
+        for pattern, score in self._parse_scored_lines(_read_lines(files["add_regex_ns_all"])):
             hit = regex_vandalism(pattern, new_lines_edited_join, old_lines_edited_join)
             if hit:
-                self.vandalism_score_detect.append(["add_regex", score, hit])
+                self.vandalism_score_detect.append(["add_regex_ns_all", score, hit])
                 vand += score
 
-        # add regex (don't ignore case)
-        for pattern, score in self._parse_scored_lines(_read_lines(files["add_regex_no_ignore_case"])):
-            hit = regex_vandalism(pattern, new_lines_edited_join, old_lines_edited_join, False)
-            if hit:
-                self.vandalism_score_detect.append(["add_regex_no_ignore_case", score, hit])
-                vand += score
-
-        # size rules
-        for size_s, score in self._parse_scored_lines(_read_lines(files["size"])):
-            try:
-                size = int(size_s)
-            except ValueError:
-                continue
-            if len(text_new) < size:
-                self.vandalism_score_detect.append(["size", score, size_s])
-                vand += score
-
-        # diff rules
-        for diff_s, score in self._parse_scored_lines(_read_lines(files["diff"])):
-            try:
-                d = int(diff_s)
-            except ValueError:
-                continue
-            delta = len(text_new) - len(text_old)
-            if (d < 0 and delta <= d) or (d >= 0 and delta >= d):
-                self.vandalism_score_detect.append(["diff", score, diff_s])
-                vand += score
-
-        # delete regex (pattern removed between old->new)
-        for pattern, score in self._parse_scored_lines(_read_lines(files["del_regex"])):
-            hit = regex_vandalism(pattern, old_lines_edited_join, new_lines_edited_join)
-            if hit:
-                self.vandalism_score_detect.append(["del_regex", score, hit])
-                vand += score
+        if self.page_ns == 0:
+            # add regex
+            for pattern, score in self._parse_scored_lines(_read_lines(files["add_regex"])):
+                hit = regex_vandalism(pattern, new_lines_edited_join, old_lines_edited_join)
+                if hit:
+                    self.vandalism_score_detect.append(["add_regex", score, hit])
+                    vand += score
+    
+            # add regex (don't ignore case)
+            for pattern, score in self._parse_scored_lines(_read_lines(files["add_regex_no_ignore_case"])):
+                hit = regex_vandalism(pattern, new_lines_edited_join, old_lines_edited_join, False)
+                if hit:
+                    self.vandalism_score_detect.append(["add_regex_no_ignore_case", score, hit])
+                    vand += score
+    
+            # size rules
+            for size_s, score in self._parse_scored_lines(_read_lines(files["size"])):
+                try:
+                    size = int(size_s)
+                except ValueError:
+                    continue
+                if len(text_new) < size:
+                    self.vandalism_score_detect.append(["size", score, size_s])
+                    vand += score
+    
+            # diff rules
+            for diff_s, score in self._parse_scored_lines(_read_lines(files["diff"])):
+                try:
+                    d = int(diff_s)
+                except ValueError:
+                    continue
+                delta = len(text_new) - len(text_old)
+                if (d < 0 and delta <= d) or (d >= 0 and delta >= d):
+                    self.vandalism_score_detect.append(["diff", score, diff_s])
+                    vand += score
+    
+            # delete regex (pattern removed between old->new)
+            for pattern, score in self._parse_scored_lines(_read_lines(files["del_regex"])):
+                hit = regex_vandalism(pattern, old_lines_edited_join, new_lines_edited_join)
+                if hit:
+                    self.vandalism_score_detect.append(["del_regex", score, hit])
+                    vand += score
 
         return vand
 
