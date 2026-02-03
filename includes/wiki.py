@@ -118,6 +118,22 @@ Analysis of the modification:
 ...
 Probability of vandalism: [probability] %"""
 
+def get_warn_level(t):
+    # Rough heuristic based on templates.
+    has_lvl0 = any(k in t for k in ("averto-0", "niveau=0", "level=0", "avertissement-niveau-0"))
+    has_lvl1 = any(k in t for k in ("averto-1", "niveau=1", "level=1", "avertissement-niveau-1"))
+    has_lvl2 = any(k in t for k in ("averto-2", "niveau=2", "level=2", "avertissement-niveau-2"))
+
+    if has_lvl2:
+        warn_level = 3
+    elif has_lvl1 and not has_lvl2:
+        warn_level = 2
+    elif has_lvl0 and not has_lvl1:
+        warn_level = 1
+    else:
+        warn_level = 0
+    return warn_level
+
 # ----------------------------
 # Public classes
 # ----------------------------
@@ -411,18 +427,7 @@ class get_page(pywikibot.Page):
     def get_warnings_user(self) -> None:
         self.talk = pywikibot.Page(self.source.site, f"User Talk:{self.contributor_name}")
         t = self.talk.text.lower()
-
-        # Rough heuristic based on templates/comments.
-        has_lvl0 = any(k in t for k in ("averto-0", "niveau=0", "level=0", "avertissement-niveau-0"))
-        has_lvl1 = any(k in t for k in ("averto-1", "niveau=1", "level=1", "avertissement-niveau-1"))
-        has_lvl2 = any(k in t for k in ("averto-2", "niveau=2", "level=2", "avertissement-niveau-2"))
-
-        if has_lvl1 and not has_lvl2:
-            self.warn_level = 2  # already warned once -> next is level 2
-        elif has_lvl0 and not has_lvl1:
-            self.warn_level = 1
-        elif not has_lvl0:
-            self.warn_level = 0
+        self.warn_level = get_warn_level(t)
 
     def warn_revert(self, summary: str = "") -> None:
         if self.warn_level < 0:
@@ -551,7 +556,8 @@ class get_page(pywikibot.Page):
             "add_regex_ns_all": f"regex_vandalisms_all_{fam}_{lang}.txt",
             "add_regex": f"regex_vandalisms_0_{fam}_{lang}.txt",
             "add_regex_no_ignore_case": f"regex_vandalisms_0_{fam}_{lang}_no_ignore_case.txt",
-            "del_regex": f"regex_vandalisms_del_0_{fam}_{lang}.txt",
+            "add_regex_lines_no_ignore_case": f"regex_vandalisms_lines_0_{fam}_{lang}_no_ignore_case.txt",
+            "del_regex_lines": f"regex_vandalisms_del_lines_0_{fam}_{lang}.txt",
             "size": f"size_vandalisms_0_{fam}_{lang}.txt",
             "diff": f"diff_vandalisms_0_{fam}_{lang}.txt",
         }
@@ -576,7 +582,7 @@ class get_page(pywikibot.Page):
         new_lines_edited_join = "\r\n".join(new_lines_edited)
 
         for pattern, score in self._parse_scored_lines(_read_lines(files["add_regex_ns_all"])):
-            hit = regex_vandalism(pattern, new_lines_edited_join, old_lines_edited_join)
+            hit = regex_vandalism(pattern, text_new, text_old)
             if hit:
                 self.vandalism_score_detect.append(["add_regex_ns_all", score, hit])
                 vand += score
@@ -584,16 +590,23 @@ class get_page(pywikibot.Page):
         if self.page_ns == 0:
             # add regex
             for pattern, score in self._parse_scored_lines(_read_lines(files["add_regex"])):
-                hit = regex_vandalism(pattern, new_lines_edited_join, old_lines_edited_join)
+                hit = regex_vandalism(pattern, text_new, text_old)
                 if hit:
                     self.vandalism_score_detect.append(["add_regex", score, hit])
                     vand += score
     
             # add regex (don't ignore case)
             for pattern, score in self._parse_scored_lines(_read_lines(files["add_regex_no_ignore_case"])):
-                hit = regex_vandalism(pattern, new_lines_edited_join, old_lines_edited_join, False)
+                hit = regex_vandalism(pattern, text_new, text_old, False)
                 if hit:
                     self.vandalism_score_detect.append(["add_regex_no_ignore_case", score, hit])
+                    vand += score
+
+            # add regex (don't ignore case)
+            for pattern, score in self._parse_scored_lines(_read_lines(files["add_regex_lines_no_ignore_case"])):
+                hit = regex_vandalism(pattern, new_lines_edited_join, old_lines_edited_join, False)
+                if hit:
+                    self.vandalism_score_detect.append(["add_regex_lines_no_ignore_case", score, hit])
                     vand += score
     
             # size rules
@@ -618,13 +631,31 @@ class get_page(pywikibot.Page):
                     vand += score
     
             # delete regex (pattern removed between old->new)
-            for pattern, score in self._parse_scored_lines(_read_lines(files["del_regex"])):
+            for pattern, score in self._parse_scored_lines(_read_lines(files["del_regex_lines"])):
                 hit = regex_vandalism(pattern, old_lines_edited_join, new_lines_edited_join)
                 if hit:
-                    self.vandalism_score_detect.append(["del_regex", score, hit])
+                    self.vandalism_score_detect.append(["del_regex_lines", score, hit])
                     vand += score
 
         return vand
+
+    def get_vandalism_report(self) -> str:
+        detected_lines: List[str] = []
+        for kind, score, payload in self.vandalism_score_detect:
+            if kind == "add_regex_ns_all" or kind == "add_regex" or kind == "add_regex_no_ignore_case":
+                detected_lines.append(f"{score} - + {payload.group()}")
+            elif kind == "add_regex_lines_no_ignore_case":
+                detected_lines.append(f"{score} - + {payload.group()} (diff)")
+            elif kind == "del_regex_lines":
+                detected_lines.append(f"{score} - - {payload.group()} (diff)")
+            elif kind == "size":
+                detected_lines.append(f"{score} - size < {payload}")
+            elif kind == "diff":
+                op = ">" if int(payload) > 0 else "<"
+                detected_lines.append(f"{score} - diff {op} {payload}")
+            else:
+                detected_lines.append(f"{score} - + {payload.group()}")
+        return "\n".join(detected_lines)
 
     # ---- other tools
 

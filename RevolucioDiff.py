@@ -30,21 +30,7 @@ if __name__ == "__main__":
         site = get_wiki(args.wiki, args.lang, "RevolucioBot")
     page = site.page(args.page)
     vandalism_score = page.vandalism_score(int(args.diff), int(args.oldid))
-    detected = ""
-    for vandalism_score_detect in page.vandalism_score_detect:
-        if vandalism_score_detect[0] == "add_regex":
-            detected += str(vandalism_score_detect[1]) + " - + " + str(vandalism_score_detect[2].group()) + "\n"
-        elif vandalism_score_detect[0] == "size":
-            detected += str(vandalism_score_detect[1]) + " - size = " + str(page.size) + " < " + vandalism_score_detect[2] + "\n"
-        elif vandalism_score_detect[0] == "diff":
-            if int(vandalism_score_detect[2]) > 0:
-                detected += str(vandalism_score_detect[1]) + " - diff > " + vandalism_score_detect[2] + "\n"
-            else:
-                detected += str(vandalism_score_detect[1]) + " - diff < " + vandalism_score_detect[2] + "\n"
-        elif vandalism_score_detect[0] == "del_regex":
-            detected += str(vandalism_score_detect[1]) + " - - " + str(vandalism_score_detect[2].group()) + "\n"
-        else:
-            detected += str(vandalism_score_detect[1]) + " - + " + str(vandalism_score_detect[2].group()) + "\n"
+    detected = page.get_vandalism_report()
     pywikibot.output(detected)
     pywikibot.output("Score : " + str(vandalism_score))
     #pywikibot.output("Diff : ")
