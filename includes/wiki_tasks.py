@@ -47,7 +47,6 @@ def _send_embed_chunked(url: Optional[str], embed_base: Dict[str, Any], text: st
         embed["description"] = chunk
         _send_webhook(url, {"embeds": [embed]})
 
-
 class wiki_task:
     def __init__(self, site, start_task_day: bool = False, start_task_month: bool = False, ignore_task_month: bool = False):
         self.site = site
@@ -295,22 +294,7 @@ class wiki_task:
     def check_vandalism(self, page, test = False) -> None:
         page_name = page.page_name
         self.vandalism_score = page.vandalism_get_score_current()
-
-        detected_lines: List[str] = []
-        for kind, score, payload in getattr(page, "vandalism_score_detect", []):
-            if kind == "add_regex":
-                detected_lines.append(f"{score} - + {payload.group()}")
-            elif kind == "del_regex":
-                detected_lines.append(f"{score} - - {payload.group()}")
-            elif kind == "size":
-                detected_lines.append(f"{score} - size = {page.size} < {payload}")
-            elif kind == "diff":
-                op = ">" if int(payload) > 0 else "<"
-                detected_lines.append(f"{score} - diff {op} {payload}")
-            else:
-                detected_lines.append(f"{score} - + {payload.group()}")
-
-        detected = "\n".join(detected_lines)
+        detected = page.get_vandalism_report()
 
         if page.vand_to_revert:
             page.revert(
