@@ -552,6 +552,7 @@ class get_page(pywikibot.Page):
         fam, lang = self.source.family, self.lang
         files = {
             "add_regex": f"regex_vandalisms_0_{fam}_{lang}.txt",
+            "add_regex_no_ignore_case": f"regex_vandalisms_0_{fam}_{lang}_no_ignore_case.txt",
             "del_regex": f"regex_vandalisms_del_0_{fam}_{lang}.txt",
             "size": f"size_vandalisms_0_{fam}_{lang}.txt",
             "diff": f"diff_vandalisms_0_{fam}_{lang}.txt",
@@ -581,6 +582,13 @@ class get_page(pywikibot.Page):
             hit = regex_vandalism(pattern, new_lines_edited_join, old_lines_edited_join)
             if hit:
                 self.vandalism_score_detect.append(["add_regex", score, hit])
+                vand += score
+
+        # add regex (don't ignore case)
+        for pattern, score in self._parse_scored_lines(_read_lines(files["add_regex_no_ignore_case"])):
+            hit = regex_vandalism(pattern, new_lines_edited_join, old_lines_edited_join, False)
+            if hit:
+                self.vandalism_score_detect.append(["add_regex_no_ignore_case", score, hit])
                 vand += score
 
         # size rules
