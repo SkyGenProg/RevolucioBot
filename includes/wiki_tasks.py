@@ -258,9 +258,8 @@ class wiki_task:
             pywikibot.output("PDD d'IP")
 
             too_old = abs((self.datetime_utcnow - page.latest_revision.timestamp).days) > self.site.days_clean_warnings
-            has_warn = (page.contributor_name != self.site.user_wiki) or ("<!-- level" in page.text)
 
-            if page.page_ns == 3 and has_warn and too_old:
+            if page.page_ns == 3 and too_old:
                 pywikibot.output("Suppression des avertissements de la page " + page_name)
                 try:
                     if self.site.lang_bot == "fr":

@@ -118,6 +118,22 @@ Analysis of the modification:
 ...
 Probability of vandalism: [probability] %"""
 
+def get_warn_level(t):
+    # Rough heuristic based on templates.
+    has_lvl0 = any(k in t for k in ("averto-0", "niveau=0", "level=0", "avertissement-niveau-0"))
+    has_lvl1 = any(k in t for k in ("averto-1", "niveau=1", "level=1", "avertissement-niveau-1"))
+    has_lvl2 = any(k in t for k in ("averto-2", "niveau=2", "level=2", "avertissement-niveau-2"))
+
+    if has_lvl2:
+        warn_level = 3
+    elif has_lvl1 and not has_lvl2:
+        warn_level = 2
+    elif has_lvl0 and not has_lvl1:
+        warn_level = 1
+    else:
+        warn_level = 0
+    return warn_level
+
 # ----------------------------
 # Public classes
 # ----------------------------
@@ -411,18 +427,7 @@ class get_page(pywikibot.Page):
     def get_warnings_user(self) -> None:
         self.talk = pywikibot.Page(self.source.site, f"User Talk:{self.contributor_name}")
         t = self.talk.text.lower()
-
-        # Rough heuristic based on templates/comments.
-        has_lvl0 = any(k in t for k in ("averto-0", "niveau=0", "level=0", "avertissement-niveau-0"))
-        has_lvl1 = any(k in t for k in ("averto-1", "niveau=1", "level=1", "avertissement-niveau-1"))
-        has_lvl2 = any(k in t for k in ("averto-2", "niveau=2", "level=2", "avertissement-niveau-2"))
-
-        if has_lvl1 and not has_lvl2:
-            self.warn_level = 2  # already warned once -> next is level 2
-        elif has_lvl0 and not has_lvl1:
-            self.warn_level = 1
-        elif not has_lvl0:
-            self.warn_level = 0
+        self.warn_level = get_warn_level(t)
 
     def warn_revert(self, summary: str = "") -> None:
         if self.warn_level < 0:
