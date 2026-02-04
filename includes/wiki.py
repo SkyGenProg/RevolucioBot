@@ -368,7 +368,7 @@ class get_page(pywikibot.Page):
         # thresholds
         self.limit = self.source.config.get("limit", -20)
         self.limit2 = self.source.config.get("limit2", -10)
-        self.limit_ai = self.source.config.get("limit_ai", 100)
+        self.limit_ai = self.source.config.get("limit_ai", 98)
         self.limit_ai2 = self.source.config.get("limit_ai2", 90)
         self.limit_ai3 = self.source.config.get("limit_ai3", 50)
 
