@@ -49,7 +49,7 @@ pip install -r requirements.txt
 Définir les variables nécessaires (webhooks, clé API IA, modèle, etc., voir config.py).
 
 Configurer `user-password.py` avec vos identifiants BotPasswords
-MediaWiki. Voir https://www.mediawiki.org/wiki/Manual:Pywikibot/login.py
+MediaWiki. Voir https://www.mediawiki.org/wiki/Manual:Pywikibot/BotPasswords#password_file_entries_format
 
 ------------------------------------------------------------------------
 
