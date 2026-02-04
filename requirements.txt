@@ -1,7 +1,2 @@
 mistralai
-mwparserfromhell>=0.5.0
-numpy
 pywikibot
-requests>=2.20.1
-requests-sse-0.5.2
-scipy
