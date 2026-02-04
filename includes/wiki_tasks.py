@@ -81,13 +81,13 @@ class wiki_task:
                 page = self.site.page(page_name)
                 pywikibot.output("Page : " + page_name)
 
-                if not self.site.config.get("disable_vandalism", False):
-                    self.check_vandalism(page)
+                if not self.site.config.get("disable_regex"):
+                    self.check_vandalism(page, self.test, self.site.config.get("confirm_vandalism_regex_by_ai"))
 
                 edit_replace = page.edit_replace()
                 pywikibot.output(f"{edit_replace} recherche(s)-remplacement(s) sur la page {page}.")
 
-                if not self.site.config.get("disable_del_categories", False) and page.page_ns != 2:
+                if not self.site.config.get("disable_del_categories") and page.page_ns != 2:
                     pywikibot.output("Suppression des catégories inexistantes sur la page " + str(page))
                     removed = page.del_categories_no_exists()
                     pywikibot.output("Catégories retirées " + ", ".join(removed) if removed else "Aucune catégorie à retirer.")
@@ -158,11 +158,11 @@ class wiki_task:
 
                 is_revert = page.is_revert()
 
-                if not is_revert and not self.site.config.get("disable_vandalism", False):
-                    self.check_vandalism(page)
+                if not is_revert and not self.site.config.get("disable_regex"):
+                    self.check_vandalism(page, self.test, self.site.config.get("confirm_vandalism_regex_by_ai"))
 
-                if not is_revert and not self.site.config.get("disable_ai", False):
-                    self.check_vandalism_ai(page)
+                if not is_revert and not self.site.config.get("disable_ai") and (not self.site.config.get("confirm_vandalism_regex_by_ai") or page.vand_to_revert):
+                    self.check_vandalism_ai(page, self.test)
 
                 if page.page_ns == 0:
                     if self.site.config.get("check_WP") and page.text.strip():
@@ -171,7 +171,7 @@ class wiki_task:
                     edit_replace = page.edit_replace()
                     pywikibot.output(f"{edit_replace} recherche(s)-remplacement(s) sur la page {page}.")
 
-                if task_day and (not self.site.config.get("disable_del_categories", False)) and page.page_ns != 2:
+                if task_day and (not self.site.config.get("disable_del_categories")) and page.page_ns != 2:
                     pywikibot.output("Suppression des catégories inexistantes sur la page " + str(page))
                     try:
                         removed = page.del_categories_no_exists()
@@ -294,12 +294,12 @@ class wiki_task:
     # Vandalism detection (non-AI)
     # ----------------------------
 
-    def check_vandalism(self, page, test = False) -> None:
+    def check_vandalism(self, page, test = False, no_revert = False) -> None:
         page_name = page.page_name
         self.vandalism_score = page.vandalism_get_score_current()
         detected = page.get_vandalism_report()
 
-        if page.vand_to_revert:
+        if page.vand_to_revert and not no_revert:
             page.revert(
                 f"Modification non-constructive détectée par expressions rationnelles (score : {self.vandalism_score})"
                 if self.site.lang_bot == "fr"
@@ -309,7 +309,7 @@ class wiki_task:
             )
 
         if self.vandalism_score < 0 and webhooks_url.get(self.site.family):
-            if not test and page.vand_to_revert:
+            if not test and page.vand_to_revert and not no_revert:
                 title = (
                     f"Modification non-constructive révoquée sur {self.site.lang}:{page_name}"
                     if self.site.lang_bot == "fr"
@@ -406,7 +406,7 @@ class wiki_task:
 
         user_rights = page.contributor_rights()
 
-        if self.proba_ai >= page.limit_ai and "autoconfirmed" not in user_rights:
+        if (self.proba_ai >= page.limit_ai or (self.proba_ai >= page.limit_ai2 and self.vandalism_score <= page.limit2)) and "autoconfirmed" not in user_rights:
             if not page.reverted:
                 page.revert(f"Modification non-constructive détectée par IA à {self.proba_ai} %" if self.site.lang_bot == "fr" else f"Non-constructive edit detected by AI ({self.proba_ai} %)", test, result_ai)
             color = 13371938
@@ -663,12 +663,12 @@ class wiki_task:
                         print("Le bot a été arrêté.")
                         break
 
-                    if not self.site.config.get("disable_vandalism", False):
+                    if not self.site.config.get("disable_regex"):
                         print(f"Calcul du score de vandalisme sur {page_name}...")
-                        self.check_vandalism(page, self.test)
+                        self.check_vandalism(page, self.test, self.site.config.get("confirm_vandalism_regex_by_ai"))
                         print(f"Score de vandalisme : {self.vandalism_score}")
 
-                    if not self.site.config.get("disable_ai", False):
+                    if not self.site.config.get("disable_ai") and (not self.site.config.get("confirm_vandalism_regex_by_ai") or page.vand_to_revert):
                         print(f"Calcul du score de vandalisme (IA) sur {page_name}...")
                         self.check_vandalism_ai(page, self.test)
                         print(f"Probabilité de vandalisme (IA) : {self.proba_ai} %")
