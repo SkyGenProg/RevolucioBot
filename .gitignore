@@ -12,3 +12,4 @@ throttle.ctrl
 *.lwp
 .env
 .venv/
+user-password.py
