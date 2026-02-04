@@ -153,11 +153,13 @@ class get_wiki:
 
         self.site = pywikibot.Site(lang, family, self.user_wiki)
 
-        fullurl = self.site.siteinfo["general"]["server"]
-        self.protocol = (fullurl.split("/")[0] or "https:")
-        self.url = fullurl.split("/")[2]
+        self.fullurl = self.site.siteinfo["general"]["server"]
+        self.protocol = (self.fullurl.split("/")[0] or "https:")
+        self.url = self.fullurl.split("/")[2]
         self.articlepath = self.site.siteinfo["general"]["articlepath"].replace("$1", "")
         self.scriptpath = self.site.siteinfo["general"]["scriptpath"]
+
+        self.talk_page = pywikibot.Page(self.site, f"User Talk:{self.user_wiki}")
 
         self.trusted: List[str] = []
         self.diffs_rc: List[Dict[str, Any]] = []
@@ -165,8 +167,8 @@ class get_wiki:
     # ---- API queries
 
     def bot_stopped(self) -> bool:
-        talk_page = pywikibot.Page(self.site, f"User Talk:{self.user_wiki}")
-        return talk_page.text.lower() != "{{/stop}}"
+        self.talk_page = pywikibot.Page(self.site, f"User Talk:{self.user_wiki}")
+        return self.talk_page.text.lower() != "{{/stop}}"
 
     def get_trusted(self) -> None:
         trusted_groups = self.config.get("trusted_groups", "sysop")
@@ -340,6 +342,7 @@ class get_page(pywikibot.Page):
         self.new_page: Optional[bool] = None
         self.text_page_oldid: Optional[str] = None
         self.text_page_oldid2: Optional[str] = None
+        self.vandalism_score_detect: List[List[Any]] = []
         self.vand_to_revert = False
         self.reverted = False
         self.list_contributor_rights = None
@@ -548,7 +551,6 @@ class get_page(pywikibot.Page):
 
     def vandalism_score(self, revision_oldid: Optional[int] = None, revision_oldid2: Optional[int] = None) -> int:
         """Score on a diff, including experienced users."""
-        self.vandalism_score_detect: List[List[Any]] = []
         self.get_text_page_old(revision_oldid, revision_oldid2)
 
         fam, lang = self.source.family, self.lang

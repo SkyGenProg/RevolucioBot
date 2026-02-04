@@ -10,9 +10,10 @@ import json
 import re
 import time
 import traceback
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, Optional
 
 import pywikibot
+from pywikibot.comms.eventstreams import EventStreams
 from mistralai import Mistral
 
 from config import api_key, headers, model, webhooks_url, webhooks_url_ai
@@ -48,8 +49,9 @@ def _send_embed_chunked(url: Optional[str], embed_base: Dict[str, Any], text: st
         _send_webhook(url, {"embeds": [embed]})
 
 class wiki_task:
-    def __init__(self, site, start_task_day: bool = False, start_task_month: bool = False, ignore_task_month: bool = False):
+    def __init__(self, site, start_task_day: bool = False, start_task_month: bool = False, ignore_task_month: bool = False, test: bool = False):
         self.site = site
+        self.test = test
         self.start_task_day = start_task_day
         self.start_task_month = start_task_month and not ignore_task_month
         self.ignore_task_month = ignore_task_month
@@ -60,11 +62,12 @@ class wiki_task:
     def send_message_bot_stopped(self) -> None:
         if self.site.lang_bot == "fr":
             title = "Bot arrêté"
-            desc = "Un utilisateur a arrêté le bot."
+            desc = f"Un utilisateur a arrêté le bot : {self.site.talk_page.full_url()}"
         else:
             title = "Bot stopped"
-            desc = "An user stopped the bot."
+            desc = f"An user stopped the bot: {self.site.talk_page.full_url()}"
         _send_webhook(webhooks_url[self.site.family], {"embeds": [{"title": title, "description": desc, "color": 13371938}]})
+        _send_webhook(webhooks_url["support"], {"embeds": [{"title": title, "description": desc, "color": 13371938}]})
 
     # ----------------------------
     # Monthly / daily / periodic
@@ -635,3 +638,40 @@ class wiki_task:
                 _safe_log_exc()
 
             time.sleep(600)  # Pause de 10 minutes
+
+    def execute_direct(self) -> None:
+        stream = EventStreams(streams="recentchange")
+        for change in stream:
+            try:
+                if change.get("wiki") != "frwiki":
+                    continue
+                if change.get("bot"):
+                    continue
+                if change.get("type") not in ("edit", "new"):
+                    continue
+
+                page_name = change.get("title")
+                page = self.site.page(page_name)
+                if page.special or not page.exists():
+                    continue
+
+                rights = page.contributor_rights()
+                is_revert = page.is_revert()
+                if not is_revert and "autoconfirmed" not in rights:
+                    if self.site.bot_stopped():
+                        self.send_message_bot_stopped()
+                        print("Le bot a été arrêté.")
+                        break
+
+                    if not self.site.config.get("disable_vandalism", False):
+                        print(f"Calcul du score de vandalisme sur {page_name}...")
+                        self.check_vandalism(page, self.test)
+                        print(f"Score de vandalisme : {self.vandalism_score}")
+
+                    if not self.site.config.get("disable_ai", False):
+                        print(f"Calcul du score de vandalisme (IA) sur {page_name}...")
+                        self.check_vandalism_ai(page, self.test)
+                        print(f"Probabilité de vandalisme (IA) : {self.proba_ai} %")
+
+            except Exception:
+                _safe_log_exc()

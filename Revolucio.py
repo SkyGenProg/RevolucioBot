@@ -7,6 +7,7 @@ import threading
 
 from includes.wiki import get_wiki
 from includes.wiki_tasks import wiki_task
+from config import WIKIS
 from version import ver
 
 logging.basicConfig(
@@ -16,16 +17,6 @@ logging.basicConfig(
     format="%(asctime)s %(thread)d %(levelname)s:%(message)s",
 )
 logging.getLogger().addHandler(logging.StreamHandler())
-
-WIKIS = [
-    ("vikidia", "fr", "RevolucioBot"),
-    ("vikidia", "en", "RevolucioBot"),
-    ("dicoado", "dicoado", "RevolucioBot"),
-    # ("nomwiki", "langue", "utilisateur"),
-]
-#WIKIS = [
-#    ("localhost", "localhost", "RevolucioBot")
-#]
 
 def parse_args():
     p = argparse.ArgumentParser()
@@ -42,16 +33,17 @@ def ensure_workdir(dirname="files"):
 
 def start_tasks(args):
     threads = []
-    for family, lang, user in WIKIS:
-        site = get_wiki(family, lang, user)
-        task = wiki_task(site, args.start_task_day, args.start_task_month, args.ignore_task_month)
-        t = threading.Thread(
-            target=task.execute,
-            name=f"task:{family}:{lang}",
-            daemon=True,  # optionnel : le process s'arrête proprement
-        )
-        t.start()
-        threads.append(t)
+    for family, lang, user, direct in WIKIS:
+        if not direct:
+            site = get_wiki(family, lang, user)
+            task = wiki_task(site, args.start_task_day, args.start_task_month, args.ignore_task_month)
+            t = threading.Thread(
+                target=task.execute,
+                name=f"task:{family}:{lang}",
+                daemon=True,  # optionnel : le process s'arrête proprement
+            )
+            t.start()
+            threads.append(t)
 
     # Optionnel : garder le main vivant (sinon daemon=True suffit)
     for t in threads:
