@@ -6,6 +6,7 @@ WIKIS = [
     ("vikidia", "fr", "RevolucioBot", False),
     ("vikidia", "en", "RevolucioBot", False),
     ("dicoado", "dicoado", "RevolucioBot", False),
+    ("wikipedia", "fr", "RevolucioBot", True),
 ]
 #WIKIS = [
 #    ("localhost", "localhost", "RevolucioBot", False)
@@ -26,4 +27,4 @@ headers = {
 }
 
 api_key = os.getenv("revolucio_api_key")
-model = "mistral-large-latest"
+model = os.getenv("revolucio_model")

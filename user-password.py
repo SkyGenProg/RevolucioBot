@@ -1,0 +1,5 @@
+('localhost', 'localhost', 'RevolucioBot', BotPassword('Revolucio', os.getenv("revolucio_pass_localhost_localhost"))
+('fr', 'vikidia', 'RevolucioBot', BotPassword('Revolucio', os.getenv("revolucio_pass_fr_vikidia")))
+('en', 'vikidia', 'RevolucioBot', BotPassword('Revolucio', os.getenv("revolucio_pass_en_vikidia")))
+('dicoado', 'dicoado', 'RevolucioBot', BotPassword('Revolucio', os.getenv("revolucio_pass_dicoado_dicoado")))
+('fr', 'wikipedia', 'RevolucioBot', BotPassword('Revolucio', os.getenv("revolucio_pass_fr_wikipedia")))

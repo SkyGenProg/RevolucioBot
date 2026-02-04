@@ -27,7 +27,7 @@ et traiter certains contenus, avec possibilité d'intégration via
 ## 🧰 Prérequis
 
 -   Python 3.10+ recommandé\
--   Compte bot ou compte utilisateur avec BotPasswords activés\
+-   Compte bot avec BotPasswords activés\
 -   Accès aux variables d'environnement pour stocker les secrets
 
 ------------------------------------------------------------------------
@@ -35,8 +35,8 @@ et traiter certains contenus, avec possibilité d'intégration via
 ## 📦 Installation
 
 ``` bash
-git clone <url-du-repo>
-cd revoluciobot
+git clone git@github.com:SkyGenProg/RevolucioBot.git
+cd RevolucioBot
 python -m venv .venv
 source .venv/bin/activate
 pip install -r requirements.txt
@@ -46,21 +46,7 @@ pip install -r requirements.txt
 
 ## ⚙️ Configuration
 
-### 1️⃣ Renommer les fichiers d'exemple
-
-``` bash
-cp config.py.example config.py
-cp user-password.py.example user-password.py
-```
-
-### 2️⃣ Variables d'environnement
-
-Définir les variables nécessaires (webhooks, clé API IA).
-
-### 3️⃣ Identifiants bot
-
-Configurer `user-password.py` avec vos identifiants BotPasswords
-MediaWiki.
+Définir les variables nécessaires (webhooks, clé API IA, mots de passe, modèle, etc., voir config.py et user-password.py).
 
 ------------------------------------------------------------------------
 
@@ -77,12 +63,6 @@ python Revolucio.py
 ``` bash
 python RevolucioDirect.py
 ```
-
-------------------------------------------------------------------------
-
-## 🔐 Sécurité
-
-Ne jamais committer les fichiers contenant des secrets.
 
 ------------------------------------------------------------------------
 
