@@ -95,6 +95,10 @@ class wiki_task:
                 if self.site.family == "dicoado":
                     self._dicoado_maintenance(page_name, page)
 
+                if self.site.bot_stopped():
+                    print("Le bot a été arrêté : Arrêt de la tâche.")
+                    break
+
         if self.site.config.get("clear_talks"):
             self._clear_ip_talks()
 
@@ -272,6 +276,10 @@ class wiki_task:
                     _safe_log_exc()
             else:
                 pywikibot.output("Pas d'avertissement à effacer")
+
+            if self.site.bot_stopped():
+                print("Le bot a été arrêté : Arrêt de la tâche.")
+                break
 
     def _dicoado_sandbox_reset(self) -> None:
         bas = self.site.page("Dico:Bac à sable")
