@@ -74,10 +74,18 @@ class wiki_task:
     # ----------------------------
 
     def task_every_month(self) -> None:
+        if self.site.bot_stopped():
+            print("Le bot a été arrêté : Tâches non-réalisées.")
+            return
+
         pywikibot.output(f"Tâches mensuelles ({self.site.family} {self.site.lang}).")
 
         if self.site.config.get("check_all_pages"): #Vérification de toutes les pages de l'espace principal si activé
             for page_name in self.site.all_pages(ns=0):
+                if self.site.bot_stopped():
+                    print("Le bot a été arrêté : Arrêt de la tâche.")
+                    break
+
                 page = self.site.page(page_name)
                 pywikibot.output("Page : " + page_name)
 
@@ -98,14 +106,14 @@ class wiki_task:
                 if self.site.family == "dicoado":
                     self._dicoado_maintenance(page_name, page)
 
-                if self.site.bot_stopped():
-                    print("Le bot a été arrêté : Arrêt de la tâche.")
-                    break
-
         if self.site.config.get("clear_talks"):
             self._clear_ip_talks()
 
     def task_every_day(self) -> None:
+        if self.site.bot_stopped():
+            print("Le bot a été arrêté : Tâches non-réalisées.")
+            return
+
         # Correction redirections une fois par jour
         if self.site.config.get("correct_redirects"):
             for page_name in (self.site.problematic_redirects("DoubleRedirects") + self.site.problematic_redirects("BrokenRedirects")):
@@ -116,6 +124,10 @@ class wiki_task:
         self.task_every_10minutes(task_day=True)
 
     def task_every_10minutes(self, task_day: bool = False) -> None:
+        if self.site.bot_stopped():
+            print("Le bot a été arrêté : Tâches non-réalisées.")
+            return
+
         detailed_diff_info: Dict[int, Dict[str, Any]] = {}
 
         if task_day:
@@ -251,6 +263,10 @@ class wiki_task:
 
     def _clear_ip_talks(self) -> None:
         for page_name in self.site.all_pages(ns=3, start="1", end="A"):
+            if self.site.bot_stopped():
+                print("Le bot a été arrêté : Arrêt de la tâche.")
+                break
+
             pywikibot.output("Page : " + page_name)
 
             is_ip_title = (page_name.count(".") == 3) or (page_name.count(":") == 8)
@@ -279,10 +295,6 @@ class wiki_task:
                     _safe_log_exc()
             else:
                 pywikibot.output("Pas d'avertissement à effacer")
-
-            if self.site.bot_stopped():
-                print("Le bot a été arrêté : Arrêt de la tâche.")
-                break
 
     def _dicoado_sandbox_reset(self) -> None:
         bas = self.site.page("Dico:Bac à sable")
@@ -629,10 +641,6 @@ class wiki_task:
         while True:
             self.datetime_utcnow = datetime.datetime.utcnow()
             try:
-                if self.site.bot_stopped():
-                    self.send_message_bot_stopped()
-                    print("Le bot a été arrêté.")
-                    break
                 if not self.ignore_task_month and (self.start_task_month or int(self.datetime_utcnow.strftime("%m")) != month):
                     self.task_every_month()
                     self.start_task_month = False
@@ -644,6 +652,11 @@ class wiki_task:
                     day = int(self.datetime_utcnow.strftime("%d"))
 
                 self.task_every_10minutes()
+
+                if self.site.bot_stopped():
+                    self.send_message_bot_stopped()
+                    print("Le bot a été arrêté.")
+                    break
 
             except Exception:
                 _safe_log_exc()
