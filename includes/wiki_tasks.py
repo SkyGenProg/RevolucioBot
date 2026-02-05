@@ -76,10 +76,13 @@ class wiki_task:
     def task_every_month(self) -> None:
         pywikibot.output(f"Tâches mensuelles ({self.site.family} {self.site.lang}).")
 
-        if self.site.config.get("check_all_pages"):
+        if self.site.config.get("check_all_pages"): #Vérification de toutes les pages de l'espace principal si activé
             for page_name in self.site.all_pages(ns=0):
                 page = self.site.page(page_name)
                 pywikibot.output("Page : " + page_name)
+
+                if self.site.config.get("check_WP") and page.text.strip():
+                    self.check_WP(page)
 
                 if not self.site.config.get("disable_regex"):
                     self.check_vandalism(page, self.test, self.site.config.get("confirm_vandalism_regex_by_ai"))
