@@ -83,9 +83,9 @@ def _paginate_json(url: str, continue_key: str) -> Iterator[Dict[str, Any]]:
 
 def regex_vandalism(regex: str, text_page1: str, text_page2: str, ignorecase: bool = True):
     flags = re.IGNORECASE if ignorecase else 0
-    re1 = re.search(regex, text_page1, flags)
-    re2 = re.search(regex, text_page2, flags)
-    return re1 if re1 and not re2 else None
+    re1 = re.findall(regex, text_page1, flags)
+    re2 = re.findall(regex, text_page2, flags)
+    return re1 if re1 and not re2 else []
 
 
 def prompt_ai(lang, date, url_wiki, page_name, diff_text, comment):
@@ -584,30 +584,30 @@ class get_page(pywikibot.Page):
         new_lines_edited_join = "\r\n".join(new_lines_edited)
 
         for pattern, score in self._parse_scored_lines(_read_lines(files["add_regex_ns_all"])):
-            hit = regex_vandalism(pattern, text_new, text_old)
-            if hit:
+            hits = regex_vandalism(pattern, text_new, text_old)
+            for hit in hits:
                 self.vandalism_score_detect.append(["add_regex_ns_all", score, hit])
                 vand += score
 
         if self.page_ns == 0:
             # add regex
             for pattern, score in self._parse_scored_lines(_read_lines(files["add_regex"])):
-                hit = regex_vandalism(pattern, text_new, text_old)
-                if hit:
+                hits = regex_vandalism(pattern, text_new, text_old)
+                for hit in hits:
                     self.vandalism_score_detect.append(["add_regex", score, hit])
                     vand += score
     
             # add regex (don't ignore case)
             for pattern, score in self._parse_scored_lines(_read_lines(files["add_regex_no_ignore_case"])):
-                hit = regex_vandalism(pattern, text_new, text_old, False)
-                if hit:
+                hits = regex_vandalism(pattern, text_new, text_old, False)
+                for hit in hits:
                     self.vandalism_score_detect.append(["add_regex_no_ignore_case", score, hit])
                     vand += score
 
-            # add regex (don't ignore case)
+            # add regex in diff only (don't ignore case)
             for pattern, score in self._parse_scored_lines(_read_lines(files["add_regex_lines_no_ignore_case"])):
-                hit = regex_vandalism(pattern, new_lines_edited_join, old_lines_edited_join, False)
-                if hit:
+                hits = regex_vandalism(pattern, new_lines_edited_join, "", False)
+                for hit in hits:
                     self.vandalism_score_detect.append(["add_regex_lines_no_ignore_case", score, hit])
                     vand += score
     
@@ -632,10 +632,10 @@ class get_page(pywikibot.Page):
                     self.vandalism_score_detect.append(["diff", score, diff_s])
                     vand += score
     
-            # delete regex (pattern removed between old->new)
+            # delete regex in diff only
             for pattern, score in self._parse_scored_lines(_read_lines(files["del_regex_lines"])):
-                hit = regex_vandalism(pattern, old_lines_edited_join, new_lines_edited_join)
-                if hit:
+                hits = regex_vandalism(pattern, old_lines_edited_join, "")
+                for hit in hits:
                     self.vandalism_score_detect.append(["del_regex_lines", score, hit])
                     vand += score
 
@@ -645,18 +645,18 @@ class get_page(pywikibot.Page):
         detected_lines: List[str] = []
         for kind, score, payload in self.vandalism_score_detect:
             if kind == "add_regex_ns_all" or kind == "add_regex" or kind == "add_regex_no_ignore_case":
-                detected_lines.append(f"{score} - + {payload.group()}")
+                detected_lines.append(f"{score} - + {payload}")
             elif kind == "add_regex_lines_no_ignore_case":
-                detected_lines.append(f"{score} - + {payload.group()} (diff)")
+                detected_lines.append(f"{score} - + {payload} (diff)")
             elif kind == "del_regex_lines":
-                detected_lines.append(f"{score} - - {payload.group()} (diff)")
+                detected_lines.append(f"{score} - - {payload} (diff)")
             elif kind == "size":
                 detected_lines.append(f"{score} - size < {payload}")
             elif kind == "diff":
                 op = ">" if int(payload) > 0 else "<"
                 detected_lines.append(f"{score} - diff {op} {payload}")
             else:
-                detected_lines.append(f"{score} - + {payload.group()}")
+                detected_lines.append(f"{score} - + {payload}")
         return "\n".join(detected_lines)
 
     # ---- other tools
