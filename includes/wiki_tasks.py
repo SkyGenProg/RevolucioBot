@@ -93,7 +93,7 @@ class wiki_task:
                     self.check_WP(page)
 
                 if not self.site.config.get("disable_regex"):
-                    self.check_vandalism(page, self.test, self.site.config.get("confirm_vandalism_regex_by_ai"))
+                    self.check_vandalism(page, self.test)
 
                 edit_replace = page.edit_replace()
                 pywikibot.output(f"{edit_replace} recherche(s)-remplacement(s) sur la page {page}.")
@@ -178,9 +178,9 @@ class wiki_task:
                 is_revert = page.is_revert()
 
                 if not is_revert and not self.site.config.get("disable_regex"):
-                    self.check_vandalism(page, self.test, self.site.config.get("confirm_vandalism_regex_by_ai"))
+                    self.check_vandalism(page, self.test)
 
-                if not is_revert and not self.site.config.get("disable_ai") and (not self.site.config.get("confirm_vandalism_regex_by_ai") or page.vand_to_revert):
+                if not is_revert and not self.site.config.get("disable_ai"):
                     self.check_vandalism_ai(page, self.test)
 
                 if page.page_ns == 0:
@@ -317,12 +317,12 @@ class wiki_task:
     # Vandalism detection (non-AI)
     # ----------------------------
 
-    def check_vandalism(self, page, test = False, no_revert = False) -> None:
+    def check_vandalism(self, page, test = False) -> None:
         page_name = page.page_name
         self.vandalism_score = page.vandalism_get_score_current()
         detected = page.get_vandalism_report()
 
-        if page.vand_to_revert and not no_revert:
+        if page.vand_to_revert:
             page.revert(
                 f"Modification non-constructive détectée par expressions rationnelles (score : {self.vandalism_score})"
                 if self.site.lang_bot == "fr"
@@ -332,7 +332,7 @@ class wiki_task:
             )
 
         if self.vandalism_score < 0 and webhooks_url.get(self.site.family):
-            if not test and page.vand_to_revert and not no_revert:
+            if not test and page.vand_to_revert:
                 title = (
                     f"Modification non-constructive révoquée sur {self.site.lang}:{page_name}"
                     if self.site.lang_bot == "fr"
@@ -689,10 +689,10 @@ class wiki_task:
 
                     if not self.site.config.get("disable_regex"):
                         print(f"Calcul du score de vandalisme sur {page_name}...")
-                        self.check_vandalism(page, self.test, self.site.config.get("confirm_vandalism_regex_by_ai"))
+                        self.check_vandalism(page, self.test)
                         print(f"Score de vandalisme : {self.vandalism_score}")
 
-                    if not self.site.config.get("disable_ai") and (not self.site.config.get("confirm_vandalism_regex_by_ai") or page.vand_to_revert):
+                    if not self.site.config.get("disable_ai"):
                         print(f"Calcul du score de vandalisme (IA) sur {page_name}...")
                         self.check_vandalism_ai(page, self.test)
                         print(f"Probabilité de vandalisme (IA) : {self.proba_ai} %")
