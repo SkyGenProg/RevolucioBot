@@ -1,8 +1,9 @@
 ﻿''':-1
+\<ref:-1
+\[\[(fichier|image):-1
+\{\{article:-1
 \=\=:-2
-\<ref:-2
-\{\{article:-2
 \{\{ébauche:-5
 \{\{boîte:-5
-\{\{infobox:-5
+\{\{.+box:-5
 \{\{portail:-5
