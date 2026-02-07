@@ -80,14 +80,6 @@ def _paginate_json(url: str, continue_key: str) -> Iterator[Dict[str, Any]]:
         yield j
         cont = j.get("continue", {}).get(continue_key)
 
-
-def regex_vandalism(regex: str, text_page1: str, text_page2: str, ignorecase: bool = True):
-    flags = re.IGNORECASE if ignorecase else 0
-    re1 = re.findall(regex, text_page1, flags)
-    re2 = re.findall(regex, text_page2, flags)
-    return re1 if re1 and not re2 else []
-
-
 def prompt_ai(lang, date, url_wiki, page_name, diff_text, comment):
     if lang == "fr":
         comment_line = f"Résumé de modification : {comment}" if comment else ""
@@ -549,17 +541,27 @@ class get_page(pywikibot.Page):
             out.append((key, score))
         return out
 
+    def score_regex_count(self, type_regex, filename, text_new, text_old, flags):
+        score_detected = 0
+        for pattern, score in self._parse_scored_lines(_read_lines(filename)):
+            hits = re.findall(pattern, text_new, flags)
+            hits_old = re.findall(pattern, text_old, flags)
+            times_pattern = len(hits)-len(hits_old)
+            if times_pattern != 0:
+                score_pattern = times_pattern*score
+                score_detected += score_pattern
+                self.vandalism_score_detect.append([type_regex, score, f"{pattern} (*{times_pattern} = {score_pattern})"])
+        return score_detected
+
     def vandalism_score(self, revision_oldid: Optional[int] = None, revision_oldid2: Optional[int] = None) -> int:
         """Score on a diff, including experienced users."""
         self.get_text_page_old(revision_oldid, revision_oldid2)
 
         fam, lang = self.source.family, self.lang
         files = {
+            "add_regex_ns_0": f"regex_vandalisms_0_{fam}_{lang}.txt",
             "add_regex_ns_all": f"regex_vandalisms_all_{fam}_{lang}.txt",
-            "add_regex": f"regex_vandalisms_0_{fam}_{lang}.txt",
-            "add_regex_no_ignore_case": f"regex_vandalisms_0_{fam}_{lang}_no_ignore_case.txt",
-            "add_regex_lines_no_ignore_case": f"regex_vandalisms_lines_0_{fam}_{lang}_no_ignore_case.txt",
-            "del_regex_lines": f"regex_vandalisms_del_lines_0_{fam}_{lang}.txt",
+            "add_regex_ns_all_no_ignore_case": f"regex_vandalisms_all_{fam}_{lang}_no_ignore_case.txt",
             "size": f"size_vandalisms_0_{fam}_{lang}.txt",
             "diff": f"diff_vandalisms_0_{fam}_{lang}.txt",
         }
@@ -569,49 +571,16 @@ class get_page(pywikibot.Page):
         vand = 0
         text_new = self.text_page_oldid or ""
         text_old = self.text_page_oldid2 or ""
-        unified_diff = difflib.unified_diff(text_old.splitlines(), text_new.splitlines(), lineterm="")
 
-        old_lines_edited = []
-        new_lines_edited = []
-
-        for line in unified_diff:
-            if line.startswith("-") and not line.startswith("---"):
-                old_lines_edited.append(line[1:])
-            elif line.startswith("+") and not line.startswith("+++"):
-                new_lines_edited.append(line[1:])
-
-        old_lines_edited_join = "\r\n".join(old_lines_edited)
-        new_lines_edited_join = "\r\n".join(new_lines_edited)
-
-        for pattern, score in self._parse_scored_lines(_read_lines(files["add_regex_ns_all"])):
-            hits = regex_vandalism(pattern, text_new, text_old)
-            for hit in hits:
-                self.vandalism_score_detect.append(["add_regex_ns_all", score, hit])
-                vand += score
+        # add regex on all ns
+        vand += self.score_regex_count("add_regex_ns_all", files["add_regex_ns_all"], text_new, text_old, re.IGNORECASE)
+        # add regex on all ns (don't ignore case)
+        vand += self.score_regex_count("add_regex_ns_all_no_ignore_case", files["add_regex_ns_all_no_ignore_case"], text_new, text_old, 0)
 
         if self.page_ns == 0:
-            # add regex
-            for pattern, score in self._parse_scored_lines(_read_lines(files["add_regex"])):
-                hits = regex_vandalism(pattern, text_new, text_old)
-                for hit in hits:
-                    self.vandalism_score_detect.append(["add_regex", score, hit])
-                    vand += score
-    
-            # add regex (don't ignore case)
-            for pattern, score in self._parse_scored_lines(_read_lines(files["add_regex_no_ignore_case"])):
-                hits = regex_vandalism(pattern, text_new, text_old, False)
-                for hit in hits:
-                    self.vandalism_score_detect.append(["add_regex_no_ignore_case", score, hit])
-                    vand += score
-
-            # add regex in diff only (don't ignore case)
-            for pattern, score in self._parse_scored_lines(_read_lines(files["add_regex_lines_no_ignore_case"])):
-                hits = regex_vandalism(pattern, new_lines_edited_join, "", False)
-                for hit in hits:
-                    self.vandalism_score_detect.append(["add_regex_lines_no_ignore_case", score, hit])
-                    vand += score
-    
-            # size rules
+            # add regex on ns 0
+            vand += self.score_regex_count("add_regex_ns_0", files["add_regex_ns_0"], text_new, text_old, re.IGNORECASE)
+            # size rules on ns 0
             for size_s, score in self._parse_scored_lines(_read_lines(files["size"])):
                 try:
                     size = int(size_s)
@@ -620,8 +589,7 @@ class get_page(pywikibot.Page):
                 if len(text_new) < size:
                     self.vandalism_score_detect.append(["size", score, size_s])
                     vand += score
-    
-            # diff rules
+            # diff rules on ns 0
             for diff_s, score in self._parse_scored_lines(_read_lines(files["diff"])):
                 try:
                     d = int(diff_s)
@@ -631,25 +599,14 @@ class get_page(pywikibot.Page):
                 if (d < 0 and delta <= d) or (d >= 0 and delta >= d):
                     self.vandalism_score_detect.append(["diff", score, diff_s])
                     vand += score
-    
-            # delete regex in diff only
-            for pattern, score in self._parse_scored_lines(_read_lines(files["del_regex_lines"])):
-                hits = regex_vandalism(pattern, old_lines_edited_join, "")
-                for hit in hits:
-                    self.vandalism_score_detect.append(["del_regex_lines", score, hit])
-                    vand += score
 
         return vand
 
     def get_vandalism_report(self) -> str:
         detected_lines: List[str] = []
         for kind, score, payload in self.vandalism_score_detect:
-            if kind == "add_regex_ns_all" or kind == "add_regex" or kind == "add_regex_no_ignore_case":
+            if kind == "add_regex_ns_0" or kind == "add_regex_ns_all" or kind == "add_regex_ns_all_no_ignore_case":
                 detected_lines.append(f"{score} - + {payload}")
-            elif kind == "add_regex_lines_no_ignore_case":
-                detected_lines.append(f"{score} - + {payload} (diff)")
-            elif kind == "del_regex_lines":
-                detected_lines.append(f"{score} - - {payload} (diff)")
             elif kind == "size":
                 detected_lines.append(f"{score} - size < {payload}")
             elif kind == "diff":
