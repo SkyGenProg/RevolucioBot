@@ -425,8 +425,7 @@ class get_page(pywikibot.Page):
         self.warn_level = get_warn_level(t)
 
     def warn_revert(self, summary: str = "") -> None:
-        if self.warn_level < 0:
-            self.get_warnings_user()
+        self.get_warnings_user()
 
         if self.warn_level >= 2:
             alert = pywikibot.Page(self.source.site, self.alert_page)
@@ -562,6 +561,7 @@ class get_page(pywikibot.Page):
             "add_regex_ns_0": f"regex_vandalisms_0_{fam}_{lang}.txt",
             "add_regex_ns_all": f"regex_vandalisms_all_{fam}_{lang}.txt",
             "add_regex_ns_all_no_ignore_case": f"regex_vandalisms_all_{fam}_{lang}_no_ignore_case.txt",
+            "del_regex_ns_0": f"regex_vandalisms_del_0_{fam}_{lang}.txt",
             "size": f"size_vandalisms_0_{fam}_{lang}.txt",
             "diff": f"diff_vandalisms_0_{fam}_{lang}.txt",
         }
@@ -580,6 +580,8 @@ class get_page(pywikibot.Page):
         if self.page_ns == 0:
             # add regex on ns 0
             vand += self.score_regex_count("add_regex_ns_0", files["add_regex_ns_0"], text_new, text_old, re.IGNORECASE)
+            # delete regex on ns 0
+            vand += self.score_regex_count("del_regex_ns_0", files["del_regex_ns_0"], text_old, text_new, re.IGNORECASE)
             # size rules on ns 0
             for size_s, score in self._parse_scored_lines(_read_lines(files["size"])):
                 try:
@@ -607,6 +609,8 @@ class get_page(pywikibot.Page):
         for kind, score, payload in self.vandalism_score_detect:
             if kind == "add_regex_ns_0" or kind == "add_regex_ns_all" or kind == "add_regex_ns_all_no_ignore_case":
                 detected_lines.append(f"{score} - + {payload}")
+            elif kind == "del_regex_ns_0":
+                detected_lines.append(f"{score} - - {payload}")
             elif kind == "size":
                 detected_lines.append(f"{score} - size < {payload}")
             elif kind == "diff":
