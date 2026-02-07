@@ -547,10 +547,10 @@ class get_page(pywikibot.Page):
             hits = re.findall(pattern, text_new, flags)
             hits_old = re.findall(pattern, text_old, flags)
             times_pattern = len(hits)-len(hits_old)
-            if times_pattern != 0:
-                score_pattern = times_pattern*score
+            if times_pattern > 0:
+                score_pattern = score*times_pattern
                 score_detected += score_pattern
-                self.vandalism_score_detect.append([type_regex, score, f"{pattern} (*{times_pattern} = {score_pattern})"])
+                self.vandalism_score_detect.append([type_regex, score, f"{pattern} ({score}x{times_pattern} = {score_pattern})"])
         return score_detected
 
     def vandalism_score(self, revision_oldid: Optional[int] = None, revision_oldid2: Optional[int] = None) -> int:
