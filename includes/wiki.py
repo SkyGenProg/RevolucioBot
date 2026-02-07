@@ -425,8 +425,7 @@ class get_page(pywikibot.Page):
         self.warn_level = get_warn_level(t)
 
     def warn_revert(self, summary: str = "") -> None:
-        if self.warn_level < 0:
-            self.get_warnings_user()
+        self.get_warnings_user()
 
         if self.warn_level >= 2:
             alert = pywikibot.Page(self.source.site, self.alert_page)
