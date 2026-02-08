@@ -1,0 +1,235 @@
+﻿\b(je|j')\b:-1
+\bj'ai lu\b:+10
+\[j'ai lu\]:+10
+\b(tu|t')\b:-1
+\b(ma|mon|mes|moi)\b:-1
+\b(ta|ton|tes|toi)\b:-1
+\bvous\b:-1
+\bnous\b:-1
+\bdedicace\b:-1
+\bvive\b:-1
+\bstar\b:-1
+fin du monde:-1
+\bnon\b:-1
+\bnon-:+1
+\boui\b:-1
+\bet aussi\b:-1
+\b(beau|belle) :-1
+\bje (me|m')\b:-3
+un gars:-3
+une? gros(se)?\b:-3
+\bvou\b:-3
+\bnou\b:-3
+\bsai\b:-3
+\btro\b:-3
+\bpa\b:-3
+\b[mt]wa\b:-3
+\btchat\b:-3
+\b(bla+)+\b:-3
+\bdle\b:-3
+\bdla\b:-3
+\bah\b:-3
+\bkif+e?\b:-3
+\bvoleu(r|rs|se):-3
+charmant:-3
+magnifique:-3
+\bhey\b:-3
+\bbravo\b:-3
+\{\{oui\}\}:+10
+\bc'est vraiment\b:-3
+\bsales?\b:-3
+:[a-z]{3,}::-3
+\blabrute\.fr\b:-3
+\bfessee?s?\b:-3
+\bje suis:-3
+\btu es:-3
+tete de mort:-3
+\bplop\b:-3
+\bw(oo|00)t\b:-3
+\blo+l+\b:-3
+\blo+l+i+l+:-3
+!!!:-3
+\bmaman\b:-3
+\bpapa\b:-3
+\;\):-3
+\:\):-3
+\bXD\b:-3
+\byes\b:-3
+\bcrotte\b:-3
+\baime bien\b:-3
+\bvisite[rz] [cl]e site:-3
+cliquez ici:-3
+sur ce lien:-3
+\best? bete:-3
+\bchui\b:-3
+\bmes best:-3
+\bah bon\b:-5
+\bc (pas|du|un|le|la|moi|mon|ma|mes|tro|super):-5
+bonjour:-5
+\bsalut\b:-5
+[a-z] salut:+6
+\bslt\b:-5
+\bcoucou\b:-5
+\bkikoo:-5
+\bk[aeiu]\s:-5
+\bko[ain]\b:-5
+\bkeske\b:-5
+\bmecs?\b:-5
+\bn(oo+|00+)bs?\b:-5
+\byo\b:-5
+yo yo ma:+10
+\bjte\b:-5
+\bmoches?\b:-5
+\bhorribles?\b:-5
+\bnon mais\b:-5
+\bmarr+e\b:-5
+\bva bien\b:-5
+\bmerci\b:-5
+\bremercie?ments?\b:-5
+\bmes potes\b:-5
+\bn'importe quoi\b:-5
+\bzut\b:-5
+\byeah\b:-5
+\ballez (les?|la|l)\b:-5
+\bi like\b:-5
+\bbisou:-5
+\bouais?\b:-5
+\bca va\b:-5
+trop fort:-5
+\bpouet:-5
+\bchers? lecteurs?:-5
+\bbouffon:-5
+\bvous etes:-5
+je te?\b:-5
+\bbroubrou\b:-5
+\bje sui\b:-5
+\bwesh\b:-5
+\bbon a rien\b:-5
+\bouii+:-10
+\bmdr+\b:-10
+\bj'?aime\b:-10
+\bje remerci:-10
+!{5,}:-10
+(h[aeiou] ?)\1{2,}:-10
+\bl+o+l+o*l*\b:-10
+[hw]a{3,}:-10
+\bchier\b:-10
+\bchiante?s?\b:-10
+plus (beau|belle) du monde:-10
+\bc bon\b:-10
+\bde reve\b:-10
+\bgros gros:-10
+[^\s]XD\b:-10
+[^\s]\:p\b:-10
+[^\s]=D\b:-10
+[^\s]\:D\b:-10
+rofl\b:-10
+\boh (oui|non):-10
+\btes com+s?\b:-10
+\bdeux balles:-10
+trop (bien|nul):-10
+\bpff+\b:-10
+\bbeurk\b:-10
+\brot?fl:-10
+\bva te\b:-10
+\bosela\b:-10
+\bptdr+\b:-10
+\bmouhaha:-10
+\bcouill(u|on):-10
+\bbogoss\b:-10
+\bbouh\b:-10
+\bje t'a+i+m+e+\b:-20
+ah{3,}:-20
+\bsuis con\b:-20
+LeStudio1\.com:-20
+\b(qui |)crache (le|du) feu\b:-20
+\bnoelis[mt]e:-20
+\bn\)oel:-20
+lamasticot:-20
+\bsert a rien\b:-20
+c[' ]est nul:-20
+\bs'en fou:-20
+\bosef\b:-20
+\byo man\b:-20
+[mt][ ']en fou[st]\b:-20
+\bspeciale? dedicace\b:-20
+\b(mon|ma) (ange|cheri):-20
+\b(une?|le|la) con(ne)?\b:-20
+\b[dl]es cons\b:-20
+\bfai?s chier\b:-20
+\bsalebot\b:-30
+\bgribeco\b:-30
+\bbradipus\b:-30
+\bclem23\b:-30
+hegesippe cormier:-30
+\belfix\b:-30
+\?{3,}:-3
+\bwé\b:-3
+\^\^:-3
+&lt;ref\b:+10
+\.edu:+5
+\.gov:+5
+\.imdb\.com:+5
+\.gouv\.fr:+5
+\.gov\.ca:+5
+\.gouv\.qc\.ca:+5
+google\.:+5
+wikipedia\.org:+10
+wikimedia\.:+10
+wikisource\.org:+10
+wikiquote\.org:+10
+site.*=:+10
+[Ss]ite officiel:+5
+\.pdf:+1
+tres bon:-1
+complet:-1
+gratuit:-1
+forum:-1
+chat:-1
+blog:-1
+portail:-1
+yahoo:-5
+blogspot:-5
+youtube:-5
+myspace:-5
+skyrock:-10
+skyblog:-10
+geocities:-5
+hautetfort:-5
+free\.fr:-5
+orange\.fr:-5
+# element [1-3]\b:-25
+\* element [A-C]\b:-25
+[Tt]exte de sous-titre:-25
+(Fichier|Image):Exemple\d?\.jpg:-25
+\[\[(Fichier|Image):\]\]:-25
+\[\[Media:Exemple\.ogg\]\]:-25
+\[Remplacez cette mention:-25
+Inserez (le|un) texte a mettre:-25
+\[\[Titre du lien\]\]:-25
+\[\[nom de la destination\]\]:-25
+\[\[Categorie:nom de la categorie\]\]:-25
+Entrez votre formule ici:-25
+Entrez le texte non formate ici:-25
+{{Modele ou page a inclure}}:-25
+&lt;ref&lt;reference, citation ou lien:-25
+\[\[À remplacer\]\]:-25
+\[\[(Fichier|Image):http:-25
+\[\[(Fichier|Image):*\\:-25
+'''Texte gras''':-25
+''Texte italique'':-25
+\[\[Special:Contributions:-25
+\[\[[Uu]tilisateur::-25
+\[\[[Uu]ser::-25
+\b0?\d\W\d\d\W\d\d\W\d\d\W\d\d\b:-5
+\S+@\S+\.[a-z]+:-5
+\bmeurt\b:-1
+\bdecedee?\b:-1
+\bmorte?\b:-1
+\bassassin:-1
+\btuee?\b:-1
+\bdeces\b:-1
+\btrepasse\b:-1
+\bdeceda\b:-1
+\best eteint:-1
+\bemporte par:-1

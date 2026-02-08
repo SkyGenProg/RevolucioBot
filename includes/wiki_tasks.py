@@ -501,6 +501,25 @@ class wiki_task:
                 "fields": [{"name": ("Probabilité de copie" if self.site.lang_bot == "fr" else "Probability of copy"), "value": f"{round(prob_WP, 2)} %", "inline": True}],
             }
 
+        if prob_WP >= 50:
+            check_page = pywikibot.Page(self.site.site, f"User:{self.site.user_wiki}/WP")
+            if self.site.lang_bot == "fr":
+                check_page.text = f"""{check_page.text}
+== Possible copie de WP sur {page_name} (diff : {page.oldid}) ==
+* Date de détection : ~~~~~
+* Page : {page.page_name}
+* Utilisateur : {page.contributor_name}
+* Diff : [[Special:Diff/{page.oldid}]]
+* Contenu copié détecté : {prob_WP} %"""
+            else:
+                check_page.text = f"""{check_page.text}
+== Possible copy from WP on {page_name} (diff: {page.oldid}) ==
+* Detection date: ~~~~~
+* Page: {page.page_name}
+* User: {page.contributor_name}
+* Diff: [[Special:Diff/{page.oldid}]]
+* Detected copied content: {prob_WP} %"""
+            check_page.save("Mise à jour" if self.site.lang_bot == "fr" else "Update", bot=False, minor=False)
         if prob_WP >= 90:
             if template_WP not in page.text:
                 page.text = "{{" + template_WP + "|" + page_name + "|" + str(round(prob_WP, 2)) + "}}\n" + page.text

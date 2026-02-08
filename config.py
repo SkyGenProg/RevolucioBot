@@ -3,10 +3,7 @@
 import os
 
 WIKIS = [
-    ("vikidia", "fr", "RevolucioBot", False),
-    ("vikidia", "en", "RevolucioBot", False),
-    ("dicoado", "dicoado", "RevolucioBot", False),
-    ("wikipedia", "fr", "RevolucioBot", True),
+    ("localhost", "localhost", "RevolucioBot", False)
 ]
 #WIKIS = [
 #    ("localhost", "localhost", "RevolucioBot", False)
