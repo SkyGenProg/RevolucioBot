@@ -511,10 +511,11 @@ class get_page(pywikibot.Page):
 
         try:
             for rev in self.revisions():
+                comment = re.sub(r"/\*[\s\S]*?\*/", "", rev.comment).strip()
                 if rev.revid == revision_oldid:
                     self.contributor_name = rev.user
                     self.commented = False
-                if self.contributor_name == rev.user and rev.comment != "":
+                if self.contributor_name == rev.user and comment != "":
                     self.commented = True
                 if (revision_oldid2 is None and rev.user != self.contributor_name and (revision_oldid is None or rev.revid <= revision_oldid)) or (revision_oldid2 is not None and rev.revid <= revision_oldid2):
                     self.oldid = rev.revid

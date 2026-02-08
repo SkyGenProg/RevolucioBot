@@ -153,12 +153,14 @@ class wiki_task:
             try:
                 page_name = page_info["title"]
                 ignored = False
-                for page_ignore in self.site.config.get("ignore"):
-                    if page_ignore in page_name:
-                        ignored = True
-                        break
-                if ignored:
-                    continue
+                pages_ignore = self.site.config.get("ignore")
+                if pages_ignore is not None:
+                    for page_ignore in pages_ignore:
+                        if page_ignore in page_name:
+                            ignored = True
+                            break
+                    if ignored:
+                        continue
 
                 page = self.site.page(page_name)
 
@@ -706,15 +708,16 @@ class wiki_task:
                     continue
                 if change.get("type") not in ("edit", "new"):
                     continue
-                ignored = False
-                for page_ignore in self.site.config.get("ignore"):
-                    if page_ignore in change.get("title"):
-                        ignored = True
-                        break
-                if ignored:
-                    continue
-
                 page_name = change.get("title")
+                ignored = False
+                pages_ignore = self.site.config.get("ignore")
+                if pages_ignore is not None:
+                    for page_ignore in pages_ignore:
+                        if page_ignore in page_name:
+                            ignored = True
+                            break
+                    if ignored:
+                        continue
                 page = self.site.page(page_name)
                 if page.special or not page.exists():
                     continue
