@@ -520,6 +520,10 @@ class get_page(pywikibot.Page):
                     self.oldid = rev.revid
                     break
         except Exception:
+            try:
+                pywikibot.error(traceback.format_exc())
+            except UnicodeError:
+                pass
             self.oldid = -1
 
         if self.oldid not in (-1, 0):

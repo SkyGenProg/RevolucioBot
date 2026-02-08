@@ -48,6 +48,12 @@ def _send_embed_chunked(url: Optional[str], embed_base: Dict[str, Any], text: st
         embed["description"] = chunk
         _send_webhook(url, {"embeds": [embed]})
 
+def url_diff(diff: int, oldid: int) -> str:
+    if oldid == -1:
+        return "index.php?diff=" + str(diff)
+    else:
+        return "index.php?diff=" + str(diff) + "&oldid=" + str(oldid)
+
 class wiki_task:
     def __init__(self, site, start_task_day: bool = False, start_task_month: bool = False, ignore_task_month: bool = False, test: bool = False):
         self.site = site
@@ -384,7 +390,7 @@ class wiki_task:
             embed_base = {
                 "title": title,
                 "description": description,
-                "url": page.protocol + "//" + page.url + page.articlepath + "index.php?diff=next&oldid=" + str(page.oldid),
+                "url": page.protocol + "//" + page.url + page.articlepath + url_diff(page.diff, page.oldid),
                 "author": {"name": page.contributor_name},
                 "color": color,
                 "fields": fields,
@@ -423,7 +429,7 @@ class wiki_task:
             embed = {
                 "title": fail_title,
                 "description": "",
-                "url": page.protocol + "//" + page.url + page.articlepath + "index.php?diff=next&oldid=" + str(page.oldid),
+                "url": page.protocol + "//" + page.url + page.articlepath + url_diff(page.diff, page.oldid),
                 "author": {"name": page.contributor_name},
                 "color": 13371938,
             }
@@ -459,7 +465,7 @@ class wiki_task:
         embed_base = {
             "title": title,
             "description": "",
-            "url": page.protocol + "//" + page.url + page.articlepath + "index.php?diff=next&oldid=" + str(page.oldid),
+            "url": page.protocol + "//" + page.url + page.articlepath + url_diff(page.diff, page.oldid),
             "author": {"name": page.contributor_name},
             "color": color,
         }
@@ -503,7 +509,7 @@ class wiki_task:
             return {
                 "title": title,
                 "description": desc,
-                "url": page.protocol + "//" + page.url + page.articlepath + "index.php?diff=next&oldid=" + str(page.oldid),
+                "url": page.protocol + "//" + page.url + page.articlepath + url_diff(page.diff, page.oldid),
                 "author": {"name": page.contributor_name},
                 "color": color,
                 "fields": [{"name": ("Probabilité de copie" if self.site.lang_bot == "fr" else "Probability of copy"), "value": f"{round(prob_WP, 2)} %", "inline": True}],
@@ -513,19 +519,19 @@ class wiki_task:
             check_page = pywikibot.Page(self.site.site, f"User:{self.site.user_wiki}/WP")
             if self.site.lang_bot == "fr":
                 check_page.text = f"""{check_page.text}
-== Possible copie de WP sur {page_name} (diff : {page.oldid}) ==
+== Possible copie de WP sur {page_name} (diff : {page.diff}) ==
 * Date de détection : ~~~~~
 * Page : {page.page_name}
 * Utilisateur : {page.contributor_name}
-* Diff : [[Special:Diff/{page.oldid}]]
+* Diff : [[Special:Diff/{page.diff}]]
 * Contenu copié détecté : {prob_WP} %"""
             else:
                 check_page.text = f"""{check_page.text}
-== Possible copy from WP on {page_name} (diff: {page.oldid}) ==
+== Possible copy from WP on {page_name} (diff: {page.diff}) ==
 * Detection date: ~~~~~
 * Page: {page.page_name}
 * User: {page.contributor_name}
-* Diff: [[Special:Diff/{page.oldid}]]
+* Diff: [[Special:Diff/{page.diff}]]
 * Detected copied content: {prob_WP} %"""
             check_page.save("Mise à jour" if self.site.lang_bot == "fr" else "Update", bot=False, minor=False)
         if prob_WP >= 90:
