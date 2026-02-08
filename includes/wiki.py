@@ -350,12 +350,12 @@ class get_page(pywikibot.Page):
             try:
                 self.contributor_name = self.latest_revision.user
                 self.page_ns = self.namespace()
-                self.oldid = self.latest_revision_id
+                self.diff = self.latest_revision_id
                 self.size = len(self.text)
             except Exception:
                 self.contributor_name = ""
                 self.page_ns = -1
-                self.oldid = None
+                self.diff = None
                 self.size = None
 
         # thresholds
@@ -394,12 +394,16 @@ class get_page(pywikibot.Page):
             else:
                 field_ai = ""
             test_page = pywikibot.Page(self.source.site, f"User:{self.user_wiki}/Tests")
+            if self.oldid == -1:
+                link_diff = f"* Diff : [[Special:Diff/{self.diff}]]"
+            else:
+                link_diff = f"* Diff : [[Special:Diff/{self.oldid}/{self.diff}]]"
             test_page.text = f"""{test_page.text}
-== Vandalisme détecté (diff : {self.oldid}) ==
+== Vandalisme détecté (diff : {self.diff}) ==
 * Date de détection : ~~~~~
 * Page : {self.page_name}
 * Utilisateur : {self.contributor_name}
-* Diff : [[Special:Diff/{self.oldid}]]
+{link_diff}
 * {summary}
 {field_regex}
 {field_ai}"""
@@ -503,29 +507,24 @@ class get_page(pywikibot.Page):
         else:
             text_new = self.text
 
-        oldid = revision_oldid2 if revision_oldid2 is not None else -1
+        self.oldid = revision_oldid2 if revision_oldid2 is not None else -1
 
-        if revision_oldid2 is None:
-            try:
-                for rev in self.revisions():
-                    if rev.comment is not None:
-                        self.commented = True
-                    if rev.user != self.contributor_name and (revision_oldid is None or rev.revid <= revision_oldid):
-                        oldid = rev.revid
-                        break
-            except Exception:
-                oldid = -1
-        else:
+        try:
             for rev in self.revisions():
-                if rev.comment is not None:
+                if rev.revid == revision_oldid:
+                    self.contributor_name = rev.user
+                    self.commented = False
+                if self.contributor_name == rev.user and rev.comment != "":
                     self.commented = True
+                if (revision_oldid2 is None and rev.user != self.contributor_name and (revision_oldid is None or rev.revid <= revision_oldid)) or (revision_oldid2 is not None and rev.revid <= revision_oldid2):
+                    self.oldid = rev.revid
                     break
-                if rev.revid <= revision_oldid:
-                    break
+        except Exception:
+            self.oldid = -1
 
-        if oldid not in (-1, 0):
+        if self.oldid not in (-1, 0):
             self.new_page = False
-            text_old = self.getOldVersion(oldid=oldid)
+            text_old = self.getOldVersion(oldid=self.oldid)
         else:
             self.new_page = True
             text_old = ""

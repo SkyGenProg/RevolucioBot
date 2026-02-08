@@ -146,6 +146,14 @@ class wiki_task:
         for page_info in self.site.diffs_rc:
             try:
                 page_name = page_info["title"]
+                ignored = False
+                for page_ignore in self.site.config.get("ignore"):
+                    if page_ignore in page_name:
+                        ignored = True
+                        break
+                if ignored:
+                    continue
+
                 page = self.site.page(page_name)
 
                 if page.special or not page.exists():
@@ -376,7 +384,7 @@ class wiki_task:
             embed_base = {
                 "title": title,
                 "description": description,
-                "url": page.protocol + "//" + page.url + page.articlepath + "index.php?diff=prev&oldid=" + str(page.oldid),
+                "url": page.protocol + "//" + page.url + page.articlepath + "index.php?diff=next&oldid=" + str(page.oldid),
                 "author": {"name": page.contributor_name},
                 "color": color,
                 "fields": fields,
@@ -415,7 +423,7 @@ class wiki_task:
             embed = {
                 "title": fail_title,
                 "description": "",
-                "url": page.protocol + "//" + page.url + page.articlepath + "index.php?diff=prev&oldid=" + str(page.oldid),
+                "url": page.protocol + "//" + page.url + page.articlepath + "index.php?diff=next&oldid=" + str(page.oldid),
                 "author": {"name": page.contributor_name},
                 "color": 13371938,
             }
@@ -451,7 +459,7 @@ class wiki_task:
         embed_base = {
             "title": title,
             "description": "",
-            "url": page.protocol + "//" + page.url + page.articlepath + "index.php?diff=prev&oldid=" + str(page.oldid),
+            "url": page.protocol + "//" + page.url + page.articlepath + "index.php?diff=next&oldid=" + str(page.oldid),
             "author": {"name": page.contributor_name},
             "color": color,
         }
@@ -495,7 +503,7 @@ class wiki_task:
             return {
                 "title": title,
                 "description": desc,
-                "url": page.protocol + "//" + page.url + page.articlepath + "index.php?diff=prev&oldid=" + str(page.oldid),
+                "url": page.protocol + "//" + page.url + page.articlepath + "index.php?diff=next&oldid=" + str(page.oldid),
                 "author": {"name": page.contributor_name},
                 "color": color,
                 "fields": [{"name": ("Probabilité de copie" if self.site.lang_bot == "fr" else "Probability of copy"), "value": f"{round(prob_WP, 2)} %", "inline": True}],
@@ -691,6 +699,13 @@ class wiki_task:
                 if change.get("bot"):
                     continue
                 if change.get("type") not in ("edit", "new"):
+                    continue
+                ignored = False
+                for page_ignore in self.site.config.get("ignore"):
+                    if page_ignore in change.get("title"):
+                        ignored = True
+                        break
+                if ignored:
                     continue
 
                 page_name = change.get("title")
