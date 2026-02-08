@@ -344,6 +344,7 @@ class get_page(pywikibot.Page):
         self.url = fullurl.split("/")[2]
         self.articlepath = self.source.site.siteinfo["general"]["articlepath"].replace("$1", "")
         self.scriptpath = self.source.site.siteinfo["general"]["scriptpath"]
+        self.commented = None
 
         if not self.special:
             try:
@@ -395,6 +396,7 @@ class get_page(pywikibot.Page):
             test_page = pywikibot.Page(self.source.site, f"User:{self.user_wiki}/Tests")
             test_page.text = f"""{test_page.text}
 == Vandalisme détecté (diff : {self.oldid}) ==
+* Date de détection : ~~~~~
 * Page : {self.page_name}
 * Utilisateur : {self.contributor_name}
 * Diff : [[Special:Diff/{self.oldid}]]
@@ -427,7 +429,11 @@ class get_page(pywikibot.Page):
     def warn_revert(self, summary: str = "") -> None:
         self.get_warnings_user()
 
-        if self.warn_level >= 2:
+        if self.warn_level >= 3:
+            self.talk.text += f"\n{{{{subst:User:{self.user_wiki}/Vandalism3|{self.page_name}|{summary}}}}} <!-- level=3 -->"
+            self.talk.save("Avertissement 3" if self.lang_bot == "fr" else "Warning 3", bot=False, minor=False)
+
+        elif self.warn_level == 2:
             alert = pywikibot.Page(self.source.site, self.alert_page)
             alert.text += f"\n{{{{subst:User:{self.user_wiki}/Alert|{self.contributor_name}}}}}"
             alert.save("Alerte vandalisme" if self.lang_bot == "fr" else "Vandalism alert", bot=False, minor=False)
@@ -491,6 +497,7 @@ class get_page(pywikibot.Page):
         revision_oldid: new version / version to check
         revision_oldid2: old version / version to compare against
         """
+        self.commented = False
         if revision_oldid is not None:
             text_new = self.getOldVersion(oldid=revision_oldid)
         else:
@@ -498,14 +505,23 @@ class get_page(pywikibot.Page):
 
         oldid = revision_oldid2 if revision_oldid2 is not None else -1
 
-        if oldid is None or oldid == -1:
+        if revision_oldid2 is None:
             try:
                 for rev in self.revisions():
+                    if rev.comment is not None:
+                        self.commented = True
                     if rev.user != self.contributor_name and (revision_oldid is None or rev.revid <= revision_oldid):
                         oldid = rev.revid
                         break
             except Exception:
                 oldid = -1
+        else:
+            for rev in self.revisions():
+                if rev.comment is not None:
+                    self.commented = True
+                    break
+                if rev.revid <= revision_oldid:
+                    break
 
         if oldid not in (-1, 0):
             self.new_page = False
@@ -562,6 +578,7 @@ class get_page(pywikibot.Page):
             "add_regex_ns_all": f"regex_vandalisms_all_{fam}_{lang}.txt",
             "add_regex_ns_all_no_ignore_case": f"regex_vandalisms_all_{fam}_{lang}_no_ignore_case.txt",
             "del_regex_ns_0": f"regex_vandalisms_del_0_{fam}_{lang}.txt",
+            "del_regex_ns_0_no_comment": f"regex_vandalisms_del_0_{fam}_{lang}_no_comment.txt",
             "size": f"size_vandalisms_0_{fam}_{lang}.txt",
             "diff": f"diff_vandalisms_0_{fam}_{lang}.txt",
         }
@@ -582,6 +599,9 @@ class get_page(pywikibot.Page):
             vand += self.score_regex_count("add_regex_ns_0", files["add_regex_ns_0"], text_new, text_old, re.IGNORECASE)
             # delete regex on ns 0
             vand += self.score_regex_count("del_regex_ns_0", files["del_regex_ns_0"], text_old, text_new, re.IGNORECASE)
+            # delete regex on ns 0 (no comment)
+            if not self.commented:
+                vand += self.score_regex_count("del_regex_ns_0_no_comment", files["del_regex_ns_0_no_comment"], text_old, text_new, re.IGNORECASE)
             # size rules on ns 0
             for size_s, score in self._parse_scored_lines(_read_lines(files["size"])):
                 try:
@@ -591,16 +611,17 @@ class get_page(pywikibot.Page):
                 if len(text_new) < size:
                     self.vandalism_score_detect.append(["size", score, size_s])
                     vand += score
-            # diff rules on ns 0
-            for diff_s, score in self._parse_scored_lines(_read_lines(files["diff"])):
-                try:
-                    d = int(diff_s)
-                except ValueError:
-                    continue
-                delta = len(text_new) - len(text_old)
-                if (d < 0 and delta <= d) or (d >= 0 and delta >= d):
-                    self.vandalism_score_detect.append(["diff", score, diff_s])
-                    vand += score
+            # diff rules on ns 0 (no comment)
+            if not self.commented:
+                for diff_s, score in self._parse_scored_lines(_read_lines(files["diff"])):
+                    try:
+                        d = int(diff_s)
+                    except ValueError:
+                        continue
+                    delta = len(text_new) - len(text_old)
+                    if (d < 0 and delta <= d) or (d >= 0 and delta >= d):
+                        self.vandalism_score_detect.append(["diff", score, diff_s])
+                        vand += score
 
         return vand
 
@@ -609,7 +630,7 @@ class get_page(pywikibot.Page):
         for kind, score, payload in self.vandalism_score_detect:
             if kind == "add_regex_ns_0" or kind == "add_regex_ns_all" or kind == "add_regex_ns_all_no_ignore_case":
                 detected_lines.append(f"{score} - + {payload}")
-            elif kind == "del_regex_ns_0":
+            elif kind == "del_regex_ns_0" or kind == "del_regex_ns_0_no_comment":
                 detected_lines.append(f"{score} - - {payload}")
             elif kind == "size":
                 detected_lines.append(f"{score} - size < {payload}")
@@ -647,7 +668,7 @@ class get_page(pywikibot.Page):
         matcher = difflib.SequenceMatcher(a=text_to_check, b=page_text_WP)
         score = sum(m.size for m in matcher.get_matching_blocks())
 
-        return self.check_WP(page_name_WP, diff, "simple") if score < 10 and lang == "en" else score
+        return self.check_WP(page_name_WP, diff, "simple") if score < 50 and lang == "en" else score
 
     def edit_replace(self) -> int:
         file1 = f"replace1_{self.source.family}_{self.lang}.txt"

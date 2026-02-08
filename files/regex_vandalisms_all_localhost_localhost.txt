@@ -1,0 +1,256 @@
+\bfrenchi?e?s?\b:-1
+\bugly\b:-1
+stupid:-3
+\bomg:-3
+\bcock:-3
+\bass\b:-3
+\bpoop\b:-3
+hey ?hey:-5
+\bsuck:-5
+\bshit:-5
+\bpimp\b:-5
+\b1337\b:-5
+\bgay\b:-5
+\bno-?lifes?\b:-5
+\bbitch(es)?\b:-10
+\basshole:-10
+\bfuck:-10
+\bfuck fuck:-10
+\bwtf\b:-10
+\bin hell\b:-10
+\bsux+e?\b:-20
+\bbig (\w+ )?cock\b:-30
+\b(is|are) gay\b:-30
+\bfuck (you|that):-30
+what the fuck:-30
+\bsurrender monkey:-30
+\bfaggot\b:-30
+\b(mother|mutha)fuck(er|ing):-30
+shut up:-30
+assmonkey:-30
+\bnigg(er|a):-30
+thanks for sharing:-30
+i laugh at:-30
+Пидор:-30
+Пиздец:-30
+педераст:-30
+Пиздец:-30
+говно:-30
+ХУЙНЯ:-30
+Хуйло:-30
+хуй:-30
+Гамнюк:-30
+Пиздец:-30
+Хуйло:-30
+Половой член:-30
+БЛаблабла:-30
+ТЫ ПЕДЕРАСТ:-30
+Пидор:-30
+\banes?\b:-1
+\bcopine:-1
+\bbatard:-1
+\bsales?\b:-1
+\bcon\b:-1
+\bpogne:-1
+\bbai[sz]e(r|s|nt)?\b:-1
+\bchattes?\b:-1
+\bparasites?\b:-1
+\bfumiste\b:-1
+\bmeprisant\b:-1
+\bprofiteur\b:-1
+\bperver[st]\b:-1
+\bassassin:-1
+\blachete:-1
+\bperfidie:-1
+\bhypocri(te|sie):-1
+\bbidons?\b:-1
+\bnullite\b:-1
+\binfecte?s?\b:-1
+\bpenis\b:-3
+\bsexe\b:-3
+\banus\b:-3
+\bvagin\b:-3
+\bsodomi:-3
+\bpourrit?e?s?\b:-3
+\bsuce\b:-3
+\bbeauf\b:-3
+\bstun\b:-3
+\bbranle:-3
+\bmeuf(s)?\b:-3
+\bculs?\b:-3
+\bpd\b:-3
+\bpede\b:-3
+\babruti:-3
+\bimbecile:-3
+\binculte:-3
+\bincompeten:-3
+\bdebile?s?\b:-3
+\bcretin:-3
+\blapins? cretin:+10
+\btapette:-3
+\bidiot\b:-3
+\bfoute?(nt)?\b:-3
+\bpowa+\b:-3
+\bpour+aves?:-3
+\bchiot+es?\b:-3
+pedophile:-3
+\bsuce(use)\b:-3
+\bsodomi:-3
+\bobsede:-3
+\bvomi\b:-3
+\bface de\b:-3
+\bbander\b:-3
+\bteub\b:-5
+\bbi+t+e:-5
+\bcon+erie:-5
+\bsaloperie:-5
+\bpu?ta?in:-5
+\bchie(r|nt|s)?\b:-5
+\btrop nul\b:-5
+\brien a rien\b:-5
+\bai marre\b:-5
+\bglandus?\b:-5
+\bcapos?\b:-5
+\bputes?\b:-10
+\bputains?\b:-10
+\bsal(aud|ope):-10
+\bosti\b:-10
+\btabarna:-10
+\bcriss+\b:-10
+\bfif\b:-10
+\b(de)?caliss:-10
+\bemm?erde:-10
+\bcaca\b:-10
+\bpipi\b:-10
+\bzizis?\b:-10
+\bprout:-10
+\bcrétin\b:-10
+\bfdp\b:-10
+\bpetasses?:-20
+\bpuputes?\b:-20
+\bco+n+a+(r+|s+):-20
+\bconnes?\b:-20
+(alain|georges) connes:+30
+\bcons\b:-20
+\{\{cons\}\}:+20
+\bput1:-20
+\bd(e )?la balle\b:-20
+\b(un|mon|son|ton|de|du|le|fait) caca\b:-20
+\bm[ae]+rdr?es?\b:-20
+\bmadres?\b:+20
+\bmerdi(que|er):-20
+\bta mere\b:-20
+\bla mere a\b:-20
+\sniquer?s?\b:-20
+\snike(r|nt)\b:-20
+\bnik\b:-20
+\bencule:-20
+\bcouil+e:-20
+\bsen fou\b:-20
+\btres stupide\b:-20
+gros nul:-20
+\bgros tas\b:-20
+\bgrosse pine\b:-20
+\bqui pue?\b:-20
+\benfoire\b:-20
+'enfoires\b:-20
+\bcasse\s+toi:-20
+\btarlou[sz]e:-20
+\bpisse(r|nt)?\b:-20
+t'?es laid:-20
+t'?es moche:-20
+\bfoufoune:-20
+ta gueule:-20
+fil?s de pute?:-20
+\bpeniss+\b:-20
+\bni(k|qu)e? ta mere\b:-30
+\b(ma|ta) bit+e\b:-30
+\b(mon|ton|du) (anus|cul?)\b:-30
+\bta mere en\b:-30
+(de|de la|dla|grosses?) m[ae]+r+de\b:-30
+\b(pauvre|sombre|gros|petit) crétin\b:-30
+(de|petites?|grosses?) tapette:-30
+(de|petits?|gros|sales?|vrais?|pauvres?) cons?\b:-30
+(grosse|sale|vieille)s? putes?:-30
+pauv[' ]cons?\b:-30
+\best une? con(ne)?\b:-30
+\btu pue?s?\b:-30
+gros (naze|caca):-30
+grosses? salopes?:-30
+\bde pute\b:-30
+faire foutre:-30
+trous? d[eu] cul:-30
+\bbougnoul:-30
+\byoupin:-30
+\bsuce des bite:-30
+\b(je|tu) suces?:-30
+\btu couches?\b:-30
+\bvien[st]? coucher?:-30
+\bta gu?eu?le?\b:-30
+\best gay\b:-30
+\bpauvre? daube:-30
+\bsalebite\b:-30
+\bfnord\b:-100
+petit polisson:-30
+thesard stagiaire:-30
+\bajaan\b:-30
+mario scolas:-30
+christian de clerck:-30
+mehdi g(ha|ah)zouz:-30
+tonton elio:-30
+tonton bradipus:-30
+\bolmeclem\b:-30
+\:noel\::-30
+\:hap\::-30
+\bcisla\b:-30
+reseau [ck]ormier:-30
+polynomes? de boubak+er:-30
+nezumi\.dumousseau\.free\.fr:-30
+Obama_in_08:-30
+\bgrawp:-30
+nazma f....e:-30
+\bhotel morro de sao paulo:-30
+a message from god almighty:-30
+saezlive:-30
+atasantesaez:-30
+franck laroze:-30
+wikipedia.+google.+pedophil:-30
+luligu:-30
+penisbird:-30
+clem\S*wiki:-30
+\bsophonpanich:-30
+clotilde chambragne:-30
+victor hugo*poitiers:-30
+claudine bourdeau:-30
+latino? moderne:-30
+pelican shit:-30
+www\.evidenz\.fr:-30
+murder suspect:-30
+ernst12:-30
+thierry olmec:-30
+bobonne elfix:-30
+chasseur de pedophiles:-30
+depeceur de bergen:-30
+adrienne serein:-30
+janseniste de carnaval:-30
+nous sommes des musulmans qui sont tres attaches a leur religion:-30
+redoutable psychopathe bien connu:-30
+madame nazma:-30
+recemment dans une? asile psychiatrique :-30
+toute la splendeur de la culture pornographique:-30
+penis*\.jpg:-30
+ejaculation*\.jpg:-30
+les photos de mon sexe:-30
+la Nazma:-30
+se mansturpant dessus:-30
+gros volatile originaire du Pakistan:-30
+\bbalg[Oo0]r\b:-30
+interdiction de diff[iu]sion sur ce site:-30
+texte sous copyright dont ompi:-30
+assirifix armand:-30
+Sulandav:-25
+onche? onche?:-30
+\bjav[ea]d rame?zani\b:-30
+\bCONCHITA:-30
+==INFRINGEMENT==:-30
+\bW\d00\b:-30
