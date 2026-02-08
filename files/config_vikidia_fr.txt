@@ -1,1 +1,1 @@
-{"lang_bot": "fr", "trusted_groups": "sysop|patroller|autopatrol|bot", "alert_page": "Project:Alerte/26", "clear_talks": true, "check_WP": true, "correct_redirects": true}
+{"lang_bot": "fr", "trusted_groups": "sysop|patroller|autopatrol|bot", "alert_page": "Project:Alerte/26", "clear_talks": true, "check_WP": true, "correct_redirects": true, "ignore": ["Vikidia:Bac à sable", "Vikidia:Livre d'or"]}

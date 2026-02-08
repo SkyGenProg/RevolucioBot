@@ -1,8 +1,10 @@
 ﻿''':-1
-\[\[(fichier|image):-1
+\[\[(fichier|image|cat[eé]gorie]):-1
 \<ref:-2
+\{\{lien:-2
 \{\{article:-2
 \=\=:-2
 \{\{ébauche:-5
-\{\{boîte:-5
 \{\{.+box:-5
+\{\{références:-5
+\<gallery:-5

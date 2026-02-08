@@ -1,5 +1,5 @@
 ﻿''':-1
-\[\[(fichier|image):-1
+\[\[(fichier|image|cat[eé]gorie]):-1
 \<ref:-2
 \{\{article:-2
 \=\=:-2
