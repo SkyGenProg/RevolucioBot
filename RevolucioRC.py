@@ -60,8 +60,8 @@ if __name__ == "__main__":
             vandalism_score = page.vandalism_score(int(page_info["revid"]), int(page_info["old_revid"]))
             detected = page.get_vandalism_report()
             pywikibot.output(detected)
-            pywikibot.output("Score : " + str(vandalism_score))
             reverted = "mw-reverted" in page_info["tags"]
+            pywikibot.output("Score : ", str(vandalism_score), ", reverted : ", reverted)
             if args.use_ai:
                 revision1 = page.get_revision(int(page_info["old_revid"]))
                 revision2 = page.get_revision(int(page_info["revid"]))
