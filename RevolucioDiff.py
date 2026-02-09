@@ -14,7 +14,7 @@ required_arg.add_argument("--lang", required=True)
 arg.add_argument("--user")
 required_arg.add_argument("--page", required=True)
 required_arg.add_argument("--diff", required=True)
-required_arg.add_argument("--oldid")
+arg.add_argument("--oldid")
 args = arg.parse_args()
 
 client = Mistral(api_key=api_key)
