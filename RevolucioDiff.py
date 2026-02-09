@@ -15,6 +15,7 @@ arg.add_argument("--user")
 required_arg.add_argument("--page", required=True)
 required_arg.add_argument("--diff", required=True)
 arg.add_argument("--oldid")
+arg.add_argument("--use_ai")
 args = arg.parse_args()
 
 client = Mistral(api_key=api_key)
@@ -33,23 +34,22 @@ if __name__ == "__main__":
     detected = page.get_vandalism_report()
     pywikibot.output(detected)
     pywikibot.output("Score : " + str(vandalism_score))
-    #pywikibot.output("Diff : ")
-    revision1 = page.get_revision(int(args.diff))
-    revision2 = page.get_revision(page.oldid)
-    diff = difflib.unified_diff((revision2["text"] or "").splitlines(), (revision1["text"] or "").splitlines())
-    diff_text = "\n".join(diff)
-    #pywikibot.output(diff)
-    prompt = prompt_ai(args.lang, revision1.timestamp, page.url, page.page_name, diff_text, revision1.comment)
-    pywikibot.output("Prompt :")
-    pywikibot.output(prompt)
-    pywikibot.output("Analyse de l'IA : ")
-    chat_response = client.chat.complete(
-        model = model,
-        messages = [
-            {
-                "role": "user",
-                "content": prompt,
-            },
-        ]
-    )
-    pywikibot.output(chat_response.choices[0].message.content)
+    if args.use_ai:
+        revision1 = page.get_revision(int(args.diff))
+        revision2 = page.get_revision(page.oldid)
+        diff = difflib.unified_diff((revision2["text"] or "").splitlines(), (revision1["text"] or "").splitlines())
+        diff_text = "\n".join(diff)
+        prompt = prompt_ai(args.lang, revision1.timestamp, page.url, page.page_name, diff_text, revision1.comment)
+        pywikibot.output("Prompt :")
+        pywikibot.output(prompt)
+        pywikibot.output("Analyse de l'IA : ")
+        chat_response = client.chat.complete(
+            model = model,
+            messages = [
+                {
+                    "role": "user",
+                    "content": prompt,
+                },
+            ]
+        )
+        pywikibot.output(chat_response.choices[0].message.content)

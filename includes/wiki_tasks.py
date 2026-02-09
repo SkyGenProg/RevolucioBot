@@ -174,7 +174,7 @@ class wiki_task:
                     try:
                         self.vandalism_score = page.vandalism_score(page_info["revid"], page_info["old_revid"])
                         detailed_diff_info = self.site.add_detailed_diff_info(
-                            detailed_diff_info, page_info, page.text_page_oldid, page.text_page_oldid2, self.vandalism_score
+                            detailed_diff_info, page_info, page.text_page_oldid, page.text_page_oldid2, self.vandalism_score, "mw-reverted" in page_info["tags"]
                         )
                     except Exception:
                         _safe_log_exc()

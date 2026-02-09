@@ -249,7 +249,7 @@ class get_wiki:
             rclimit=str(n_edits),
             rcend=str(timestamp),
             rcprop="timestamp|title|user|ids|comment|tags",
-            rctype="edit|new|categorize",
+            rctype="edit|new",
             rcshow="!bot",
             rcstart=str(timestamp_start) if timestamp_start else None,
             rcnamespace=namespace,
@@ -281,9 +281,10 @@ class get_wiki:
         old: str,
         new: str,
         vandalism_score: int,
+        reverted: bool
     ) -> Dict[int, Dict[str, Any]]:
         revid = page_info["revid"]
-        entry = diff_info.setdefault(revid, {"reverted": False, "next_revid": -1})
+        entry = diff_info.setdefault(revid, {"next_revid": -1})
         entry.update(
             {
                 "score": vandalism_score,
@@ -293,27 +294,9 @@ class get_wiki:
                 "page": page_info.get("title", ""),
                 "old": old,
                 "new": new,
+                "reverted": reverted
             }
         )
-
-        # Heuristic: consider a series of edits by the same user as reverted if the next revision got reverted.
-        if not entry["reverted"]:
-            next_id = entry.get("next_revid", -1)
-            if (
-                next_id > 0
-                and not entry["trusted"]
-                and diff_info.get(next_id, {}).get("reverted")
-                and page_info.get("user")
-                and diff_info.get(next_id, {}).get("user") == page_info.get("user")
-            ):
-                entry["reverted"] = True
-
-        old_revid = page_info.get("old_revid", 0)
-        if old_revid not in (0, -1):
-            prev = diff_info.setdefault(old_revid, {"reverted": False, "next_revid": revid})
-            comment = page_info.get("comment", "").lower()
-            if comment:
-                prev["reverted"] = any(k in comment for k in ("revert", "révoc", "cancel", "annul"))
         return diff_info
 
 
@@ -560,13 +543,13 @@ class get_page(pywikibot.Page):
             out.append((key, score))
         return out
 
-    def score_regex_count(self, type_regex, filename, text_new, text_old, flags):
+    def score_regex_count(self, type_regex, filename, text_new, text_old, flags, ignore_if_regex_detected_in_old_version=False):
         score_detected = 0
         for pattern, score in self._parse_scored_lines(_read_lines(filename)):
             hits = re.findall(pattern, text_new, flags)
             hits_old = re.findall(pattern, text_old, flags)
             times_pattern = len(hits)-len(hits_old)
-            if times_pattern > 0:
+            if (not ignore_if_regex_detected_in_old_version or len(hits_old) == 0) and times_pattern > 0:
                 score_pattern = score*times_pattern
                 score_detected += score_pattern
                 self.vandalism_score_detect.append([type_regex, score, f"{pattern} ({score}x{times_pattern} = {score_pattern})"])
@@ -600,7 +583,7 @@ class get_page(pywikibot.Page):
 
         if self.page_ns == 0:
             # add regex on ns 0
-            vand += self.score_regex_count("add_regex_ns_0", files["add_regex_ns_0"], text_new, text_old, re.IGNORECASE)
+            vand += self.score_regex_count("add_regex_ns_0", files["add_regex_ns_0"], text_new, text_old, re.IGNORECASE, True)
             # delete regex on ns 0
             vand += self.score_regex_count("del_regex_ns_0", files["del_regex_ns_0"], text_old, text_new, re.IGNORECASE)
             # delete regex on ns 0 (no comment)
