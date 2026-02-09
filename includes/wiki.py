@@ -264,6 +264,20 @@ class get_wiki:
                 if show_trusted or (user and user not in self.trusted):
                     self.diffs_rc.append(contrib)
 
+    def rights(self, contributor_name: str):
+        url = _api_url(
+            self.protocol,
+            self.url,
+            self.scriptpath,
+            action="query",
+            list="users",
+            ususers=urllib.parse.quote(contributor_name),
+            usprop="rights",
+            format="json",
+        )
+        j = json.loads(request_site(url))
+        return j.get("query", {}).get("users", [{}])[0].get("rights", []) or []
+
     # ---- wrappers
 
     def page(self, page_wiki: str) -> "get_page":
@@ -465,18 +479,7 @@ class get_page(pywikibot.Page):
 
     def contributor_rights(self) -> List[str]:
         if self.list_contributor_rights is None:
-            url = _api_url(
-                self.protocol,
-                self.url,
-                self.scriptpath,
-                action="query",
-                list="users",
-                ususers=urllib.parse.quote(self.contributor_name),
-                usprop="rights",
-                format="json",
-            )
-            j = json.loads(request_site(url))
-            self.list_contributor_rights = j.get("query", {}).get("users", [{}])[0].get("rights", []) or []
+            self.list_contributor_rights = self.source.rights(self.contributor_name)
         return self.list_contributor_rights
 
     def get_text_page_old(self, revision_oldid: Optional[int] = None, revision_oldid2: Optional[int] = None) -> None:

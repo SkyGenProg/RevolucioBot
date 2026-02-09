@@ -28,6 +28,7 @@ if __name__ == "__main__":
         site = get_wiki(args.wiki, args.lang, args.user)
     else:
         site = get_wiki(args.wiki, args.lang, "RevolucioBot")
+    site.get_trusted()
     site.rc_pages(timestamp=str((datetime.now() - timedelta(seconds=int(args.limit))).timestamp()), rctoponly=False)
     output_file = "ia_wiki_results.csv"
     file_exists = os.path.isfile(output_file)
@@ -52,16 +53,21 @@ if __name__ == "__main__":
             prog = 100*site.diffs_rc.index(page_info)/len(site.diffs_rc)
             pywikibot.output(f"{prog} %")
             page_name = page_info["title"]
+            user = page_info["user"]
+            if user in site.trusted:
+                continue
+            user_rights = site.rights(user)
+            if "autoconfirmed" in user_rights:
+                continue
             page = site.page(page_name)
-            user_rights = page.contributor_rights()
-            if page.special or not page.exists() or page.isRedirectPage() or "autoconfirmed" in user_rights:
+            if page.special or not page.exists() or page.isRedirectPage():
                 continue
             pywikibot.output("Page : " + page_name)
             vandalism_score = page.vandalism_score(int(page_info["revid"]), int(page_info["old_revid"]))
             detected = page.get_vandalism_report()
             pywikibot.output(detected)
             reverted = "mw-reverted" in page_info["tags"]
-            pywikibot.output("Score : ", str(vandalism_score), ", reverted : ", reverted)
+            pywikibot.output(f"Score : {vandalism_score}, reverted : {reverted}")
             if args.use_ai:
                 revision1 = page.get_revision(int(page_info["old_revid"]))
                 revision2 = page.get_revision(int(page_info["revid"]))
