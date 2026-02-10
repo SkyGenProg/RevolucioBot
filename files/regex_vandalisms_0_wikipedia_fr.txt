@@ -119,10 +119,6 @@ plus (beau|belle) du monde:-10
 \bc bon\b:-10
 \bde reve\b:-10
 \bgros gros:-10
-[^\s]XD\b:-10
-[^\s]\:p\b:-10
-[^\s]=D\b:-10
-[^\s]\:D\b:-10
 rofl\b:-10
 \boh (oui|non):-10
 \btes com+s?\b:-10
