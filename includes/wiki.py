@@ -569,8 +569,7 @@ class get_page(pywikibot.Page):
             "add_regex_ns_all_no_ignore_case": f"regex_vandalisms_all_{fam}_{lang}_no_ignore_case.txt",
             "del_regex_ns_0": f"regex_vandalisms_del_0_{fam}_{lang}.txt",
             "del_regex_ns_0_no_comment": f"regex_vandalisms_del_0_{fam}_{lang}_no_comment.txt",
-            "size": f"size_vandalisms_0_{fam}_{lang}.txt",
-            "diff": f"diff_vandalisms_0_{fam}_{lang}.txt",
+            "size": f"size_vandalisms_0_{fam}_{lang}.txt"
         }
         for f_type in files:
             _ensure_file(files[f_type])
@@ -603,14 +602,14 @@ class get_page(pywikibot.Page):
                     vand += score
             # diff rules on ns 0 (no comment)
             if not self.commented:
-                for diff_s, score in self._parse_scored_lines(_read_lines(files["diff"])):
-                    try:
-                        d = int(diff_s)
-                    except ValueError:
-                        continue
-                    delta = len(text_new) - len(text_old)
-                    if (d < 0 and delta <= d) or (d >= 0 and delta >= d):
-                        self.vandalism_score_detect.append(["diff", score, diff_s])
+                delta = len(text_new) - len(text_old)
+                if delta < 0:
+                    bytes_uncommented_remove = self.source.config.get("bytes_uncommented_remove", 500)
+                    diff_s = -delta//bytes_uncommented_remove
+                    score_uncommented_remove = self.source.config.get("score_uncommented_remove", -1)
+                    score = score_uncommented_remove*diff_s
+                    if score != 0:
+                        self.vandalism_score_detect.append(["diff", score, -diff_s*bytes_uncommented_remove])
                         vand += score
 
         return vand
