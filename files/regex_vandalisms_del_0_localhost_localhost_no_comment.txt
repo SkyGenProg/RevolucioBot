@@ -5,6 +5,7 @@
 \{\{article:-2
 \=\=:-2
 \{\{ébauche:-5
-\{\{.+box:-5
-\{\{références:-5
+\{\{taxobox:-5
 \<gallery:-5
+\{\{références:-10
+(?s)\{\{Infobox[^}]*?\n(.*?)\n\}\}:-10
