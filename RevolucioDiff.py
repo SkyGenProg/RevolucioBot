@@ -34,6 +34,7 @@ if __name__ == "__main__":
     detected = page.get_vandalism_report()
     pywikibot.output(detected)
     pywikibot.output("Score : " + str(vandalism_score))
+    pywikibot.output("Révoqué précédemment : " + str(page.user_previous_reverted))
     if args.use_ai:
         revision1 = page.get_revision(int(args.diff))
         revision2 = page.get_revision(page.oldid)

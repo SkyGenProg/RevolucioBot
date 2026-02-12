@@ -333,6 +333,7 @@ class get_page(pywikibot.Page):
         self.text_page_oldid2: Optional[str] = None
         self.vandalism_score_detect: List[List[Any]] = []
         self.vand_to_revert = False
+        self.user_previous_reverted = False
         self.reverted = False
         self.list_contributor_rights = None
 
@@ -465,7 +466,7 @@ class get_page(pywikibot.Page):
             self.vand_to_revert = True
         elif vand <= self.limit2 and "autoconfirmed" not in user_rights:
             self.get_warnings_user()
-            self.vand_to_revert = self.warn_level > 0
+            self.vand_to_revert = self.warn_level > 0 or self.user_previous_reverted
         else:
             self.vand_to_revert = False
         return vand
@@ -505,6 +506,7 @@ class get_page(pywikibot.Page):
                     self.commented = True
                 if (revision_oldid2 is None and rev.user != self.contributor_name and (revision_oldid is None or rev.revid <= revision_oldid)) or (revision_oldid2 is not None and rev.revid <= revision_oldid2):
                     self.oldid = rev.revid
+                    self.user_previous_reverted = ("mw-rollback" in rev.tags or "mw-undo"  in rev.tags or "mw-manual-revert" in rev.tags) and self.contributor_name in rev.comment and self.user_wiki != rev.user
                     break
         except Exception:
             try:
