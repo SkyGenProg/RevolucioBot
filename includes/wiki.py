@@ -497,7 +497,7 @@ class get_page(pywikibot.Page):
         self.oldid = revision_oldid2 if revision_oldid2 is not None else -1
 
         try:
-            for rev in self.revisions():
+            for rev in self.revisions(total=50):
                 comment = re.sub(r"/\*[\s\S]*?\*/", "", rev.comment).strip()
                 if rev.revid == revision_oldid:
                     self.contributor_name = rev.user
