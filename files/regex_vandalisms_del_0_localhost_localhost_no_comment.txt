@@ -8,4 +8,4 @@
 \{\{taxobox:-5
 \<gallery:-5
 \{\{références:-10
-(?s)\{\{Infobox[^}]*?\n(.*?)\n\}\}:-10
+(?s)\{\{Infobox[^}]*?\n(.*?)\n\}\}:-20
