@@ -1,4 +1,6 @@
 ''':-1
-\[\[(file|category):-1
 \<ref:-2
-\=\=:-2
+\=\=(\=)?:-3
+file\::-3
+\[\[category\::-3
+\<gallery:-5

@@ -1,9 +1,11 @@
 ﻿''':-1
-\[\[(fichier|image|cat[eé]gorie]):-1
 \<ref:-2
 \{\{lien:-2
 \{\{article:-2
-\=\=:-2
+\{\{citation:-2
+\=\=(\=)?:-3
+(fichier|image|file)\::-3
+\[\[cat[eé]gorie\::-3
 \{\{ébauche:-5
 \{\{taxobox:-5
 \<gallery:-5
