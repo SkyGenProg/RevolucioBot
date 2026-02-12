@@ -28,7 +28,7 @@ cite web:+3
 &lt;ref:+10
 \|\s*.+\s*=\s*([^|}]+):+1
 \{\{[\s\S]+?\}\}:+2
-\{\{[Ss]uppression:+5
+\{\{([Ss]uppression|SI):+5
 \{\{[Pp]ortail:+5
 \{\{[Éé]bauche:+3
 \{\{[Àà] supprimer:+5
