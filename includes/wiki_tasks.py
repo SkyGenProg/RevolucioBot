@@ -451,7 +451,7 @@ class wiki_task:
             color = 13371938
         elif self.proba_ai >= page.limit_ai2 and "autoconfirmed" not in user_rights:
             page.get_warnings_user()
-            if page.warn_level > 0 and not page.reverted:
+            if (page.warn_level > 0 or page.user_previous_reverted) and not page.reverted:
                 page.revert(f"Modification non-constructive détectée par IA à {self.proba_ai} %" if self.site.lang_bot == "fr" else f"Non-constructive edit detected by AI ({self.proba_ai} %)", test, result_ai)
                 color = 13371938
             else:
