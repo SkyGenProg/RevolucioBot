@@ -76,8 +76,6 @@ bonjour:-5
 \bkeske\b:-5
 \bmecs?\b:-5
 \bn(oo+|00+)bs?\b:-5
-\byo\b:-5
-yo yo ma:+10
 \bjte\b:-5
 \bmoches?\b:-5
 \bhorribles?\b:-5
