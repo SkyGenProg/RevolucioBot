@@ -1,13 +1,13 @@
 ﻿'''.+''':-1
+\{\{ébauche:-2
 \<ref:-2
 \{\{lien:-2
 \{\{article:-2
 \{\{citation:-2
 == .+ ==:-2
+\{\{taxobox:-2
 (fichier|image|file)\::-3
 \[\[cat[eé]gorie\::-3
-\{\{ébauche:-5
-\{\{taxobox:-5
 \<gallery:-5
 \{\{références:-10
-(?s)\{\{Infobox[^}]*?\n(.*?)\n\}\}:-20
+(?s)\{\{Infobox[^}]*?\n(.*?)\n\}\}:-10

@@ -1,11 +1,11 @@
 ﻿'''.+''':-1
+\{\{ébauche:-2
 \<ref:-2
 \{\{lien:-2
 \{\{article:-2
 == .+ ==:-2
 (fichier|image|file)\::-3
 \[\[cat[eé]gorie\::-3
-\{\{ébauche:-5
 \<gallery:-5
 \{\{références:-10
-(?s)\{\{(Infobox|Boîte)[^}]*?\n(.*?)\n\}\}:-20
+(?s)\{\{(Infobox|Boîte)[^}]*?\n(.*?)\n\}\}:-10
