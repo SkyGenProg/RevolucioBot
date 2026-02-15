@@ -1,7 +1,6 @@
 ﻿'''.+''':-1
+\<ref:-1
 \{\{ébauche:-2
-\<ref:-2
-\{\{lien:-2
 \{\{article:-2
 == .+ ==:-2
 (fichier|image|file)\::-3

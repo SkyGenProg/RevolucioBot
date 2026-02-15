@@ -1,5 +1,5 @@
 '''.+''':-1
-\<ref:-2
+\<ref:-1
 == .+ ==:-2
 (fichier|image|file)\::-3
 \[\[cat[eé]gorie\::-3
