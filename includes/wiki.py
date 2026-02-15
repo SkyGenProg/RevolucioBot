@@ -598,16 +598,19 @@ class get_page(pywikibot.Page):
                 vand += self.score_regex_count("del_regex_ns_0_no_comment", files["del_regex_ns_0_no_comment"], text_old, text_new, re.IGNORECASE)
             # size rules on ns 0
             vand_size = 0
+            vandalism_score_detect_size = []
             for size_s, score in self._parse_scored_lines(_read_lines(files["size"])):
                 try:
                     size = int(size_s)
                 except ValueError:
                     continue
                 if len(text_new) < size:
-                    self.vandalism_score_detect.append(["size", score, size_s])
+                    vandalism_score_detect_size.append(["size", score, size_s])
                     vand_size += score
             if vand_size < 0 and not self.isRedirectPage():
                 vand += vand_size
+                for line in vandalism_score_detect_size:
+                    self.vandalism_score_detect.append(line)
             # diff rules on ns 0 (no comment)
             if not self.commented:
                 delta = len(text_new) - len(text_old)
