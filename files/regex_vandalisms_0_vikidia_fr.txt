@@ -151,12 +151,9 @@ c[' ]est nul:-20
 \b(une?|le|la) con(ne)?\b:-20
 \b[dl]es cons\b:-20
 \bfai?s chier\b:-20
-\bsalebot\b:-30
-\bgribeco\b:-30
-\bbradipus\b:-30
-\bclem23\b:-30
-hegesippe cormier:-30
-\belfix\b:-30
+\brevoluciobot\b:-30
+\bsimonk\b:-30
+\bsimon2001\b:-30
 \?{3,}:-3
 \bwé\b:-3
 \^\^:-3

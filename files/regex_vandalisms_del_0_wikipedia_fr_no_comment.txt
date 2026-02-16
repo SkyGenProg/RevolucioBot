@@ -9,4 +9,5 @@
 \[\[cat[eé]gorie\::-3
 \<gallery:-5
 \{\{références:-10
+\{\{palette:-10
 (?s)\{\{Infobox[^}]*?\n(.*?)\n\}\}:-10

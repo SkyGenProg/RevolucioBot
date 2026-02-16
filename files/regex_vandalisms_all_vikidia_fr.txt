@@ -189,7 +189,9 @@ trous? d[eu] cul:-30
 \bta gu?eu?le?\b:-30
 \best gay\b:-30
 \bpauvre? daube:-30
-\bsalebite\b:-30
+choubidou:-30
+ninipatalo:-30
+bachirx:-30
 \bfnord\b:-100
 petit polisson:-30
 thesard stagiaire:-30

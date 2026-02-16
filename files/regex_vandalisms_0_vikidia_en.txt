@@ -11,3 +11,6 @@ site.*=:+10
 \[\[[Uu]ser::-25
 \b0?\d\W\d\d\W\d\d\W\d\d\W\d\d\b:-5
 \S+@\S+\.[a-z]+:-5
+\brevoluciobot\b:-30
+\bsimonk\b:-30
+\bsimon2001\b:-30
