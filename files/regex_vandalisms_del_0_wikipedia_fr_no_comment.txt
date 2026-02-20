@@ -1,11 +1,9 @@
 ﻿'''.+''':-1
 \<ref:-1
 \{\{ébauche:-1
-\{\{article:-2
+\[\[cat[eé]gorie\::-1
 == .+ ==:-2
 \{\{taxobox:-2
-(fichier|image|file)\::-3
-\[\[cat[eé]gorie\::-3
 \<gallery:-5
 \{\{références:-10
 \{\{palette:-10
