@@ -10,6 +10,8 @@ import json
 import re
 import time
 import traceback
+import tensorflow as tf
+import numpy as np
 from typing import Any, Dict, Optional
 
 import pywikibot
@@ -53,6 +55,69 @@ def url_diff(diff: int, oldid: int) -> str:
         return "index.php?diff=" + str(diff)
     else:
         return "index.php?diff=" + str(diff) + "&oldid=" + str(oldid)
+
+def basic_clean(s):
+    if s is None:
+        return ""
+    return " ".join(str(s).replace("\n", " ").replace("\r", " ").split())
+
+def compute_features_row(old, new, diff):
+    len_old = len(old)
+    len_new = len(new)
+    len_diff = len(diff)
+    delta_len = len_new - len_old
+    abs_delta_len = abs(delta_len)
+    ratio_new_old = (len_new + 1.0) / (len_old + 1.0)
+    ratio_diff_new = (len_diff + 1.0) / (len_new + 1.0)
+    num_excl = new.count("!")
+    num_qm = new.count("?")
+    num_caps = sum(1 for c in new if c.isupper())
+    caps_ratio = num_caps / (len_new + 1.0)
+
+    # doit correspondre à l'ordre des colonnes d'entraînement (mêmes noms)
+    return {
+        "len_old": len_old,
+        "len_new": len_new,
+        "len_diff": len_diff,
+        "delta_len": delta_len,
+        "abs_delta_len": abs_delta_len,
+        "ratio_new_old": ratio_new_old,
+        "ratio_diff_new": ratio_diff_new,
+        "num_excl": num_excl,
+        "num_qm": num_qm,
+        "num_caps": num_caps,
+        "caps_ratio": caps_ratio
+    }
+
+def predict(model_dir, norm_json, old, new, diff):
+    model = tf.keras.models.load_model(model_dir)
+
+    with open(norm_json, "r", encoding="utf-8") as f:
+        norm = json.load(f)
+    mean = norm["mean"]
+    std = norm["std"]
+
+    old = basic_clean(old)
+    new = basic_clean(new)
+    diff = basic_clean(diff)
+
+    feats = compute_features_row(old, new, diff)
+    # normalisation
+    vec = []
+    for k in mean.keys():
+        m = float(mean[k])
+        s = float(std[k]) if float(std[k]) != 0 else 1.0
+        vec.append((float(feats.get(k, 0.0)) - m) / s)
+    num = np.array([vec], dtype=np.float32)
+
+    inputs = {
+        "old": np.array([old], dtype=object),
+        "new": np.array([new], dtype=object),
+        "diff": np.array([diff], dtype=object),
+        "num": num,
+    }
+    prob = float(model.predict(inputs, verbose=0)[0][0])
+    return prob
 
 class wiki_task:
     def __init__(self, site, start_task_day: bool = False, start_task_month: bool = False, ignore_task_month: bool = False, test: bool = False):
@@ -192,6 +257,9 @@ class wiki_task:
                     continue
 
                 is_revert = page.is_revert()
+
+                if not is_revert and self.site.config.get("local_ai_model"):
+                    self.check_vandalism_ai_local(page, True)
 
                 if not is_revert and not self.site.config.get("disable_regex"):
                     self.check_vandalism(page, self.test)
@@ -472,6 +540,63 @@ class wiki_task:
             "color": color,
         }
         _send_embed_chunked(webhooks_url_ai.get(self.site.family), embed_base, result_ai)
+
+        if not test and webhooks_url.get(self.site.family) and page.alert_request:
+            self.block_alert(page)
+
+    # ----------------------------
+    # Vandalism detection (local AI)
+    # ----------------------------
+
+    def check_vandalism_ai_local(self, page, test = False) -> None:
+        if page.contributor_is_trusted():
+            return
+
+        diff_text = page.get_diff()
+
+        prob = predict(
+            model_dir=self.site.config.get("local_ai_model"),
+            norm_json=self.site.config.get("num_feat_norm"),
+            old=page.text_page_oldid2,
+            new=page.text_page_oldid,
+            diff=diff_text
+        )
+        self.proba_ai = prob*100
+
+        user_rights = page.contributor_rights()
+
+        if self.site.lang_bot == "fr":
+            title_base = f"Analyse de l'IA locale (bêta) sur {self.site.lang}:{page.page_name} : {self.proba_ai} % de probabilité de vandalisme"
+        else:
+            title_base = f"Local AI analysis (beta) on {self.site.lang}:{page.page_name} : {self.proba_ai} % de probabilité de vandalisme"
+
+        if (self.proba_ai >= page.limit_ai or (self.proba_ai >= page.limit_ai2 and self.vandalism_score <= page.limit2)) and "autoconfirmed" not in user_rights:
+            if not page.reverted:
+                page.revert(f"Modification non-constructive détectée par IA locale à {self.proba_ai} %" if self.site.lang_bot == "fr" else f"Non-constructive edit detected by local AI ({self.proba_ai} %)", test, f"Modification non-constructive détectée par IA locale à {self.proba_ai} %" if self.site.lang_bot == "fr" else f"Non-constructive edit detected by local AI ({self.proba_ai} %)")
+            color = 13371938
+        elif self.proba_ai >= page.limit_ai2 and "autoconfirmed" not in user_rights:
+            page.get_warnings_user()
+            if (page.warn_level > 0 or page.user_previous_reverted) and not page.reverted:
+                page.revert(f"Modification non-constructive détectée par IA locale à {self.proba_ai} %" if self.site.lang_bot == "fr" else f"Non-constructive edit detected by local AI ({self.proba_ai} %)", test, f"Modification non-constructive détectée par IA locale à {self.proba_ai} %" if self.site.lang_bot == "fr" else f"Non-constructive edit detected by local AI ({self.proba_ai} %)")
+                color = 13371938
+            else:
+                color = 12138760
+        elif self.proba_ai >= page.limit_ai3:
+            color = 12138760
+        else:
+            color = 12161032
+
+        title = title_base + (" (modification révoquée)" if (self.site.lang_bot == "fr" and page.reverted) else "")
+        title = title + (" (reverted edit)" if (self.site.lang_bot != "fr" and page.reverted) else "")
+
+        embed_base = {
+            "title": title,
+            "description": "",
+            "url": page.protocol + "//" + page.url + page.articlepath + url_diff(page.diff, page.oldid),
+            "author": {"name": page.contributor_name},
+            "color": color,
+        }
+        _send_embed_chunked(webhooks_url_ai.get(self.site.family), embed_base, "")
 
         if not test and webhooks_url.get(self.site.family) and page.alert_request:
             self.block_alert(page)

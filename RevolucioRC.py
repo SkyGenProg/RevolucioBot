@@ -21,16 +21,16 @@ client = Mistral(api_key=api_key)
 
 if __name__ == "__main__":
     pywikibot.output("Revolució %s" % ver)
-    if(not os.path.exists("files")):
-       os.mkdir("files")
-    os.chdir("files")
+    if(not os.path.exists("model")):
+       os.mkdir("model")
+    os.chdir("model")
     if args.user != None:
         site = get_wiki(args.wiki, args.lang, args.user)
     else:
         site = get_wiki(args.wiki, args.lang, "RevolucioBot")
     site.get_trusted()
     site.rc_pages(timestamp=str((datetime.now() - timedelta(seconds=int(args.limit))).timestamp()), rctoponly=False)
-    output_file = "ia_wiki_results.csv"
+    output_file = "rc_wiki.csv"
     file_exists = os.path.isfile(output_file)
     
     csv_file = open(output_file, "w", newline="", encoding="utf-8")
@@ -43,6 +43,9 @@ if __name__ == "__main__":
             "page",
             "revid",
             "old_revid",
+            "old",
+            "new",
+            "diff",
             "diff_url",
             "score_algo",
             "prob_vand",
@@ -108,6 +111,10 @@ if __name__ == "__main__":
                 page.page_name,
                 page_info["revid"],
                 page_info["old_revid"],
+                page.text_page_oldid,
+                page.text_page_oldid2,
+                page.get_diff(),
+                page.page_name,
                 diff_url,
                 vandalism_score,
                 prob_vand,

@@ -3,6 +3,7 @@
 import argparse, os, pywikibot, difflib
 
 from includes.wiki import get_wiki, prompt_ai
+from includes.wiki_tasks import predict
 from config import api_key, model
 from version import ver
 from mistralai import Mistral
@@ -16,6 +17,7 @@ required_arg.add_argument("--page", required=True)
 required_arg.add_argument("--diff", required=True)
 arg.add_argument("--oldid")
 arg.add_argument("--use_ai")
+arg.add_argument("--use_local_ai")
 args = arg.parse_args()
 
 client = Mistral(api_key=api_key)
@@ -54,3 +56,16 @@ if __name__ == "__main__":
             ]
         )
         pywikibot.output(chat_response.choices[0].message.content)
+    if args.use_local_ai:
+        revision1 = page.get_revision(int(args.diff))
+        revision2 = page.get_revision(page.oldid)
+        diff = difflib.unified_diff((revision2["text"] or "").splitlines(), (revision1["text"] or "").splitlines())
+        diff_text = "\n".join(diff)
+        prob = predict(
+            model_dir=site.config.get("local_ai_model"),
+            norm_json=site.config.get("num_feat_norm"),
+            old=revision2["text"],
+            new=revision1["text"],
+            diff=diff_text
+        )
+        pywikibot.output(f"Probabilité de vandalisme (IA locale) : {prob}")
