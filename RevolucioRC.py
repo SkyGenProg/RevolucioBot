@@ -21,9 +21,9 @@ client = Mistral(api_key=api_key)
 
 if __name__ == "__main__":
     pywikibot.output("Revolució %s" % ver)
-    if(not os.path.exists("model")):
-       os.mkdir("model")
-    os.chdir("model")
+    if(not os.path.exists("files")):
+       os.mkdir("files")
+    os.chdir("files")
     if args.user != None:
         site = get_wiki(args.wiki, args.lang, args.user)
     else:

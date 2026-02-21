@@ -27,6 +27,7 @@ et traiter certains contenus, avec possibilité d'intégration via
 ## 🧰 Prérequis
 
 -   Python 3.10+ recommandé
+-   Git LFS (https://git-lfs.com)
 -   Compte bot avec BotPasswords activés
 -   Accès aux variables d'environnement pour stocker les secrets
 

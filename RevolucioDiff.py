@@ -61,6 +61,7 @@ if __name__ == "__main__":
         revision2 = page.get_revision(page.oldid)
         diff = difflib.unified_diff((revision2["text"] or "").splitlines(), (revision1["text"] or "").splitlines())
         diff_text = "\n".join(diff)
+        os.chdir("..")
         prob = predict(
             model_dir=site.config.get("local_ai_model"),
             norm_json=site.config.get("num_feat_norm"),
@@ -68,4 +69,4 @@ if __name__ == "__main__":
             new=revision1["text"],
             diff=diff_text
         )
-        pywikibot.output(f"Probabilité de vandalisme (IA locale) : {prob}")
+        pywikibot.output(f"Probabilité de vandalisme (IA locale) : {prob*100} %.")

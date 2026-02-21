@@ -90,7 +90,7 @@ def compute_features_row(old, new, diff):
     }
 
 def predict(model_dir, norm_json, old, new, diff):
-    model = tf.keras.models.load_model(model_dir)
+    model_local = tf.keras.models.load_model(model_dir)
 
     with open(norm_json, "r", encoding="utf-8") as f:
         norm = json.load(f)
@@ -116,7 +116,7 @@ def predict(model_dir, norm_json, old, new, diff):
         "diff": np.array([diff], dtype=object),
         "num": num,
     }
-    prob = float(model.predict(inputs, verbose=0)[0][0])
+    prob = float(model_local.predict(inputs, verbose=0)[0][0])
     return prob
 
 class wiki_task:
@@ -492,8 +492,12 @@ class wiki_task:
             fail_title = f"AI analysis (Mistral) failed on {self.site.lang}:{page.page_name}"
 
         try:
-            chat_response = client.chat.complete(model=model, messages=[{"role": "user", "content": prompt}])
-            result_ai = chat_response.choices[0].message.content
+            if not api_key or not model:
+                pywikibot.error("api_key or model not specified in venv.")
+                return
+            else:
+                chat_response = client.chat.complete(model=model, messages=[{"role": "user", "content": prompt}])
+                result_ai = chat_response.choices[0].message.content
         except Exception:
             _safe_log_exc()
             embed = {
@@ -553,31 +557,36 @@ class wiki_task:
             return
 
         diff_text = page.get_diff()
-
-        prob = predict(
-            model_dir=self.site.config.get("local_ai_model"),
-            norm_json=self.site.config.get("num_feat_norm"),
-            old=page.text_page_oldid2,
-            new=page.text_page_oldid,
-            diff=diff_text
-        )
+        model_dir = "../" + self.site.config.get("local_ai_model")
+        norm_json = "../" + self.site.config.get("num_feat_norm")
+        try:
+            prob = predict(
+                model_dir=model_dir,
+                norm_json=norm_json,
+                old=page.text_page_oldid2,
+                new=page.text_page_oldid,
+                diff=diff_text
+            )
+        except ValueError:
+            pywikibot.error(f"Check if file {model_dir} or {norm_json} exists.")
+            return
         self.proba_ai = prob*100
 
         user_rights = page.contributor_rights()
 
         if self.site.lang_bot == "fr":
-            title_base = f"Analyse de l'IA locale (bêta) sur {self.site.lang}:{page.page_name} : {self.proba_ai} % de probabilité de vandalisme"
+            title_base = f"Analyse de l'IA locale (bêta) sur {self.site.lang}:{page.page_name} : {round(self.proba_ai, 2)} % de probabilité de vandalisme"
         else:
-            title_base = f"Local AI analysis (beta) on {self.site.lang}:{page.page_name} : {self.proba_ai} % de probabilité de vandalisme"
+            title_base = f"Local AI analysis (beta) on {self.site.lang}:{page.page_name} : {round(self.proba_ai, 2)} % de probabilité de vandalisme"
 
         if (self.proba_ai >= page.limit_ai or (self.proba_ai >= page.limit_ai2 and self.vandalism_score <= page.limit2)) and "autoconfirmed" not in user_rights:
             if not page.reverted:
-                page.revert(f"Modification non-constructive détectée par IA locale à {self.proba_ai} %" if self.site.lang_bot == "fr" else f"Non-constructive edit detected by local AI ({self.proba_ai} %)", test, f"Modification non-constructive détectée par IA locale à {self.proba_ai} %" if self.site.lang_bot == "fr" else f"Non-constructive edit detected by local AI ({self.proba_ai} %)")
+                page.revert(f"Modification non-constructive détectée par IA locale à {round(self.proba_ai, 2)} %" if self.site.lang_bot == "fr" else f"Non-constructive edit detected by local AI ({round(self.proba_ai, 2)} %)", test, f"Modification non-constructive détectée par IA locale à {round(self.proba_ai, 2)} %" if self.site.lang_bot == "fr" else f"Non-constructive edit detected by local AI ({round(self.proba_ai, 2)} %)")
             color = 13371938
         elif self.proba_ai >= page.limit_ai2 and "autoconfirmed" not in user_rights:
             page.get_warnings_user()
             if (page.warn_level > 0 or page.user_previous_reverted) and not page.reverted:
-                page.revert(f"Modification non-constructive détectée par IA locale à {self.proba_ai} %" if self.site.lang_bot == "fr" else f"Non-constructive edit detected by local AI ({self.proba_ai} %)", test, f"Modification non-constructive détectée par IA locale à {self.proba_ai} %" if self.site.lang_bot == "fr" else f"Non-constructive edit detected by local AI ({self.proba_ai} %)")
+                page.revert(f"Modification non-constructive détectée par IA locale à {round(self.proba_ai, 2)} %" if self.site.lang_bot == "fr" else f"Non-constructive edit detected by local AI ({round(self.proba_ai, 2)} %)", test, f"Modification non-constructive détectée par IA locale à {round(self.proba_ai, 2)} %" if self.site.lang_bot == "fr" else f"Non-constructive edit detected by local AI ({round(self.proba_ai, 2)} %)")
                 color = 13371938
             else:
                 color = 12138760
@@ -794,6 +803,10 @@ class wiki_task:
     # ----------------------------
 
     def execute(self) -> None:
+        if not api_key or not model:
+            pywikibot.warning("api_key or model not specified in venv.")
+        if not webhooks_url[self.site.family]:
+            pywikibot.warning(f"Discord webhook url of {self.site.family} not specified in venv.")
         self.datetime_utcnow = datetime.datetime.utcnow()
         month = int(self.datetime_utcnow.strftime("%m"))
         day = int(self.datetime_utcnow.strftime("%d"))
@@ -824,6 +837,10 @@ class wiki_task:
             time.sleep(600)  # Pause de 10 minutes
 
     def execute_direct(self) -> None:
+        if not api_key or not model:
+            pywikibot.warning("api_key or model not specified in venv.")
+        if not webhooks_url[self.site.family]:
+            pywikibot.warning(f"Discord webhook url of {self.site.family} not specified in venv.")
         stream = EventStreams(streams="recentchange")
         for change in stream:
             try:
