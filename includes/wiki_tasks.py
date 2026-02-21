@@ -272,13 +272,22 @@ class wiki_task:
                     page.get_text_page_old()
 
                 if not is_revert and self.site.config.get("local_ai_model"):
-                    self.check_vandalism_ai_local(page, True)
+                    try:
+                        self.check_vandalism_ai_local(page, True)
+                    except Exception:
+                        _safe_log_exc()
 
                 if not is_revert and not self.site.config.get("disable_regex"):
-                    self.check_vandalism(page, self.test)
+                    try:
+                        self.check_vandalism(page, self.test)
+                    except Exception:
+                        _safe_log_exc()
 
                 if not is_revert and not self.site.config.get("disable_ai"):
-                    self.check_vandalism_ai(page, self.test)
+                    try:
+                        self.check_vandalism_ai(page, self.test)
+                    except Exception:
+                        _safe_log_exc()
 
                 if page.page_ns == 0:
                     if self.site.config.get("check_WP") and page.text.strip():
@@ -889,17 +898,28 @@ class wiki_task:
                         page.get_text_page_old()
 
                     if not is_revert and self.site.config.get("local_ai_model"):
-                        self.check_vandalism_ai_local(page, True)
+                        print(f"Calcul du score de vandalisme (IA locale) sur {page_name}...")
+                        try:
+                            self.check_vandalism_ai_local(page, True)
+                            print(f"Probabilité de vandalisme (IA locale) : {self.proba_ai} %")
+                        except Exception:
+                            _safe_log_exc()
 
                     if not self.site.config.get("disable_regex"):
                         print(f"Calcul du score de vandalisme sur {page_name}...")
-                        self.check_vandalism(page, self.test)
-                        print(f"Score de vandalisme : {self.vandalism_score}")
+                        try:
+                            self.check_vandalism(page, self.test)
+                            print(f"Score de vandalisme : {self.vandalism_score}")
+                        except Exception:
+                            _safe_log_exc()
 
                     if not self.site.config.get("disable_ai"):
-                        print(f"Calcul du score de vandalisme (IA) sur {page_name}...")
-                        self.check_vandalism_ai(page, self.test)
-                        print(f"Probabilité de vandalisme (IA) : {self.proba_ai} %")
+                        print(f"Calcul du score de vandalisme (IA Mistral) sur {page_name}...")
+                        try:
+                            self.check_vandalism_ai(page, self.test)
+                            print(f"Probabilité de vandalisme (IA Mistral) : {self.proba_ai} %")
+                        except Exception:
+                            _safe_log_exc()
 
             except Exception:
                 _safe_log_exc()
