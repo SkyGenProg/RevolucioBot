@@ -560,10 +560,8 @@ class get_page(pywikibot.Page):
                 self.vandalism_score_detect.append([type_regex, score, f"{pattern} ({score}x{times_pattern} = {score_pattern})"])
         return score_detected
 
-    def vandalism_score(self, revision_oldid: Optional[int] = None, revision_oldid2: Optional[int] = None) -> int:
+    def vandalism_score(self) -> int:
         """Score on a diff, including experienced users."""
-        self.get_text_page_old(revision_oldid, revision_oldid2)
-
         fam, lang = self.source.family, self.lang
         files = {
             "add_regex_ns_0": f"regex_vandalisms_0_{fam}_{lang}.txt",

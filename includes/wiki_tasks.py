@@ -257,6 +257,8 @@ class wiki_task:
                     continue
 
                 is_revert = page.is_revert()
+                if self.site.config.get("local_ai_model") or not self.site.config.get("disable_regex") or not self.site.config.get("disable_ai"):
+                    page.get_text_page_old()
 
                 if not is_revert and self.site.config.get("local_ai_model"):
                     self.check_vandalism_ai_local(page, True)
@@ -871,6 +873,12 @@ class wiki_task:
                         self.send_message_bot_stopped()
                         print("Le bot a été arrêté.")
                         break
+
+                    if self.site.config.get("local_ai_model") or not self.site.config.get("disable_regex") or not self.site.config.get("disable_ai"):
+                        page.get_text_page_old()
+
+                    if not is_revert and self.site.config.get("local_ai_model"):
+                        self.check_vandalism_ai_local(page, True)
 
                     if not self.site.config.get("disable_regex"):
                         print(f"Calcul du score de vandalisme sur {page_name}...")
