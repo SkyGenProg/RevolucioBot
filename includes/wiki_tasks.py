@@ -16,9 +16,12 @@ try:
     import tensorflow as tf
 except ImportError:
     tf = None
-    pywikibot.warning("Tensorflow is not installed.")
-    
-import numpy as np
+    pywikibot.warning("Tensorflow is not installed. It is required for local AI.")
+try:
+    import numpy as np
+except ImportError:
+    np = None
+    pywikibot.warning("Numpy is not installed. It is required for local AI.")
 from typing import Any, Dict, Optional
 
 from mistralai import Mistral
@@ -95,8 +98,8 @@ def compute_features_row(old, new, diff):
     }
 
 def predict(model_dir, norm_json, old, new, diff):
-    if tf is None:
-        pywikibot.error("Tensorflow is not installed: The local AI needs Tensorflow.")
+    if tf is None or np is None:
+        pywikibot.error("Tensorflow or Numpy are not installed: The local AI needs these libraries.")
         return -1
     model_local = tf.keras.models.load_model(model_dir)
 
