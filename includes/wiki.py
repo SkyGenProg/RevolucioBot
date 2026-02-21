@@ -522,7 +522,6 @@ class get_page(pywikibot.Page):
         else:
             self.new_page = True
             text_old = ""
-
         self.text_page_oldid = text_new or ""
         self.text_page_oldid2 = text_old or ""
 
@@ -621,7 +620,6 @@ class get_page(pywikibot.Page):
                     if score != 0:
                         self.vandalism_score_detect.append(["diff", score, -diff_s*bytes_uncommented_remove])
                         vand += score
-
         return vand
 
     def get_vandalism_report(self) -> str:
