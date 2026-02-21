@@ -29,7 +29,8 @@ if __name__ == "__main__":
     else:
         site = get_wiki(args.wiki, args.lang, "RevolucioBot")
     site.get_trusted()
-    site.rc_pages(timestamp=str((datetime.now() - timedelta(seconds=int(args.limit))).timestamp()), rctoponly=False)
+    timestamp = str((datetime.now() - timedelta(seconds=int(args.limit))).timestamp())
+    site.rc_pages(timestamp=timestamp, rctoponly=False)
     output_file = "rc_wiki.csv"
     file_exists = os.path.isfile(output_file)
     
@@ -66,17 +67,22 @@ if __name__ == "__main__":
             if page.special or not page.exists() or page.isRedirectPage():
                 continue
             pywikibot.output("Page : " + page_name)
-            page.get_text_page_old(int(page_info["revid"]), int(page_info["old_revid"]))
+            page.get_text_page_old(int(page_info["revid"]), int(page_info["old_revid"]) if int(page_info["old_revid"]) > 0 else None, starttime=timestamp)
             vandalism_score = page.vandalism_score()
             detected = page.get_vandalism_report()
             pywikibot.output(detected)
             reverted = "mw-reverted" in page_info["tags"]
             pywikibot.output(f"Score : {vandalism_score}, reverted : {reverted}")
-            if args.use_ai:
+            if int(page_info["old_revid"]) > 0:
                 revision1 = page.get_revision(int(page_info["old_revid"]))
-                revision2 = page.get_revision(int(page_info["revid"]))
-                diff = difflib.unified_diff((revision1["text"] or "").splitlines(), (revision2["text"] or "").splitlines())
-                diff_text = "\n".join(diff)
+                revision1_text = revision1["text"] or ""
+            else:
+                revision1_text = ""
+            revision2 = page.get_revision(int(page_info["revid"]))
+            revision2_text = revision2["text"] or ""
+            diff = difflib.unified_diff(revision1_text.splitlines(), revision2_text.splitlines())
+            diff_text = "\n".join(diff)
+            if args.use_ai:
                 prompt = prompt_ai(args.lang, revision2.timestamp, page.url, page.page_name, diff_text, revision2.comment)
                 pywikibot.output("Prompt :")
                 pywikibot.output(prompt)
@@ -107,14 +113,14 @@ if __name__ == "__main__":
                 f"&oldid={page_info['old_revid']}"
             )
             writer.writerow([
-                page.latest_revision.timestamp.isoformat(),
+                revision2.timestamp.isoformat(),
                 f"{args.lang}.{args.wiki}",
                 page.page_name,
                 page_info["revid"],
                 page_info["old_revid"],
                 page.text_page_oldid,
                 page.text_page_oldid2,
-                page.get_diff(),
+                diff_text,
                 diff_url,
                 vandalism_score,
                 prob_vand,

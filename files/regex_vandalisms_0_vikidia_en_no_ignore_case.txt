@@ -3,4 +3,13 @@
 [bcdfghjklmnpqrstvwxz]{20}:-20
 \b[bcdfghjklmnpqrstvwxz]{7,}\b:-3
 \b[bcdfghjklmnpqrstvwxz]{10,}\b:-20
+[iou]{4}:-5
+[ae]{7}:-5
 [^A-Z]{300}:-3
+([a-fA-F])\1{10}:-10
+([g-zG-Z])\1{5}:-10
+([a-zA-Z0-9]{1,10})\1{5}:-10
+[xX]{5}:+10
+([a-zA-Z0-9]{1,10})\1{10}:-20
+[xX]{10}:+20
+,{10}:-30

@@ -483,7 +483,7 @@ class get_page(pywikibot.Page):
             self.list_contributor_rights = self.source.rights(self.contributor_name)
         return self.list_contributor_rights
 
-    def get_text_page_old(self, revision_oldid: Optional[int] = None, revision_oldid2: Optional[int] = None) -> None:
+    def get_text_page_old(self, revision_oldid: Optional[int] = None, revision_oldid2: Optional[int] = None, total: Optional[int] = 50, starttime: Optional[str] = None) -> None:
         """
         revision_oldid: new version / version to check
         revision_oldid2: old version / version to compare against
@@ -495,18 +495,19 @@ class get_page(pywikibot.Page):
             text_new = self.text
 
         self.oldid = revision_oldid2 if revision_oldid2 is not None else -1
+        contributor_name = ""
 
         try:
-            for rev in self.revisions(total=50):
+            for rev in self.revisions(total=total, starttime=starttime):
                 comment = re.sub(r"/\*[\s\S]*?\*/", "", rev.comment).strip().lower()
                 if rev.revid == revision_oldid:
-                    self.contributor_name = rev.user
+                    contributor_name = rev.user
                     self.commented = False
-                if self.contributor_name == rev.user and comment != "" and "résumé automatique" not in comment:
+                if contributor_name == rev.user and comment != "" and "résumé automatique" not in comment:
                     self.commented = True
-                if (revision_oldid2 is None and rev.user != self.contributor_name and (revision_oldid is None or rev.revid <= revision_oldid)) or (revision_oldid2 is not None and rev.revid <= revision_oldid2):
+                if (revision_oldid2 is None and rev.user != contributor_name and (revision_oldid is None or rev.revid <= revision_oldid)) or (revision_oldid2 is not None and rev.revid <= revision_oldid2):
                     self.oldid = rev.revid
-                    self.user_previous_reverted = ("mw-rollback" in rev.tags or "mw-undo"  in rev.tags or "mw-manual-revert" in rev.tags) and self.contributor_name in rev.comment and self.user_wiki != rev.user
+                    self.user_previous_reverted = ("mw-rollback" in rev.tags or "mw-undo" in rev.tags or "mw-manual-revert" in rev.tags) and contributor_name in rev.comment and self.user_wiki != rev.user
                     break
         except Exception:
             try:

@@ -123,7 +123,7 @@ def build_model(num_features, vocab_size=50000, seq_len=400, embed_dim=128, lstm
 # -----------------------------
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument("--csv", default="rc_wiki.csv", help="Chemin vers le CSV")
+    parser.add_argument("--csv", default="model/vikidia_fr/rc_wiki.csv", help="Chemin vers le CSV")
     parser.add_argument("--outdir", default="model_vandalism", help="Dossier de sortie")
     parser.add_argument("--batch", type=int, default=64)
     parser.add_argument("--epochs", type=int, default=10)

@@ -32,7 +32,7 @@ if __name__ == "__main__":
     else:
         site = get_wiki(args.wiki, args.lang, "RevolucioBot")
     page = site.page(args.page)
-    page.get_text_page_old(int(args.diff), int(args.oldid) if args.oldid is not None else None)
+    page.get_text_page_old(int(args.diff), int(args.oldid) if args.oldid is not None else None, total=None)
     vandalism_score = page.vandalism_score()
     detected = page.get_vandalism_report()
     pywikibot.output(detected)

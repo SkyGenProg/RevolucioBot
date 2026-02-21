@@ -1,8 +1,9 @@
 # -*- coding: utf-8 -*-
 
-import csv
+import csv, sys
+csv.field_size_limit(sys.maxsize)
 
-csv_file = "rc_wiki.csv"
+csv_file = "model/vikidia_fr/rc_wiki.csv"
 
 true_positives = []
 true_negatives = []
