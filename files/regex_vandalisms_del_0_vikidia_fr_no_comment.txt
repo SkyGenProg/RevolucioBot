@@ -4,5 +4,5 @@
 \[\[cat[eé]gorie\::-1
 == .+ ==:-2
 \<gallery:-5
-\{\{références:-10
+\{\{références:-5
 (?s)\{\{(Infobox|Boîte)[^}]*?\n(.*?)\n\}\}:-10

@@ -232,7 +232,7 @@ def main():
     # Probabilités
     y_prob = model.predict(ds_test, verbose=0).reshape(-1)
 
-    # Seuil (par défaut 0.5). Tu peux l'ajuster (ex: 0.4) selon ton objectif.
+    # Seuil
     threshold = 0.5
     y_pred = (y_prob >= threshold).astype(np.int32)
 

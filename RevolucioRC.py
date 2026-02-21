@@ -115,7 +115,6 @@ if __name__ == "__main__":
                 page.text_page_oldid,
                 page.text_page_oldid2,
                 page.get_diff(),
-                page.page_name,
                 diff_url,
                 vandalism_score,
                 prob_vand,
