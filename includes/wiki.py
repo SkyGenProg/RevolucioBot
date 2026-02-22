@@ -495,7 +495,7 @@ class get_page(pywikibot.Page):
             text_new = self.text
 
         self.oldid = revision_oldid2 if revision_oldid2 is not None else -1
-        contributor_name = ""
+        contributor_name = self.contributor_name if revision_oldid is None else ""
 
         try:
             for rev in self.revisions(total=total, starttime=starttime):
