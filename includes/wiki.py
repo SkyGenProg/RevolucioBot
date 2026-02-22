@@ -483,7 +483,7 @@ class get_page(pywikibot.Page):
             self.list_contributor_rights = self.source.rights(self.contributor_name)
         return self.list_contributor_rights
 
-    def get_text_page_old(self, revision_oldid: Optional[int] = None, revision_oldid2: Optional[int] = None, total: Optional[int] = 50, starttime: Optional[str] = None) -> None:
+    def get_text_page_old(self, revision_oldid: Optional[int] = None, revision_oldid2: Optional[int] = None, total: Optional[int] = 50, endtime: Optional[str] = None) -> None:
         """
         revision_oldid: new version / version to check
         revision_oldid2: old version / version to compare against
@@ -498,7 +498,7 @@ class get_page(pywikibot.Page):
         contributor_name = self.contributor_name if revision_oldid is None else ""
 
         try:
-            for rev in self.revisions(total=total, starttime=starttime):
+            for rev in self.revisions(total=total, endtime=endtime):
                 comment = re.sub(r"/\*[\s\S]*?\*/", "", rev.comment).strip().lower()
                 if rev.revid == revision_oldid:
                     contributor_name = rev.user

@@ -38,11 +38,13 @@ if __name__ == "__main__":
     pywikibot.output(detected)
     pywikibot.output("Score : " + str(vandalism_score))
     pywikibot.output("Révoqué précédemment : " + str(page.user_previous_reverted))
+    revision1 = page.get_revision(int(args.diff))
+    revision2 = page.get_revision(page.oldid)
+    diff = difflib.unified_diff((revision2["text"] or "").splitlines(), (revision1["text"] or "").splitlines())
+    diff_text = "\n".join(diff)
+    pywikibot.output("Diff :")
+    pywikibot.output(diff_text)
     if args.use_ai:
-        revision1 = page.get_revision(int(args.diff))
-        revision2 = page.get_revision(page.oldid)
-        diff = difflib.unified_diff((revision2["text"] or "").splitlines(), (revision1["text"] or "").splitlines())
-        diff_text = "\n".join(diff)
         prompt = prompt_ai(args.lang, revision1.timestamp, page.url, page.page_name, diff_text, revision1.comment)
         pywikibot.output("Prompt :")
         pywikibot.output(prompt)
@@ -58,10 +60,6 @@ if __name__ == "__main__":
         )
         pywikibot.output(chat_response.choices[0].message.content)
     if args.use_local_ai:
-        revision1 = page.get_revision(int(args.diff))
-        revision2 = page.get_revision(page.oldid)
-        diff = difflib.unified_diff((revision2["text"] or "").splitlines(), (revision1["text"] or "").splitlines())
-        diff_text = "\n".join(diff)
         os.chdir("..")
         prob = predict(
             model_dir=site.config.get("local_ai_model"),

@@ -67,7 +67,7 @@ if __name__ == "__main__":
             if page.special or not page.exists() or page.isRedirectPage():
                 continue
             pywikibot.output("Page : " + page_name)
-            page.get_text_page_old(int(page_info["revid"]), int(page_info["old_revid"]) if int(page_info["old_revid"]) > 0 else None, starttime=timestamp)
+            page.get_text_page_old(int(page_info["revid"]), int(page_info["old_revid"]) if int(page_info["old_revid"]) > 0 else None, endtime=timestamp)
             vandalism_score = page.vandalism_score()
             detected = page.get_vandalism_report()
             pywikibot.output(detected)

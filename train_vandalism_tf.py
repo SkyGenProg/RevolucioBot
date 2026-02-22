@@ -76,7 +76,15 @@ def build_text_tower(name, vectorizer, input_dim, embed_dim=128, lstm_units=64, 
     inp = tf.keras.Input(shape=(), dtype=tf.string, name=name)
     x = vectorizer(inp)
     x = tf.keras.layers.Embedding(input_dim=input_dim, output_dim=embed_dim, mask_zero=True)(x)
-    x = tf.keras.layers.Bidirectional(tf.keras.layers.LSTM(lstm_units, return_sequences=False))(x)
+    x = tf.keras.layers.Bidirectional(
+        tf.keras.layers.LSTM(
+            lstm_units,
+            return_sequences=False,
+            use_cudnn=False,        # Important pour anciennes versions
+            activation='tanh',
+            recurrent_activation='sigmoid'
+        )
+    )(x)
     x = tf.keras.layers.Dropout(dropout)(x)
     return inp, x
 
