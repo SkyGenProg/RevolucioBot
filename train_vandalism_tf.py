@@ -240,27 +240,6 @@ def main():
     # Probabilités
     y_prob = model.predict(ds_test, verbose=0).reshape(-1)
 
-    # Seuil
-    threshold = 0.5
-    y_pred = (y_prob >= threshold).astype(np.int32)
-
-    # Confusion matrix: [[TN, FP], [FN, TP]]
-    cm = tf.math.confusion_matrix(y_true, y_pred, num_classes=2).numpy()
-    tn, fp, fn, tp = cm.ravel()
-
-    print("\n--- Confusion matrix (test) ---")
-    print(cm)
-    print(f"TN={tn}  FP={fp}  FN={fn}  TP={tp}")
-
-    # Faux-positifs = modifications constructives détectées comme vandalismes
-    print(f"\nFaux-positifs (constructif->vandalisme) : {fp}")
-
-    # Optionnel: taux de faux positifs (FPR) et précision sur la classe 'vandalisme'
-    fpr = fp / (fp + tn) if (fp + tn) > 0 else 0.0
-    precision_pos = tp / (tp + fp) if (tp + fp) > 0 else 0.0
-    print(f"Taux de faux-positifs (FPR) : {fpr:.3f}")
-    print(f"Precision (vandalisme) : {precision_pos:.3f}")
-
     # Sauvegarde modèle + normalisation features
     model.save(os.path.join(args.outdir, "model.keras"))
     with open(os.path.join(args.outdir, "num_feat_norm.json"), "w", encoding="utf-8") as f:
@@ -278,6 +257,27 @@ def main():
     save_vocab(vec_diff, "diff")
 
     print(f"Modèle exporté dans: {args.outdir}/saved_model")
+
+    for threshold in np.arange(0.25, 1, 0.01):
+        print(f"threshold={threshold}")
+        y_pred = (y_prob >= threshold).astype(np.int32)
+
+        # Confusion matrix: [[TN, FP], [FN, TP]]
+        cm = tf.math.confusion_matrix(y_true, y_pred, num_classes=2).numpy()
+        tn, fp, fn, tp = cm.ravel()
+
+        print("\n--- Confusion matrix (test) ---")
+        print(cm)
+        print(f"TN={tn}  FP={fp}  FN={fn}  TP={tp}")
+
+        # Faux-positifs = modifications constructives détectées comme vandalismes
+        print(f"\nFaux-positifs (constructif->vandalisme) : {fp}")
+
+        # Optionnel: taux de faux positifs (FPR) et précision sur la classe 'vandalisme'
+        fpr = fp / (fp + tn) if (fp + tn) > 0 else 0.0
+        precision_pos = tp / (tp + fp) if (tp + fp) > 0 else 0.0
+        print(f"Taux de faux-positifs (FPR) : {fpr:.3f}")
+        print(f"Precision (vandalisme) : {precision_pos:.3f}")
 
 if __name__ == "__main__":
     main()
