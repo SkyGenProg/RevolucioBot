@@ -604,18 +604,18 @@ class wiki_task:
         else:
             title_base = f"Local AI analysis (beta) on {self.site.lang}:{page.page_name} : {round(self.proba_ai, 2)} % de probabilité de vandalisme"
 
-        if (self.proba_ai >= page.limit_ai or (self.proba_ai >= page.limit_ai2 and self.vandalism_score <= page.limit2)) and "autoconfirmed" not in user_rights:
+        if (self.proba_ai >= page.limit_ai_local or (self.proba_ai >= page.limit_ai_local2 and self.vandalism_score <= page.limit2)) and "autoconfirmed" not in user_rights:
             if not page.reverted:
                 page.revert(f"Modification non-constructive détectée par IA locale à {round(self.proba_ai, 2)} %" if self.site.lang_bot == "fr" else f"Non-constructive edit detected by local AI ({round(self.proba_ai, 2)} %)", test, f"Modification non-constructive détectée par IA locale à {round(self.proba_ai, 2)} %" if self.site.lang_bot == "fr" else f"Non-constructive edit detected by local AI ({round(self.proba_ai, 2)} %)")
             color = 13371938
-        elif self.proba_ai >= page.limit_ai2 and "autoconfirmed" not in user_rights:
+        elif self.proba_ai >= page.limit_ai_local2 and "autoconfirmed" not in user_rights:
             page.get_warnings_user()
             if (page.warn_level > 0 or page.user_previous_reverted) and not page.reverted:
                 page.revert(f"Modification non-constructive détectée par IA locale à {round(self.proba_ai, 2)} %" if self.site.lang_bot == "fr" else f"Non-constructive edit detected by local AI ({round(self.proba_ai, 2)} %)", test, f"Modification non-constructive détectée par IA locale à {round(self.proba_ai, 2)} %" if self.site.lang_bot == "fr" else f"Non-constructive edit detected by local AI ({round(self.proba_ai, 2)} %)")
                 color = 13371938
             else:
                 color = 12138760
-        elif self.proba_ai >= page.limit_ai3:
+        elif self.proba_ai >= page.limit_ai_local3:
             color = 12138760
         else:
             color = 12161032

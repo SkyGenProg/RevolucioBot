@@ -362,6 +362,9 @@ class get_page(pywikibot.Page):
         self.limit_ai = self.source.config.get("limit_ai", 98)
         self.limit_ai2 = self.source.config.get("limit_ai2", 90)
         self.limit_ai3 = self.source.config.get("limit_ai3", 50)
+        self.limit_ai_local = self.source.config.get("limit_ai", 94)
+        self.limit_ai_local2 = self.source.config.get("limit_ai2", 90)
+        self.limit_ai_local3 = self.source.config.get("limit_ai3", 50)
 
         # alert page
         alert_page_tpl = self.source.config.get("alert_page")
