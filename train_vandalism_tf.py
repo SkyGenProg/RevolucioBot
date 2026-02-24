@@ -75,12 +75,11 @@ def make_tf_dataset(df, num_feat, batch_size=64, shuffle=False):
 def build_text_tower(name, vectorizer, input_dim, embed_dim=128, lstm_units=64, dropout=0.2):
     inp = tf.keras.Input(shape=(), dtype=tf.string, name=name)
     x = vectorizer(inp)
-    x = tf.keras.layers.Embedding(input_dim=input_dim, output_dim=embed_dim, mask_zero=True)(x)
+    x = tf.keras.layers.Embedding(input_dim=input_dim, output_dim=embed_dim, mask_zero=False)(x)
     x = tf.keras.layers.Bidirectional(
         tf.keras.layers.LSTM(
             lstm_units,
             return_sequences=False,
-            use_cudnn=False,        # Important pour anciennes versions
             activation='tanh',
             recurrent_activation='sigmoid'
         )
@@ -134,7 +133,7 @@ def main():
     parser.add_argument("--csv", default="model/vikidia_fr/rc_wiki.csv", help="Chemin vers le CSV")
     parser.add_argument("--outdir", default="model_vandalism", help="Dossier de sortie")
     parser.add_argument("--batch", type=int, default=64)
-    parser.add_argument("--epochs", type=int, default=10)
+    parser.add_argument("--epochs", type=int, default=50)
     parser.add_argument("--vocab", type=int, default=50000)
     parser.add_argument("--seqlen", type=int, default=400)
     parser.add_argument("--seed", type=int, default=42)
@@ -208,17 +207,17 @@ def main():
     vec_new.adapt(df_train["new"].values)
     vec_diff.adapt(df_train["diff"].values)
 
-    # Gestion du déséquilibre (optionnel mais souvent utile)
-    # class_weight = {0: 1.0, 1: neg / max(pos, 1)}
-    # print("class_weight:", class_weight)
+    # Gestion du déséquilibre
+    class_weight = {0: 1.0, 1: neg / max(pos, 1)}
+    print("class_weight:", class_weight)
 
     callbacks = [
-        tf.keras.callbacks.EarlyStopping(monitor="val_auc", mode="max", patience=2, restore_best_weights=True),
+        tf.keras.callbacks.EarlyStopping(monitor="val_loss", patience=5, restore_best_weights=True),
         tf.keras.callbacks.ModelCheckpoint(
             filepath=os.path.join(args.outdir, "ckpt.keras"),
-            monitor="val_auc", mode="max", save_best_only=True
+            monitor="val_loss", save_best_only=True
         ),
-        tf.keras.callbacks.ReduceLROnPlateau(monitor="val_auc", mode="max", factor=0.5, patience=1, min_lr=1e-5),
+        tf.keras.callbacks.ReduceLROnPlateau(monitor="val_loss", factor=0.5, patience=1, min_lr=1e-5),
     ]
 
     history = model.fit(
@@ -226,7 +225,7 @@ def main():
         validation_data=ds_val,
         epochs=args.epochs,
         callbacks=callbacks,
-        # class_weight=class_weight,
+        class_weight=class_weight,
         verbose=1,
     )
 
@@ -258,15 +257,16 @@ def main():
 
     print(f"Modèle exporté dans: {args.outdir}/saved_model")
 
-    for threshold in np.arange(0.25, 1, 0.01):
-        print(f"threshold={threshold}")
+    for threshold_loop in np.arange(0.25, 1, 0.01):
+        threshold = round(threshold_loop, 2)
+        print(f"\nthreshold={threshold}")
         y_pred = (y_prob >= threshold).astype(np.int32)
 
         # Confusion matrix: [[TN, FP], [FN, TP]]
         cm = tf.math.confusion_matrix(y_true, y_pred, num_classes=2).numpy()
         tn, fp, fn, tp = cm.ravel()
 
-        print("\n--- Confusion matrix (test) ---")
+        print("--- Confusion matrix (test) ---")
         print(cm)
         print(f"TN={tn}  FP={fp}  FN={fn}  TP={tp}")
 

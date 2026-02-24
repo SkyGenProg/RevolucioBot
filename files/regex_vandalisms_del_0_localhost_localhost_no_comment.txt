@@ -2,7 +2,7 @@
 \<ref:-1
 \{\{ébauche:-1
 \[\[cat[eé]gorie\::-1
-== .+ ==:-2
+==.+==\n(\n)?[^\n=]+:-2
 \{\{taxobox:-2
 \<gallery:-5
 \{\{références:-5

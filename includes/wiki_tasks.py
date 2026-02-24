@@ -276,7 +276,7 @@ class wiki_task:
 
                 if not is_revert and self.site.config.get("local_ai_model"):
                     try:
-                        self.check_vandalism_ai_local(page, True)
+                        self.check_vandalism_ai_local(page, self.test)
                     except Exception:
                         _safe_log_exc()
 
@@ -903,7 +903,7 @@ class wiki_task:
                     if not is_revert and self.site.config.get("local_ai_model"):
                         print(f"Calcul du score de vandalisme (IA locale) sur {page_name}...")
                         try:
-                            self.check_vandalism_ai_local(page, True)
+                            self.check_vandalism_ai_local(page, self.test)
                             print(f"Probabilité de vandalisme (IA locale) : {self.proba_ai} %")
                         except Exception:
                             _safe_log_exc()
