@@ -1,16 +1,19 @@
 # -*- coding: utf-8 -*-
 
-import csv, sys
+import argparse, csv, sys
 csv.field_size_limit(sys.maxsize)
 
-csv_file = "model/vikidia_fr/rc_wiki.csv"
+arg = argparse.ArgumentParser()
+required_arg = arg.add_argument_group("required arguments")
+required_arg.add_argument("--csv_file", required=True)
+args = arg.parse_args()
 
 true_positives = []
 true_negatives = []
 false_positives = []
 false_negatives = []
 
-with open(csv_file, newline='', encoding='utf-8') as f:
+with open(args.csv_file, newline='', encoding='utf-8') as f:
     reader = csv.DictReader(f)
     
     for row in reader:

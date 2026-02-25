@@ -26,32 +26,34 @@ def basic_clean(s: str) -> str:
     return s
 
 def compute_features(df: pd.DataFrame) -> pd.DataFrame:
-    # Features très simples mais utiles
     old = df["old"].astype(str)
     new = df["new"].astype(str)
     diff = df["diff"].astype(str)
+    comment = df["comment"].astype(str)
 
     df_feat = pd.DataFrame(index=df.index)
 
     df_feat["len_old"] = old.str.len()
     df_feat["len_new"] = new.str.len()
     df_feat["len_diff"] = diff.str.len()
+    df_feat["len_comment"] = comment.str.len()
 
     df_feat["delta_len"] = df_feat["len_new"] - df_feat["len_old"]
     df_feat["abs_delta_len"] = df_feat["delta_len"].abs()
 
-    # Ratios (évite div0)
     df_feat["ratio_new_old"] = (df_feat["len_new"] + 1.0) / (df_feat["len_old"] + 1.0)
     df_feat["ratio_diff_new"] = (df_feat["len_diff"] + 1.0) / (df_feat["len_new"] + 1.0)
 
-    # Nombre de caractères "suspects" (simple heuristique)
     df_feat["num_excl"] = new.str.count("!")
     df_feat["num_qm"] = new.str.count(r"\?")
     df_feat["num_caps"] = new.apply(lambda x: sum(1 for c in x if c.isupper()))
     df_feat["caps_ratio"] = df_feat["num_caps"] / (df_feat["len_new"] + 1.0)
 
-    # Normalisation simple (z-score) sur les features numériques
-    # (sera recalculée sur train uniquement plus bas)
+    df_feat["comment_num_excl"] = comment.str.count("!")
+    df_feat["comment_num_qm"] = comment.str.count(r"\?")
+    df_feat["comment_caps"] = comment.apply(lambda x: sum(1 for c in x if c.isupper()))
+    df_feat["comment_caps_ratio"] = df_feat["comment_caps"] / (df_feat["len_comment"] + 1.0)
+
     return df_feat
 
 def make_tf_dataset(df, num_feat, batch_size=64, shuffle=False):
@@ -59,6 +61,7 @@ def make_tf_dataset(df, num_feat, batch_size=64, shuffle=False):
         "old": df["old"].values,
         "new": df["new"].values,
         "diff": df["diff"].values,
+        "comment": df["comment"].values,
         "num": num_feat.values.astype(np.float32),
     }
     labels = df["reverted"].values.astype(np.float32)
@@ -88,49 +91,42 @@ def build_text_tower(name, vectorizer, input_dim, embed_dim=128, lstm_units=64, 
     return inp, x
 
 def build_model(num_features, vocab_size=50000, seq_len=400, embed_dim=128, lstm_units=64):
-    vec_old = tf.keras.layers.TextVectorization(
-        max_tokens=vocab_size, output_mode="int", output_sequence_length=seq_len
-    )
-    vec_new = tf.keras.layers.TextVectorization(
-        max_tokens=vocab_size, output_mode="int", output_sequence_length=seq_len
-    )
-    vec_diff = tf.keras.layers.TextVectorization(
-        max_tokens=vocab_size, output_mode="int", output_sequence_length=seq_len
-    )
+    vec_old = tf.keras.layers.TextVectorization(max_tokens=vocab_size, output_mode="int", output_sequence_length=seq_len)
+    vec_new = tf.keras.layers.TextVectorization(max_tokens=vocab_size, output_mode="int", output_sequence_length=seq_len)
+    vec_diff = tf.keras.layers.TextVectorization(max_tokens=vocab_size, output_mode="int", output_sequence_length=seq_len)
+    vec_comment = tf.keras.layers.TextVectorization(max_tokens=vocab_size, output_mode="int", output_sequence_length=seq_len)
 
-    # IMPORTANT: input_dim = max_tokens (vocab_size) + 2 dans certains cas,
-    # mais TextVectorization respecte max_tokens, donc on peut utiliser vocab_size.
-    # Pour être ultra sûr, on met vocab_size.
     inp_old, tower_old = build_text_tower("old", vec_old, input_dim=vocab_size, embed_dim=embed_dim, lstm_units=lstm_units)
     inp_new, tower_new = build_text_tower("new", vec_new, input_dim=vocab_size, embed_dim=embed_dim, lstm_units=lstm_units)
     inp_diff, tower_diff = build_text_tower("diff", vec_diff, input_dim=vocab_size, embed_dim=embed_dim, lstm_units=lstm_units)
+    inp_comment, tower_comment = build_text_tower("comment", vec_comment, input_dim=vocab_size, embed_dim=embed_dim, lstm_units=lstm_units)
 
     inp_num = tf.keras.Input(shape=(num_features,), dtype=tf.float32, name="num")
     x_num = tf.keras.layers.Dense(64, activation="relu")(inp_num)
     x_num = tf.keras.layers.Dropout(0.2)(x_num)
 
-    x = tf.keras.layers.Concatenate()([tower_old, tower_new, tower_diff, x_num])
+    x = tf.keras.layers.Concatenate()([tower_old, tower_new, tower_diff, tower_comment, x_num])
     x = tf.keras.layers.Dense(256, activation="relu")(x)
     x = tf.keras.layers.Dropout(0.3)(x)
     x = tf.keras.layers.Dense(64, activation="relu")(x)
     out = tf.keras.layers.Dense(1, activation="sigmoid", name="reverted")(x)
 
-    model = tf.keras.Model(inputs=[inp_old, inp_new, inp_diff, inp_num], outputs=out)
+    model = tf.keras.Model(inputs=[inp_old, inp_new, inp_diff, inp_comment, inp_num], outputs=out)
     model.compile(
-        optimizer=tf.keras.optimizers.Adam(1e-4),
+        optimizer=tf.keras.optimizers.Adam(1e-5),
         loss=tf.keras.losses.BinaryCrossentropy(),
         metrics=[tf.keras.metrics.AUC(name="auc"),
                  tf.keras.metrics.Precision(name="precision"),
                  tf.keras.metrics.Recall(name="recall")]
     )
-    return model, vec_old, vec_new, vec_diff
+    return model, vec_old, vec_new, vec_diff, vec_comment
 
 # -----------------------------
 # Main
 # -----------------------------
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument("--csv", default="model/vikidia_fr/rc_wiki.csv", help="Chemin vers le CSV")
+    parser.add_argument("--csv", default="model/vikidia_fr/rc_wiki_vikidia_fr.csv", help="Chemin vers le CSV")
     parser.add_argument("--outdir", default="model_vandalism", help="Dossier de sortie")
     parser.add_argument("--batch", type=int, default=64)
     parser.add_argument("--epochs", type=int, default=50)
@@ -145,13 +141,13 @@ def main():
     df = pd.read_csv(args.csv)
 
     # Champs requis
-    required = ["old", "new", "diff", "reverted"]
+    required = ["old", "new", "diff", "comment", "reverted"]
     for c in required:
         if c not in df.columns:
             raise ValueError(f"Colonne manquante: {c}")
 
     # Nettoyage texte
-    for col in ["old", "new", "diff"]:
+    for col in ["old", "new", "diff", "comment"]:
         df[col] = df[col].apply(basic_clean)
 
     # Label
@@ -196,16 +192,16 @@ def main():
 
     # Modèle + vectorizers
     num_features = feat_train.shape[1]
-    model, vec_old, vec_new, vec_diff = build_model(
+    model, vec_old, vec_new, vec_diff, vec_comment = build_model(
         num_features=num_features,
         vocab_size=args.vocab,
         seq_len=args.seqlen
     )
 
-    # Adapt vocabularies sur train
     vec_old.adapt(df_train["old"].values)
     vec_new.adapt(df_train["new"].values)
     vec_diff.adapt(df_train["diff"].values)
+    vec_comment.adapt(df_train["comment"].values)
 
     # Gestion du déséquilibre
     class_weight = {0: 1.0, 1: neg / max(pos, 1)}
@@ -254,6 +250,7 @@ def main():
     save_vocab(vec_old, "old")
     save_vocab(vec_new, "new")
     save_vocab(vec_diff, "diff")
+    save_vocab(vec_comment, "comment")
 
     print(f"Modèle exporté dans: {args.outdir}/saved_model")
 
