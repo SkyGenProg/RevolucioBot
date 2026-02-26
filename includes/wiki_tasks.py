@@ -71,35 +71,45 @@ def basic_clean(s):
         return ""
     return " ".join(str(s).replace("\n", " ").replace("\r", " ").split())
 
-def compute_features_row(old, new, diff):
+def compute_features_row(old, new, diff, comment):
     len_old = len(old)
     len_new = len(new)
     len_diff = len(diff)
+    len_comment = len(comment)
     delta_len = len_new - len_old
     abs_delta_len = abs(delta_len)
     ratio_new_old = (len_new + 1.0) / (len_old + 1.0)
     ratio_diff_new = (len_diff + 1.0) / (len_new + 1.0)
     num_excl = new.count("!")
     num_qm = new.count("?")
+    comment_num_excl = comment.count("!")
+    comment_num_qm = comment.count("?")
     num_caps = sum(1 for c in new if c.isupper())
     caps_ratio = num_caps / (len_new + 1.0)
+    comment_caps = sum(1 for c in comment if c.isupper())
+    comment_caps_ratio = comment_caps / (len_comment + 1.0)
 
     # doit correspondre à l'ordre des colonnes d'entraînement (mêmes noms)
     return {
         "len_old": len_old,
         "len_new": len_new,
         "len_diff": len_diff,
+        "len_comment": len_comment,
         "delta_len": delta_len,
         "abs_delta_len": abs_delta_len,
         "ratio_new_old": ratio_new_old,
         "ratio_diff_new": ratio_diff_new,
         "num_excl": num_excl,
         "num_qm": num_qm,
+        "comment_num_excl": comment_num_excl,
+        "comment_num_qm": comment_num_qm,
         "num_caps": num_caps,
-        "caps_ratio": caps_ratio
+        "caps_ratio": caps_ratio,
+        "comment_caps": comment_caps,
+        "comment_caps_ratio": comment_caps_ratio,
     }
 
-def predict(model_dir, norm_json, old, new, diff):
+def predict(model_dir, norm_json, old, new, diff, comment):
     if tf is None or np is None:
         pywikibot.error("Tensorflow or Numpy are not installed: The local AI needs these libraries.")
         return -1
@@ -113,8 +123,9 @@ def predict(model_dir, norm_json, old, new, diff):
     old = basic_clean(old)
     new = basic_clean(new)
     diff = basic_clean(diff)
+    comment = basic_clean(comment)
 
-    feats = compute_features_row(old, new, diff)
+    feats = compute_features_row(old, new, diff, comment)
     # normalisation
     vec = []
     for k in mean.keys():
@@ -127,6 +138,7 @@ def predict(model_dir, norm_json, old, new, diff):
         "old": np.array([old], dtype=object),
         "new": np.array([new], dtype=object),
         "diff": np.array([diff], dtype=object),
+        "comment": np.array([comment], dtype=object),
         "num": num,
     }
     prob = float(model_local.predict(inputs, verbose=0)[0][0])
@@ -590,10 +602,11 @@ class wiki_task:
                 norm_json=norm_json,
                 old=page.text_page_oldid2,
                 new=page.text_page_oldid,
-                diff=diff_text
+                diff=diff_text,
+                comment=page.comment
             )
-        except ValueError:
-            pywikibot.error(f"Check if file {model_dir} or {norm_json} exists.")
+        except Exception:
+            pywikibot.error(traceback.format_exc())
             return
         self.proba_ai = prob*100
 
