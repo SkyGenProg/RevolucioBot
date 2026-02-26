@@ -37,15 +37,17 @@ if __name__ == "__main__":
     detected = page.get_vandalism_report()
     pywikibot.output(detected)
     pywikibot.output("Score : " + str(vandalism_score))
-    pywikibot.output("Révoqué précédemment : " + str(page.user_previous_reverted))
-    revision1 = page.get_revision(int(args.diff))
-    revision2 = page.get_revision(page.oldid)
-    diff = difflib.unified_diff((revision2["text"] or "").splitlines(), (revision1["text"] or "").splitlines())
+    pywikibot.output("Revoqué : " + str(page.edit_reverted))
+    pywikibot.output("Utilisateur révoqué précédemment : " + str(page.user_previous_reverted))
+    pywikibot.output("Date : " + str(page.timestamp))
+    revision1_text = page.text_page_oldid
+    revision2_text = page.text_page_oldid2
+    diff = difflib.unified_diff(revision2_text.splitlines(), revision1_text.splitlines())
     diff_text = "\n".join(diff)
     pywikibot.output("Diff :")
     pywikibot.output(diff_text)
     if args.use_ai:
-        prompt = prompt_ai(args.lang, revision1.timestamp, page.url, page.page_name, diff_text, revision1.comment)
+        prompt = prompt_ai(args.lang, page.timestamp, page.url, page.page_name, diff_text, page.comment)
         pywikibot.output("Prompt :")
         pywikibot.output(prompt)
         pywikibot.output("Analyse de l'IA : ")
@@ -64,8 +66,8 @@ if __name__ == "__main__":
         prob = predict(
             model_dir=site.config.get("local_ai_model"),
             norm_json=site.config.get("num_feat_norm"),
-            old=revision2["text"],
-            new=revision1["text"],
+            old=revision2_text,
+            new=revision1_text,
             diff=diff_text
         )
         pywikibot.output(f"Probabilité de vandalisme (IA locale) : {prob*100} %.")

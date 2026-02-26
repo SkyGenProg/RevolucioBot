@@ -334,7 +334,8 @@ class get_page(pywikibot.Page):
         self.vandalism_score_detect: List[List[Any]] = []
         self.vand_to_revert = False
         self.user_previous_reverted = False
-        self.reverted = False
+        self.edit_reverted = False # Reverted by an user
+        self.reverted = False # Reverted by the bot
         self.list_contributor_rights = None
 
         fullurl = self.source.site.siteinfo["general"]["server"] + self.source.site.siteinfo["general"]["articlepath"].replace("$1", self.page_name)
@@ -343,6 +344,7 @@ class get_page(pywikibot.Page):
         self.articlepath = self.source.site.siteinfo["general"]["articlepath"].replace("$1", "")
         self.scriptpath = self.source.site.siteinfo["general"]["scriptpath"]
         self.commented = None
+        self.comment = ""
 
         if not self.special:
             try:
@@ -499,19 +501,24 @@ class get_page(pywikibot.Page):
 
         self.oldid = revision_oldid2 if revision_oldid2 is not None else -1
         contributor_name = self.contributor_name if revision_oldid is None else ""
-
+        edit_reverted = False
         try:
             for rev in self.revisions(total=total, endtime=endtime):
+                is_revert = "mw-rollback" in rev.tags or "mw-undo" in rev.tags or "mw-manual-revert" in rev.tags
                 comment = re.sub(r"/\*[\s\S]*?\*/", "", rev.comment).strip().lower()
                 if rev.revid == revision_oldid:
+                    self.edit_reverted = edit_reverted or "mw-reverted" in rev.tags
+                    self.comment = rev.comment
+                    self.timestamp = rev.timestamp
                     contributor_name = rev.user
                     self.commented = False
                 if contributor_name == rev.user and comment != "" and "résumé automatique" not in comment:
                     self.commented = True
                 if (revision_oldid2 is None and rev.user != contributor_name and (revision_oldid is None or rev.revid <= revision_oldid)) or (revision_oldid2 is not None and rev.revid <= revision_oldid2):
                     self.oldid = rev.revid
-                    self.user_previous_reverted = ("mw-rollback" in rev.tags or "mw-undo" in rev.tags or "mw-manual-revert" in rev.tags) and contributor_name in rev.comment and self.user_wiki != rev.user
+                    self.user_previous_reverted = is_revert and contributor_name in rev.comment and self.user_wiki != rev.user
                     break
+                edit_reverted = is_revert
         except Exception:
             try:
                 pywikibot.error(traceback.format_exc())

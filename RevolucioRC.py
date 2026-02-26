@@ -59,7 +59,16 @@ if __name__ == "__main__":
                 pywikibot.output(f"{prog} %")
                 page_name = page_info["title"]
                 user = page_info["user"]
-                if user in site.trusted:
+                ignored = False
+                pages_ignore = site.config.get("ignore")
+                if pages_ignore is not None:
+                    for page_ignore in pages_ignore:
+                        if page_ignore in page_name:
+                            ignored = True
+                            break
+                    if ignored:
+                        continue
+                if ignored or user in site.trusted:
                     status_ok = True
                     continue
                 user_rights = site.rights(user)
@@ -75,20 +84,14 @@ if __name__ == "__main__":
                 vandalism_score = page.vandalism_score()
                 detected = page.get_vandalism_report()
                 pywikibot.output(detected)
-                reverted = "mw-reverted" in page_info["tags"]
-                pywikibot.output(f"Score : {vandalism_score}, reverted : {reverted}")
-                if int(page_info["old_revid"]) > 0:
-                    revision1 = page.get_revision(int(page_info["old_revid"]))
-                    revision1_text = revision1["text"] or ""
-                else:
-                    revision1_text = ""
-                revision2 = page.get_revision(int(page_info["revid"]))
-                revision2_text = revision2["text"] or ""
-                diff = difflib.unified_diff(revision1_text.splitlines(), revision2_text.splitlines())
+                pywikibot.output(f"Score : {vandalism_score}, reverted : {page.edit_reverted}")
+                revision1_text = page.text_page_oldid
+                revision2_text = page.text_page_oldid2
+                diff = difflib.unified_diff(revision2_text.splitlines(), revision1_text.splitlines())
                 diff_text = "\n".join(diff)
-                diff_comment = revision2.comment
+                diff_comment = page.comment
                 if args.use_ai:
-                    prompt = prompt_ai(args.lang, revision2.timestamp, page.url, page.page_name, diff_text, revision2.comment)
+                    prompt = prompt_ai(args.lang, page.timestamp, page.url, page.page_name, diff_text, page.comment)
                     pywikibot.output("Prompt :")
                     pywikibot.output(prompt)
                     pywikibot.output("Analyse de l'IA : ")
@@ -116,7 +119,7 @@ if __name__ == "__main__":
                     f"&oldid={page_info['old_revid']}"
                 )
                 writer.writerow([
-                    revision2.timestamp.isoformat(),
+                    page.timestamp.isoformat(),
                     f"{args.lang}.{args.wiki}",
                     page.page_name,
                     page.page_ns,
@@ -129,7 +132,7 @@ if __name__ == "__main__":
                     diff_url,
                     vandalism_score,
                     prob_vand,
-                    reverted
+                    page.edit_reverted
                 ])
                 status_ok = True
             except HTTPError:

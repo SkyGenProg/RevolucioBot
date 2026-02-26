@@ -1,1 +1,2 @@
 *.keras filter=lfs diff=lfs merge=lfs -text
+rc_wiki_* filter=lfs diff=lfs merge=lfs -text

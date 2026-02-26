@@ -253,7 +253,7 @@ class wiki_task:
                         page.get_text_page_old(page_info["revid"], page_info["old_revid"] if int(page_info["old_revid"]) > 0 else None)
                         self.vandalism_score = page.vandalism_score()
                         detailed_diff_info = self.site.add_detailed_diff_info(
-                            detailed_diff_info, page_info, page.text_page_oldid, page.text_page_oldid2, self.vandalism_score, "mw-reverted" in page_info["tags"]
+                            detailed_diff_info, page_info, page.text_page_oldid, page.text_page_oldid2, self.vandalism_score, page.edit_reverted
                         )
                     except Exception:
                         _safe_log_exc()

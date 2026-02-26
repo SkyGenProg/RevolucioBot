@@ -113,7 +113,7 @@ def build_model(num_features, vocab_size=50000, seq_len=400, embed_dim=128, lstm
 
     model = tf.keras.Model(inputs=[inp_old, inp_new, inp_diff, inp_comment, inp_num], outputs=out)
     model.compile(
-        optimizer=tf.keras.optimizers.Adam(1e-5),
+        optimizer=tf.keras.optimizers.Adam(1e-4),
         loss=tf.keras.losses.BinaryCrossentropy(),
         metrics=[tf.keras.metrics.AUC(name="auc"),
                  tf.keras.metrics.Precision(name="precision"),
@@ -129,7 +129,7 @@ def main():
     parser.add_argument("--csv", default="model/vikidia_fr/rc_wiki_vikidia_fr.csv", help="Chemin vers le CSV")
     parser.add_argument("--outdir", default="model_vandalism", help="Dossier de sortie")
     parser.add_argument("--batch", type=int, default=64)
-    parser.add_argument("--epochs", type=int, default=50)
+    parser.add_argument("--epochs", type=int, default=10)
     parser.add_argument("--vocab", type=int, default=50000)
     parser.add_argument("--seqlen", type=int, default=400)
     parser.add_argument("--seed", type=int, default=42)
@@ -203,17 +203,12 @@ def main():
     vec_diff.adapt(df_train["diff"].values)
     vec_comment.adapt(df_train["comment"].values)
 
-    # Gestion du déséquilibre
-    class_weight = {0: 1.0, 1: neg / max(pos, 1)}
-    print("class_weight:", class_weight)
-
     callbacks = [
-        tf.keras.callbacks.EarlyStopping(monitor="val_loss", patience=5, restore_best_weights=True),
+        tf.keras.callbacks.EarlyStopping(monitor="val_loss", patience=2, restore_best_weights=True),
         tf.keras.callbacks.ModelCheckpoint(
             filepath=os.path.join(args.outdir, "ckpt.keras"),
             monitor="val_loss", save_best_only=True
         ),
-        tf.keras.callbacks.ReduceLROnPlateau(monitor="val_loss", factor=0.5, patience=1, min_lr=1e-5),
     ]
 
     history = model.fit(
@@ -221,7 +216,6 @@ def main():
         validation_data=ds_val,
         epochs=args.epochs,
         callbacks=callbacks,
-        class_weight=class_weight,
         verbose=1,
     )
 
