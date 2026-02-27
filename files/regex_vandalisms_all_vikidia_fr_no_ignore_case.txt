@@ -6,15 +6,19 @@
 [^a-z]{200}:-10
 !{5}:-3
 \.{5}:-1
-[A-Z][a-z][^.:?;]+[.?:;]:+1
+[A-Z][a-z][^.:?;\r\n]+[.?:;]:+1
 '':+1
-==:+3
 cite web:+3
 \[\[[\s\S]+?\]\]:+1
 ^\*\*? :+1
+==.+==:+5
 \[\[\w{2,3}\:.+\]\]:+10
 \[\[[Cc]at[eé]gorie\:.+\]\]:+10
-<ref:+10
+<ref:+50
+\{\{[Ll]ien web:+50
+\{\{[Aa]rticle:+50
+\{\{[Oo]uvrage:+50
+\{\{[Cc]hapitre:+50
 \|\s*.+\s*=\s*([^|}]+):+1
 \{\{[\s\S]+?\}\}:+2
 \{\{([Ss]uppression|SI):+5
@@ -29,6 +33,5 @@ cite web:+3
 »:+2
 ":+1
 REDIRECT:+5
-Votre modification a ete annulee par un \[\[Wikipedia:Bot:-20
 visibility:\s+hidden:-20
 \|\d{5,}px(\||\]\]):-20
