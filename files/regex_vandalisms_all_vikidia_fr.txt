@@ -12,12 +12,12 @@ hey ?hey:-5
 \b1337\b:-5
 \bgay\b:-5
 \bno-?lifes?\b:-5
-\bbitch(es)?\b:-10
-\basshole:-10
-\bfuck:-10
-\bfuck fuck:-10
-\bwtf\b:-10
-\bin hell\b:-10
+\bbitch(es)?\b:-20
+\basshole:-20
+\bfuck:-20
+\bfuck fuck:-20
+\bwtf\b:-20
+\bin hell\b:-20
 \bsux+e?\b:-20
 \bbig (\w+ )?cock\b:-30
 \b(is|are) gay\b:-30
