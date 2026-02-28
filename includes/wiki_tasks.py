@@ -152,6 +152,7 @@ class wiki_task:
         self.start_task_month = start_task_month and not ignore_task_month
         self.ignore_task_month = ignore_task_month
         self.site.get_trusted()  # récupération des utilisateurs ignorés par le bot
+        self.vandalism_score = None
 
         self.datetime_utcnow = datetime.datetime.utcnow()
 
@@ -554,7 +555,7 @@ class wiki_task:
 
         user_rights = page.contributor_rights()
 
-        if (self.proba_ai >= page.limit_ai or (self.proba_ai >= page.limit_ai2 and self.vandalism_score <= page.limit2)) and "autoconfirmed" not in user_rights:
+        if (self.proba_ai >= page.limit_ai or (self.proba_ai >= page.limit_ai2 and self.vandalism_score is not None and self.vandalism_score <= page.limit2)) and "autoconfirmed" not in user_rights:
             if not page.reverted:
                 page.revert(f"Modification non-constructive détectée par IA à {self.proba_ai} %" if self.site.lang_bot == "fr" else f"Non-constructive edit detected by AI ({self.proba_ai} %)", test, result_ai)
             color = 13371938
@@ -617,7 +618,7 @@ class wiki_task:
         else:
             title_base = f"Local AI analysis (beta) on {self.site.lang}:{page.page_name} : {round(self.proba_ai, 2)} % de probabilité de vandalisme"
 
-        if (self.proba_ai >= page.limit_ai_local or (self.proba_ai >= page.limit_ai_local2 and self.vandalism_score <= page.limit2)) and "autoconfirmed" not in user_rights:
+        if (self.proba_ai >= page.limit_ai_local or (self.proba_ai >= page.limit_ai_local2 and self.vandalism_score is not None and self.vandalism_score <= page.limit2)) and "autoconfirmed" not in user_rights:
             if not page.reverted:
                 page.revert(f"Modification non-constructive détectée par IA locale à {round(self.proba_ai, 2)} %" if self.site.lang_bot == "fr" else f"Non-constructive edit detected by local AI ({round(self.proba_ai, 2)} %)", test, f"Modification non-constructive détectée par IA locale à {round(self.proba_ai, 2)} %" if self.site.lang_bot == "fr" else f"Non-constructive edit detected by local AI ({round(self.proba_ai, 2)} %)")
             color = 13371938
