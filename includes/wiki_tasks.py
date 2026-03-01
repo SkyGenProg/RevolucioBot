@@ -18,6 +18,7 @@ except ImportError:
     tf = None
     pywikibot.warning("Tensorflow is not installed. It is required for local AI.")
 except Exception:
+    tf = None
     pywikibot.error(traceback.format_exc())
 try:
     import numpy as np
