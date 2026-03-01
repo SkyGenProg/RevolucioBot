@@ -407,7 +407,7 @@ class wiki_task:
 
             too_old = abs((self.datetime_utcnow - page.latest_revision.timestamp).days) > self.site.days_clean_warnings
 
-            if page.page_ns == 3 and too_old and ("avertissement effacé" not in page.text.lower() or "warning cleared" not in page.text.lower() or "==" in page.text.lower()):
+            if page.page_ns == 3 and too_old and (("avertissement effacé" not in page.text.lower() and "warning cleared" not in page.text.lower()) or "==" in page.text.lower()):
                 pywikibot.output("Suppression des avertissements de la page " + page_name)
                 try:
                     if self.site.lang_bot == "fr":
