@@ -7,7 +7,7 @@ wikisource\.org:+10
 wikiquote\.org:+10
 site.*=:+10
 \.pdf:+1
-\[\[Special:Contributions:-25
+\[\[Special:Contrib(ution)?s:-25
 \[\[[Uu]ser::-25
 \b0?\d\W\d\d\W\d\d\W\d\d\W\d\d\b:-5
 \S+@\S+\.[a-z]+:-5

@@ -208,7 +208,8 @@ Entrez le texte non formate ici:-25
 \[\[(Fichier|Image):*\\:-25
 '''Texte gras''':-25
 ''Texte italique'':-25
-\[\[Special:Contributions:-25
+\[\[Sp[eé]cial:Contrib(ution)?s:-25
+\[\[[Uu](ser|tilisateur)::-25
 \b0?\d\W\d\d\W\d\d\W\d\d\W\d\d\b:-5
 \S+@\S+\.[a-z]+:-5
 \bmeurt\b:-1
