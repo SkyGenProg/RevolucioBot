@@ -110,20 +110,13 @@ Analysis of the modification:
 ...
 Probability of vandalism: [probability] %"""
 
-def get_warn_level(t):
+def get_warn_level(t, level_min, level_max):
     # Rough heuristic based on templates.
-    has_lvl0 = any(k in t for k in ("averto-0", "niveau=0", "level=0", "avertissement-niveau-0"))
-    has_lvl1 = any(k in t for k in ("averto-1", "niveau=1", "level=1", "avertissement-niveau-1"))
-    has_lvl2 = any(k in t for k in ("averto-2", "niveau=2", "level=2", "avertissement-niveau-2"))
-
-    if has_lvl2:
-        warn_level = 3
-    elif has_lvl1 and not has_lvl2:
-        warn_level = 2
-    elif has_lvl0 and not has_lvl1:
-        warn_level = 1
-    else:
-        warn_level = 0
+    warn_level = level_min
+    for l in range(level_min, level_max+1):
+        has_lvl_l = any(k in t for k in (f"averto-{l}", f"niveau={l}", f"level={l}", f"avertissement-niveau-{l}"))
+        if has_lvl_l:
+            warn_level = l+1
     return warn_level
 
 # ----------------------------
@@ -357,16 +350,20 @@ class get_page(pywikibot.Page):
                 self.page_ns = -1
                 self.diff = None
                 self.size = None
+            self.contributor_before_edits = ""
 
         # thresholds
         self.limit = self.source.config.get("limit", -20)
-        self.limit2 = self.source.config.get("limit2", -10)
+        self.limit2 = self.source.config.get("limit2", -3)
         self.limit_ai = self.source.config.get("limit_ai", 98)
         self.limit_ai2 = self.source.config.get("limit_ai2", 90)
         self.limit_ai3 = self.source.config.get("limit_ai3", 50)
         self.limit_ai_local = self.source.config.get("limit_ai_local", 98)
         self.limit_ai_local2 = self.source.config.get("limit_ai_local2", 90)
         self.limit_ai_local3 = self.source.config.get("limit_ai_local3", 50)
+        self.level_block = self.source.config.get("level_block", 2)
+        self.level_max = self.source.config.get("level_max", 3)
+        self.level_min = self.source.config.get("level_min", 0)
 
         # alert page
         alert_page_tpl = self.source.config.get("alert_page")
@@ -422,40 +419,41 @@ class get_page(pywikibot.Page):
         self.text = "{{subst:User:%s/VandalismDelete}}" % self.user_wiki if self.new_page else (self.text_page_oldid2 or "")
 
         if self.lang_bot == "fr":
-            msg = ("Annulation : " + summary) if summary else "Annulation modification non-constructive"
+            if self.contributor_before_edits != "":
+                msg = f"Bot : Annulation des modifications de [[Special:Contributions/{self.contributor_name}|{self.contributor_name}]], retour à la version de [[Special:Contributions/{self.contributor_before_edits}|{self.contributor_before_edits}]] : {summary}"
+            else:
+                msg = f"Bot : Suppression immédiate de cette page créée par [[Special:Contributions/{self.contributor_name}|{self.contributor_name}]] : {summary}"
         else:
-            msg = ("Revert : " + summary) if summary else "Revert"
+            if self.contributor_before_edits != "":
+                msg = f"Bot: Reverted edits by [[Special:Contributions/{self.contributor_name}|{self.contributor_name}]], restored version of [[Special:Contributions/{self.contributor_before_edits}|{self.contributor_before_edits}]] : {summary}"
+            else:
+                msg = f"Bot: Speedy delete of page created by [[Special:Contributions/{self.contributor_name}|{self.contributor_name}]] : {summary}"
         self.save(msg, bot=False, minor=False)
         self.reverted = True
 
     def get_warnings_user(self) -> None:
         self.talk = pywikibot.Page(self.source.site, f"User Talk:{self.contributor_name}")
         t = self.talk.text.lower()
-        self.warn_level = get_warn_level(t)
+        self.warn_level = get_warn_level(t, self.level_min, self.level_max)
+        if self.warn_level >= self.level_max:
+            self.warn_level = self.level_max
 
     def warn_revert(self, summary: str = "") -> None:
         self.get_warnings_user()
 
-        if self.warn_level >= 3:
-            self.talk.text += f"\n{{{{subst:User:{self.user_wiki}/Vandalism3|{self.page_name}|{summary}}}}} <!-- level=3 -->"
-            self.talk.save("Avertissement 3" if self.lang_bot == "fr" else "Warning 3", bot=False, minor=False)
+        if self.oldid == -1:
+            link_diff = f"[[Special:Diff/{self.diff}]]"
+        else:
+            link_diff = f"[[Special:Diff/{self.oldid}/{self.diff}]]"
 
-        elif self.warn_level == 2:
+        self.talk.text += f"\n{{{{subst:User:{self.user_wiki}/Vandalism{self.warn_level}|{self.page_name}|{summary}|{link_diff}}}}} <!-- level={self.warn_level} -->"
+        self.talk.save(f"Bot : Avertissement {self.warn_level} sur [[{self.page_name}]]" if self.lang_bot == "fr" else f"Bot: Warning {self.warn_level} on [[{self.page_name}]]", bot=False, minor=False)
+
+        if self.warn_level == self.level_block:
             alert = pywikibot.Page(self.source.site, self.alert_page)
             alert.text += f"\n{{{{subst:User:{self.user_wiki}/Alert|{self.contributor_name}}}}}"
-            alert.save("Alerte vandalisme" if self.lang_bot == "fr" else "Vandalism alert", bot=False, minor=False)
-
-            self.talk.text += f"\n{{{{subst:User:{self.user_wiki}/Vandalism2|{self.page_name}|{summary}}}}} <!-- level=2 -->"
-            self.talk.save("Avertissement 2" if self.lang_bot == "fr" else "Warning 2", bot=False, minor=False)
+            alert.save(f"Bot : Alerte vandalisme concernant [[Special:Contributions/{self.contributor_name}|{self.contributor_name}]] !" if self.lang_bot == "fr" else "Bot: Vandalism alert about [[Special:Contributions/{self.contributor_name}|{self.contributor_name}]] !", bot=False, minor=False)
             self.alert_request = True
-
-        elif self.warn_level == 1:
-            self.talk.text += f"\n{{{{subst:User:{self.user_wiki}/Vandalism1|{self.page_name}|{summary}}}}} <!-- level=1 -->"
-            self.talk.save("Avertissement 1" if self.lang_bot == "fr" else "Warning 1", bot=False, minor=False)
-
-        else:
-            self.talk.text += f"\n{{{{subst:User:{self.user_wiki}/Vandalism0|{self.page_name}|{summary}}}}} <!-- level=0 -->"
-            self.talk.save("Avertissement 0" if self.lang_bot == "fr" else "Warning 0", bot=False, minor=False)
 
     # ---- vandalism scoring
 
@@ -471,7 +469,7 @@ class get_page(pywikibot.Page):
             self.vand_to_revert = True
         elif vand <= self.limit2 and "autoconfirmed" not in user_rights:
             self.get_warnings_user()
-            self.vand_to_revert = self.warn_level > 0 or self.user_previous_reverted
+            self.vand_to_revert = self.warn_level > self.level_min or self.user_previous_reverted
         else:
             self.vand_to_revert = False
         return vand
@@ -516,6 +514,7 @@ class get_page(pywikibot.Page):
                     self.commented = True
                 if (revision_oldid2 is None and rev.user != contributor_name and (revision_oldid is None or rev.revid <= revision_oldid)) or (revision_oldid2 is not None and rev.revid <= revision_oldid2):
                     self.oldid = rev.revid
+                    self.contributor_before_edits = rev.user
                     self.user_previous_reverted = is_revert and contributor_name in rev.comment and self.user_wiki != rev.user
                     break
                 edit_reverted = is_revert
@@ -551,10 +550,7 @@ class get_page(pywikibot.Page):
                 continue
             key, score_s = line.rsplit(":", 1)
             key = key.strip()
-            try:
-                score = int(score_s.strip())
-            except ValueError:
-                continue
+            score = int(score_s.strip())
             out.append((key, score))
         return out
 
@@ -605,20 +601,18 @@ class get_page(pywikibot.Page):
             if not self.commented:
                 vand += self.score_regex_count("del_regex_ns_0_no_comment", files["del_regex_ns_0_no_comment"], text_old, text_new, re.IGNORECASE)
             # size rules on ns 0
-            vand_size = 0
-            vandalism_score_detect_size = []
-            for size_s, score in self._parse_scored_lines(_read_lines(files["size"])):
-                try:
+            if self.new_page:
+                vand_size = 0
+                vandalism_score_detect_size = []
+                for size_s, score in self._parse_scored_lines(_read_lines(files["size"])):
                     size = int(size_s)
-                except ValueError:
-                    continue
-                if len(text_new) < size:
-                    vandalism_score_detect_size.append(["size", score, size_s])
-                    vand_size += score
-            if vand_size < 0 and not self.isRedirectPage():
-                vand += vand_size
-                for line in vandalism_score_detect_size:
-                    self.vandalism_score_detect.append(line)
+                    if len(text_new) < size:
+                        vandalism_score_detect_size.append(["size", score, size_s])
+                        vand_size += score
+                if vand_size < 0 and not self.isRedirectPage():
+                    vand += vand_size
+                    for line in vandalism_score_detect_size:
+                        self.vandalism_score_detect.append(line)
             # diff rules on ns 0 (no comment)
             if not self.commented:
                 delta = len(text_new) - len(text_old)

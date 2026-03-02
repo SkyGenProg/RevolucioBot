@@ -1,1 +1,1 @@
-{"lang_bot": "fr", "trusted_groups": "sysop|bot", "alert_page": "Project:Vandalisme en cours", "clear_talks": false, "check_WP": false, "correct_redirects": false, "disable_ai": true, "ignore": ["Aide:Bac à sable"]}
+{"lang_bot": "fr", "trusted_groups": "sysop|bot", "alert_page": "Project:Vandalisme en cours", "clear_talks": false, "check_WP": false, "correct_redirects": false, "disable_ai": true, "ignore": ["Aide:Bac à sable"], "level_min": 1, "level_block": 3, "level_max": 4}
