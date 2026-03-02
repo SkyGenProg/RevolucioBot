@@ -131,7 +131,7 @@ trop (bien|nul):-10
 \bcouill(u|on):-10
 \bbogoss\b:-10
 \bbouh\b:-10
-\bje t'a+i+m+e+\b:-20
+\bje t'a+i+m+e+\b:-10
 ah{3,}:-20
 \bsuis con\b:-20
 LeStudio1\.com:-20
