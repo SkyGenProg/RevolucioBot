@@ -12,7 +12,7 @@ cite web:+3
 ^\*\*? :+1
 ==.+==:+5
 \[\[\w{2,3}\:.+\]\]:+10
-\[\[[Cc]at[eé]gorie\:.+\]\]:+10
+\[\[[Cc]at[eé]gorie\:.+\]\]:+50
 ''[^.?!\r\n]+'':+50
 <ref:+50
 «[^.?!\r\n]+»:+50
@@ -29,10 +29,10 @@ cite web:+3
 \{\{[Pp]ortail:+5
 \{\{[Éé]bauche:+3
 \{\{[Àà] supprimer:+5
-\{\{[Ii]nfobox:+10
-<small>:+10
-<blockquote>:+10
-<math>:+10
+\{\{[Ii]nfobox:+50
+<small>:+50
+<blockquote>:+50
+<math>:+50
 REDIRECT:+50
 visibility:\s+hidden:-20
 \|\d{5,}px(\||\]\]):-20
