@@ -445,7 +445,7 @@ class wiki_task:
         self.vandalism_score = page.vandalism_get_score_current()
         detected = page.get_vandalism_report()
 
-        if page.vand_to_revert:
+        if page.vand_to_revert and not page.reverted:
             page.revert(
                 f"Modification non-constructive détectée par expressions rationnelles (score : {self.vandalism_score})"
                 if self.site.lang_bot == "fr"
