@@ -359,7 +359,7 @@ class get_page(pywikibot.Page):
         self.limit_ai2 = self.source.config.get("limit_ai2", 90)
         self.limit_ai3 = self.source.config.get("limit_ai3", 50)
         self.limit_ai_local = self.source.config.get("limit_ai_local", 98)
-        self.limit_ai_local2 = self.source.config.get("limit_ai_local2", 90)
+        self.limit_ai_local2 = self.source.config.get("limit_ai_local2", 95)
         self.limit_ai_local3 = self.source.config.get("limit_ai_local3", 50)
         self.level_block = self.source.config.get("level_block", 2)
         self.level_max = self.source.config.get("level_max", 3)

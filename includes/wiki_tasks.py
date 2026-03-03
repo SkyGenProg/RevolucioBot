@@ -184,25 +184,25 @@ class wiki_task:
                     print("Le bot a été arrêté : Arrêt de la tâche.")
                     break
 
-                page = self.site.page(page_name)
+                self.page = self.site.page(page_name)
                 pywikibot.output("Page : " + page_name)
 
-                if self.site.config.get("check_WP") and page.text.strip():
-                    self.check_WP(page)
+                if self.site.config.get("check_WP") and self.page.text.strip():
+                    self.check_WP()
 
                 if not self.site.config.get("disable_regex"):
-                    self.check_vandalism(page, self.test)
+                    self.check_vandalism(self.test)
 
-                edit_replace = page.edit_replace()
-                pywikibot.output(f"{edit_replace} recherche(s)-remplacement(s) sur la page {page}.")
+                edit_replace = self.page.edit_replace()
+                pywikibot.output(f"{edit_replace} recherche(s)-remplacement(s) sur la page {self.page}.")
 
-                if not self.site.config.get("disable_del_categories") and page.page_ns != 2:
-                    pywikibot.output("Suppression des catégories inexistantes sur la page " + str(page))
-                    removed = page.del_categories_no_exists()
+                if not self.site.config.get("disable_del_categories") and self.page.page_ns != 2:
+                    pywikibot.output(f"Suppression des catégories inexistantes sur la page {self.page}")
+                    removed = self.page.del_categories_no_exists()
                     pywikibot.output("Catégories retirées " + ", ".join(removed) if removed else "Aucune catégorie à retirer.")
 
                 if self.site.family == "dicoado":
-                    self._dicoado_maintenance(page_name, page)
+                    self._dicoado_maintenance()
 
         if self.site.config.get("clear_talks"):
             self._clear_ip_talks()
@@ -217,7 +217,7 @@ class wiki_task:
             for page_name in (self.site.problematic_redirects("DoubleRedirects") + self.site.problematic_redirects("BrokenRedirects")):
                 page = self.site.page(page_name)
                 if page.isRedirectPage():
-                    pywikibot.output("Correction de redirection sur la page " + str(page))
+                    pywikibot.output(f"Correction de redirection sur la page {page}.")
                     page.redirects()
         self.task_every_10minutes(task_day=True)
 
@@ -254,20 +254,20 @@ class wiki_task:
                     if ignored:
                         continue
 
-                page = self.site.page(page_name)
+                self.page = self.site.page(page_name)
 
-                if page.special or not page.exists():
+                if self.page.special or not self.page.exists():
                     continue
 
                 pywikibot.output("Page : " + page_name)
 
-                is_redirect = page.isRedirectPage()
+                is_redirect = self.page.isRedirectPage()
                 if task_day and not is_redirect:
                     try:
-                        page.get_text_page_old(page_info["revid"], page_info["old_revid"] if int(page_info["old_revid"]) > 0 else None)
-                        self.vandalism_score = page.vandalism_score()
+                        self.page.get_text_page_old(page_info["revid"], page_info["old_revid"] if int(page_info["old_revid"]) > 0 else None)
+                        self.vandalism_score = self.page.vandalism_score()
                         detailed_diff_info = self.site.add_detailed_diff_info(
-                            detailed_diff_info, page_info, page.text_page_oldid, page.text_page_oldid2, self.vandalism_score, page.edit_reverted
+                            detailed_diff_info, page_info, self.page.text_page_oldid, self.page.text_page_oldid2, self.vandalism_score, self.page.edit_reverted
                         )
                     except Exception:
                         _safe_log_exc()
@@ -278,45 +278,45 @@ class wiki_task:
 
                 if is_redirect:
                     if self.site.config.get("correct_redirects"):
-                        pywikibot.output("Correction de redirection sur la page " + str(page))
-                        page.redirects()
+                        pywikibot.output("Correction de redirection sur la page " + str(self.page))
+                        self.page.redirects()
                     else:
-                        pywikibot.output(f"La page {page} est une redirection.")
+                        pywikibot.output(f"La page {self.page} est une redirection.")
                     continue
 
-                is_revert = page.is_revert()
+                is_revert = self.page.is_revert()
                 if self.site.config.get("local_ai_model") or not self.site.config.get("disable_regex") or not self.site.config.get("disable_ai"):
-                    page.get_text_page_old()
+                    self.page.get_text_page_old()
 
                 if not is_revert and self.site.config.get("local_ai_model"):
                     try:
-                        self.check_vandalism_ai_local(page, self.test)
+                        self.check_vandalism_ai_local(self.test)
                     except Exception:
                         _safe_log_exc()
 
                 if not is_revert and not self.site.config.get("disable_regex"):
                     try:
-                        self.check_vandalism(page, self.test)
+                        self.check_vandalism(self.test)
                     except Exception:
                         _safe_log_exc()
 
                 if not is_revert and not self.site.config.get("disable_ai"):
                     try:
-                        self.check_vandalism_ai(page, self.test)
+                        self.check_vandalism_ai(self.test)
                     except Exception:
                         _safe_log_exc()
 
-                if page.page_ns == 0:
-                    if self.site.config.get("check_WP") and page.text.strip():
-                        self.check_WP(page)
+                if self.page.page_ns == 0:
+                    if self.site.config.get("check_WP") and self.page.text.strip():
+                        self.check_WP()
 
-                    edit_replace = page.edit_replace()
-                    pywikibot.output(f"{edit_replace} recherche(s)-remplacement(s) sur la page {page}.")
+                    edit_replace = self.page.edit_replace()
+                    pywikibot.output(f"{edit_replace} recherche(s)-remplacement(s) sur la page {self.page}.")
 
-                if task_day and (not self.site.config.get("disable_del_categories")) and page.page_ns != 2:
-                    pywikibot.output("Suppression des catégories inexistantes sur la page " + str(page))
+                if task_day and (not self.site.config.get("disable_del_categories")) and self.page.page_ns != 2:
+                    pywikibot.output(f"Suppression des catégories inexistantes sur la page {self.page}.")
                     try:
-                        removed = page.del_categories_no_exists()
+                        removed = self.page.del_categories_no_exists()
                         pywikibot.output("Catégories retirées " + ", ".join(removed) if removed else "Aucune catégorie à retirer.")
                     except Exception:
                         _safe_log_exc()
@@ -335,31 +335,31 @@ class wiki_task:
     # Maintenance helpers
     # ----------------------------
 
-    def _dicoado_maintenance(self, page_name: str, page) -> None:
+    def _dicoado_maintenance(self) -> None:
         try:
-            if page.isRedirectPage():
+            if self.page.isRedirectPage():
                 return
 
-            original = page.text
+            original = self.page.text
 
             def _field_edit(field_base: str, i: int, transform):
                 n = "" if i == 1 else str(i)
                 field = f"|{field_base}{n}="
-                if field not in page.text:
+                if field not in self.page.text:
                     return
                 try:
-                    parts = page.text.split(field, 1)
+                    parts = self.page.text.split(field, 1)
                     rhs = parts[1]
                     split_token = "=" if "=" in rhs else "}}"
                     before, after = rhs.split(split_token, 1)
                     before = transform(before)
                     parts[1] = split_token.join([before, after])
-                    page.text = field.join(parts)
+                    self.page.text = field.join(parts)
                 except Exception:
                     _safe_log_exc()
 
             def _bold_title(s: str) -> str:
-                s = re.sub(r"(\s|[=#'])(?!'{3,})\b(" + re.escape(page_name) + r")(\w{0,})\b(?!'{3,})", r"\1'''\2\3'''", s)
+                s = re.sub(r"(\s|[=#'])(?!'{3,})\b(" + re.escape(self.page.page_name) + r")(\w{0,})\b(?!'{3,})", r"\1'''\2\3'''", s)
                 return re.sub(r'\B(?!{{\"\|)\"\b([^\"]*)\b\"(?!}})\B', r'{{"|\1}}', s)
 
             def _capitalize_first(s: str) -> str:
@@ -375,11 +375,11 @@ class wiki_task:
                 _field_edit("voir", i, lambda s: s.replace("[[", "").replace("]]", ""))
                 _field_edit("def", i, lambda s: re.sub(r'\B(?!{{\"\|)\"\b([^\"]*)\b\"(?!}})\B', r'{{"|\1}}', _lower_first(s)))
 
-            if "|son=LL-Q150" in page.text:
-                page.text = page.text.replace("|son=LL-Q150", "|prononciation=LL-Q150")
+            if "|son=LL-Q150" in self.page.text:
+                self.page.text = self.page.text.replace("|son=LL-Q150", "|prononciation=LL-Q150")
 
-            if page.text != original:
-                page.save("maintenance")
+            if self.page.text != original:
+                self.page.save("maintenance")
 
         except Exception:
             _safe_log_exc()
@@ -440,13 +440,13 @@ class wiki_task:
     # Vandalism detection (non-AI)
     # ----------------------------
 
-    def check_vandalism(self, page, test = False) -> None:
-        page_name = page.page_name
-        self.vandalism_score = page.vandalism_get_score_current()
-        detected = page.get_vandalism_report()
+    def check_vandalism(self, test = False) -> None:
+        page_name = self.page.page_name
+        self.vandalism_score = self.page.vandalism_get_score_current()
+        detected = self.page.get_vandalism_report()
 
-        if page.vand_to_revert and not page.reverted:
-            page.revert(
+        if self.page.vand_to_revert and not self.page.reverted:
+            self.page.revert(
                 f"Modification non-constructive détectée par expressions rationnelles (score : {self.vandalism_score})"
                 if self.site.lang_bot == "fr"
                 else f"Unconstructive edit reverted by regex (score: {self.vandalism_score})",
@@ -455,7 +455,7 @@ class wiki_task:
             )
 
         if self.vandalism_score < 0 and webhooks_url.get(self.site.family):
-            if not test and page.vand_to_revert:
+            if not test and self.page.vand_to_revert:
                 title = (
                     f"Modification non-constructive révoquée sur {self.site.lang}:{page_name}"
                     if self.site.lang_bot == "fr"
@@ -467,7 +467,7 @@ class wiki_task:
                     else "This edit has been detected as unconstructive"
                 )
                 color = 13371938
-            elif self.vandalism_score <= page.limit2:
+            elif self.vandalism_score <= self.page.limit2:
                 title = (
                     f"Modification suspecte sur {self.site.lang}:{page_name}"
                     if self.site.lang_bot == "fr"
@@ -499,8 +499,8 @@ class wiki_task:
             embed_base = {
                 "title": title,
                 "description": description,
-                "url": page.protocol + "//" + page.url + page.articlepath + url_diff(page.diff, page.oldid),
-                "author": {"name": page.contributor_name},
+                "url": self.page.protocol + "//" + self.page.url + self.page.articlepath + url_diff(self.page.diff, self.page.oldid),
+                "author": {"name": self.page.contributor_name},
                 "color": color,
                 "fields": fields,
             }
@@ -508,27 +508,27 @@ class wiki_task:
             _send_webhook(webhooks_url[self.site.family], {"embeds": [embed_base]})
             _send_embed_chunked(webhooks_url[self.site.family], {k: v for k, v in embed_base.items() if k != "fields"}, detected)
 
-        if not test and webhooks_url.get(self.site.family) and page.alert_request:
-            self.block_alert(page)
+        if not test and webhooks_url.get(self.site.family) and self.page.alert_request:
+            self.block_alert()
 
     # ----------------------------
     # Vandalism detection (AI)
     # ----------------------------
 
-    def check_vandalism_ai(self, page, test = False) -> None:
-        if page.contributor_is_trusted():
+    def check_vandalism_ai(self, test = False) -> None:
+        if self.page.contributor_is_trusted():
             return
 
-        diff_text = page.get_diff()
-        prompt = prompt_ai(self.site.lang_bot, page.latest_revision.timestamp, page.url, page.page_name, diff_text, page.latest_revision.comment)
+        diff_text = self.page.get_diff()
+        prompt = prompt_ai(self.site.lang_bot, self.page.latest_revision.timestamp, self.page.url, self.page.page_name, diff_text, self.page.latest_revision.comment)
         if self.site.lang_bot == "fr":
             proba_re = r"probabilité de vandalisme.*:[^0-9]*([\d\.,]+)[^0-9]*%"
-            title_base = f"Analyse de l'IA (Mistral) sur {self.site.lang}:{page.page_name}"
-            fail_title = f"Analyse de l'IA (Mistral) échouée sur {self.site.lang}:{page.page_name}"
+            title_base = f"Analyse de l'IA (Mistral) sur {self.site.lang}:{self.page.page_name}"
+            fail_title = f"Analyse de l'IA (Mistral) échouée sur {self.site.lang}:{self.page.page_name}"
         else:
             proba_re = r"probability of vandalism.*:[^0-9]*([\d\.,]+)[^0-9]*%"
-            title_base = f"AI analysis (Mistral) on {self.site.lang}:{page.page_name}"
-            fail_title = f"AI analysis (Mistral) failed on {self.site.lang}:{page.page_name}"
+            title_base = f"AI analysis (Mistral) on {self.site.lang}:{self.page.page_name}"
+            fail_title = f"AI analysis (Mistral) failed on {self.site.lang}:{self.page.page_name}"
 
         try:
             if not api_key or not model:
@@ -542,151 +542,151 @@ class wiki_task:
             embed = {
                 "title": fail_title,
                 "description": "",
-                "url": page.protocol + "//" + page.url + page.articlepath + url_diff(page.diff, page.oldid),
-                "author": {"name": page.contributor_name},
+                "url": self.page.protocol + "//" + self.page.url + self.page.articlepath + url_diff(self.page.diff, self.page.oldid),
+                "author": {"name": self.page.contributor_name},
                 "color": 13371938,
             }
             _send_webhook(webhooks_url_ai.get(self.site.family), {"embeds": [embed]})
-            if webhooks_url.get(self.site.family) and page.alert_request:
-                self.block_alert(page)
+            if webhooks_url.get(self.site.family) and self.page.alert_request:
+                self.block_alert()
             return
 
         m = re.search(proba_re, result_ai.lower())
         self.proba_ai = float(m.group(1).replace(",", ".")) if m else 0.0
 
-        user_rights = page.contributor_rights()
+        user_rights = self.page.contributor_rights()
 
-        if (self.proba_ai >= page.limit_ai or (self.proba_ai >= page.limit_ai2 and self.vandalism_score is not None and self.vandalism_score <= page.limit2)) and "autoconfirmed" not in user_rights:
-            if not page.reverted:
-                page.revert(f"Modification non-constructive détectée par IA à {self.proba_ai} %" if self.site.lang_bot == "fr" else f"Non-constructive edit detected by AI ({self.proba_ai} %)", test, result_ai)
+        if (self.proba_ai >= self.page.limit_ai or (self.proba_ai >= self.page.limit_ai2 and self.vandalism_score is not None and self.vandalism_score <= self.page.limit2)) and "autoconfirmed" not in user_rights:
+            if not self.page.reverted:
+                self.page.revert(f"Modification non-constructive détectée par IA à {self.proba_ai} %" if self.site.lang_bot == "fr" else f"Non-constructive edit detected by AI ({self.proba_ai} %)", test, result_ai)
             color = 13371938
-        elif self.proba_ai >= page.limit_ai2 and "autoconfirmed" not in user_rights:
-            page.get_warnings_user()
-            if (page.warn_level > page.level_min or page.user_previous_reverted) and not page.reverted:
-                page.revert(f"Modification non-constructive détectée par IA à {self.proba_ai} %" if self.site.lang_bot == "fr" else f"Non-constructive edit detected by AI ({self.proba_ai} %)", test, result_ai)
+        elif self.proba_ai >= self.page.limit_ai2 and "autoconfirmed" not in user_rights:
+            self.page.get_warnings_user()
+            if (self.page.warn_level > self.page.level_min or self.page.user_previous_reverted) and not self.page.reverted:
+                self.page.revert(f"Modification non-constructive détectée par IA à {self.proba_ai} %" if self.site.lang_bot == "fr" else f"Non-constructive edit detected by AI ({self.proba_ai} %)", test, result_ai)
                 color = 13371938
             else:
                 color = 12138760
-        elif self.proba_ai >= page.limit_ai3:
+        elif self.proba_ai >= self.page.limit_ai3:
             color = 12138760
         else:
             color = 12161032
 
-        title = title_base + (" (modification révoquée)" if (self.site.lang_bot == "fr" and page.reverted) else "")
-        title = title + (" (reverted edit)" if (self.site.lang_bot != "fr" and page.reverted) else "")
+        title = title_base + (" (modification révoquée)" if (self.site.lang_bot == "fr" and self.page.reverted) else "")
+        title = title + (" (reverted edit)" if (self.site.lang_bot != "fr" and self.page.reverted) else "")
 
         embed_base = {
             "title": title,
             "description": "",
-            "url": page.protocol + "//" + page.url + page.articlepath + url_diff(page.diff, page.oldid),
-            "author": {"name": page.contributor_name},
+            "url": self.page.protocol + "//" + self.page.url + self.page.articlepath + url_diff(self.page.diff, self.page.oldid),
+            "author": {"name": self.page.contributor_name},
             "color": color,
         }
         _send_embed_chunked(webhooks_url_ai.get(self.site.family), embed_base, result_ai)
 
-        if not test and webhooks_url.get(self.site.family) and page.alert_request:
-            self.block_alert(page)
+        if not test and webhooks_url.get(self.site.family) and self.page.alert_request:
+            self.block_alert()
 
     # ----------------------------
     # Vandalism detection (local AI)
     # ----------------------------
 
-    def check_vandalism_ai_local(self, page, test = False) -> None:
-        if page.contributor_is_trusted():
+    def check_vandalism_ai_local(self, test = False) -> None:
+        if self.page.contributor_is_trusted():
             return
 
-        diff_text = page.get_diff()
+        diff_text = self.page.get_diff()
         model_dir = "../" + self.site.config.get("local_ai_model")
         norm_json = "../" + self.site.config.get("num_feat_norm")
         try:
             prob = predict(
                 model_dir=model_dir,
                 norm_json=norm_json,
-                old=page.text_page_oldid2,
-                new=page.text_page_oldid,
+                old=self.page.text_page_oldid2,
+                new=self.page.text_page_oldid,
                 diff=diff_text,
-                comment=page.comment
+                comment=self.page.comment
             )
         except Exception:
             pywikibot.error(traceback.format_exc())
             return
         self.proba_ai = prob*100
 
-        user_rights = page.contributor_rights()
+        user_rights = self.page.contributor_rights()
 
         if self.site.lang_bot == "fr":
-            title_base = f"Analyse de l'IA locale (bêta) sur {self.site.lang}:{page.page_name} : {round(self.proba_ai, 2)} % de probabilité de vandalisme"
+            title_base = f"Analyse de l'IA locale (bêta) sur {self.site.lang}:{self.page.page_name} : {round(self.proba_ai, 2)} % de probabilité de vandalisme"
         else:
-            title_base = f"Local AI analysis (beta) on {self.site.lang}:{page.page_name} : {round(self.proba_ai, 2)} % de probabilité de vandalisme"
+            title_base = f"Local AI analysis (beta) on {self.site.lang}:{self.page.page_name} : {round(self.proba_ai, 2)} % de probabilité de vandalisme"
 
-        if (self.proba_ai >= page.limit_ai_local or (self.proba_ai >= page.limit_ai_local2 and self.vandalism_score is not None and self.vandalism_score <= page.limit2)) and "autoconfirmed" not in user_rights:
-            if not page.reverted:
-                page.revert(f"Modification non-constructive détectée par IA locale à {round(self.proba_ai, 2)} %" if self.site.lang_bot == "fr" else f"Non-constructive edit detected by local AI ({round(self.proba_ai, 2)} %)", test, f"Modification non-constructive détectée par IA locale à {round(self.proba_ai, 2)} %" if self.site.lang_bot == "fr" else f"Non-constructive edit detected by local AI ({round(self.proba_ai, 2)} %)")
+        if (self.proba_ai >= self.page.limit_ai_local or (self.proba_ai >= self.page.limit_ai_local2 and self.vandalism_score is not None and self.vandalism_score <= self.page.limit2)) and "autoconfirmed" not in user_rights:
+            if not self.page.reverted:
+                self.page.revert(f"Modification non-constructive détectée par IA locale à {round(self.proba_ai, 2)} %" if self.site.lang_bot == "fr" else f"Non-constructive edit detected by local AI ({round(self.proba_ai, 2)} %)", test, f"Modification non-constructive détectée par IA locale à {round(self.proba_ai, 2)} %" if self.site.lang_bot == "fr" else f"Non-constructive edit detected by local AI ({round(self.proba_ai, 2)} %)")
             color = 13371938
-        elif self.proba_ai >= page.limit_ai_local2 and "autoconfirmed" not in user_rights:
-            page.get_warnings_user()
-            if (page.warn_level > page.level_min or page.user_previous_reverted) and not page.reverted:
-                page.revert(f"Modification non-constructive détectée par IA locale à {round(self.proba_ai, 2)} %" if self.site.lang_bot == "fr" else f"Non-constructive edit detected by local AI ({round(self.proba_ai, 2)} %)", test, f"Modification non-constructive détectée par IA locale à {round(self.proba_ai, 2)} %" if self.site.lang_bot == "fr" else f"Non-constructive edit detected by local AI ({round(self.proba_ai, 2)} %)")
+        elif self.proba_ai >= self.page.limit_ai_local2 and "autoconfirmed" not in user_rights:
+            self.page.get_warnings_user()
+            if (self.page.warn_level > self.page.level_min or self.page.user_previous_reverted) and not self.page.reverted:
+                self.page.revert(f"Modification non-constructive détectée par IA locale à {round(self.proba_ai, 2)} %" if self.site.lang_bot == "fr" else f"Non-constructive edit detected by local AI ({round(self.proba_ai, 2)} %)", test, f"Modification non-constructive détectée par IA locale à {round(self.proba_ai, 2)} %" if self.site.lang_bot == "fr" else f"Non-constructive edit detected by local AI ({round(self.proba_ai, 2)} %)")
                 color = 13371938
             else:
                 color = 12138760
-        elif self.proba_ai >= page.limit_ai_local3:
+        elif self.proba_ai >= self.page.limit_ai_local3:
             color = 12138760
         else:
             color = 12161032
 
-        title = title_base + (" (modification révoquée)" if (self.site.lang_bot == "fr" and page.reverted) else "")
-        title = title + (" (reverted edit)" if (self.site.lang_bot != "fr" and page.reverted) else "")
+        title = title_base + (" (modification révoquée)" if (self.site.lang_bot == "fr" and self.page.reverted) else "")
+        title = title + (" (reverted edit)" if (self.site.lang_bot != "fr" and self.page.reverted) else "")
 
         embed_base = {
             "title": title,
             "description": "",
-            "url": page.protocol + "//" + page.url + page.articlepath + url_diff(page.diff, page.oldid),
-            "author": {"name": page.contributor_name},
+            "url": self.page.protocol + "//" + self.page.url + self.page.articlepath + url_diff(self.page.diff, self.page.oldid),
+            "author": {"name": self.page.contributor_name},
             "color": color,
         }
         _send_embed_chunked(webhooks_url_ai.get(self.site.family), embed_base, "")
 
-        if not test and webhooks_url.get(self.site.family) and page.alert_request:
-            self.block_alert(page)
+        if not test and webhooks_url.get(self.site.family) and self.page.alert_request:
+            self.block_alert(self.page)
 
     # ----------------------------
     # Alerts / copy detection / stats
     # ----------------------------
 
-    def block_alert(self, page) -> None:
+    def block_alert(self) -> None:
         if self.site.lang_bot == "fr":
-            title = "Demande de blocage de " + page.contributor_name
+            title = "Demande de blocage de " + self.page.contributor_name
             desc = "Un vandale est à bloquer."
         else:
-            title = "Request to block against " + page.contributor_name
+            title = "Request to block against " + self.page.contributor_name
             desc = "A vandal must be blocked."
 
         embed = {
             "title": title,
             "description": desc,
-            "url": page.protocol + "//" + page.url + page.articlepath + page.alert_page.replace(" ", "_"),
-            "author": {"name": page.contributor_name},
+            "url": self.page.protocol + "//" + self.page.url + self.page.articlepath + self.page.alert_page.replace(" ", "_"),
+            "author": {"name": self.page.contributor_name},
             "color": 16711680,
         }
         _send_webhook(webhooks_url.get(self.site.family), {"embeds": [embed]})
 
-    def check_WP(self, page) -> None:
-        page_name = page.page_name
-        score_check_WP = page.check_WP()
-        prob_WP = score_check_WP / len(page.text.strip()) * 100
-        template_WP = "User:" + page.user_wiki + "/CopyWP"
+    def check_WP(self) -> None:
+        page_name = self.page.page_name
+        score_check_WP = self.page.check_WP()
+        prob_WP = score_check_WP / len(self.page.text.strip()) * 100
+        template_WP = f"User:{self.page.user_wiki}/CopyWP"
 
         pywikibot.output(
-            f"Probabilité de copie de Wikipédia de la page {page} : {prob_WP} % ({score_check_WP} octets en commun/{len(page.text.strip())} octets))"
+            f"Probabilité de copie de Wikipédia de la page {self.page} : {prob_WP} % ({score_check_WP} octets en commun/{len(self.page.text.strip())} octets))"
         )
 
         def _embed(title: str, desc: str, color: int) -> Dict[str, Any]:
             return {
                 "title": title,
                 "description": desc,
-                "url": page.protocol + "//" + page.url + page.articlepath + url_diff(page.diff, page.oldid),
-                "author": {"name": page.contributor_name},
+                "url": self.page.protocol + "//" + self.page.url + self.page.articlepath + url_diff(self.page.diff, self.page.oldid),
+                "author": {"name": self.page.contributor_name},
                 "color": color,
                 "fields": [{"name": ("Probabilité de copie" if self.site.lang_bot == "fr" else "Probability of copy"), "value": f"{round(prob_WP, 2)} %", "inline": True}],
             }
@@ -695,25 +695,25 @@ class wiki_task:
             check_page = pywikibot.Page(self.site.site, f"User:{self.site.user_wiki}/WP")
             if self.site.lang_bot == "fr":
                 check_page.text = f"""{check_page.text}
-== Possible copie de WP sur {page_name} (diff : {page.diff}) ==
+== Possible copie de WP sur {page_name} (diff : {self.page.diff}) ==
 * Date de détection : ~~~~~
-* Page : {page.page_name}
-* Utilisateur : {page.contributor_name}
-* Diff : [[Special:Diff/{page.diff}]]
+* Page : {self.page.page_name}
+* Utilisateur : {self.page.contributor_name}
+* Diff : [[Special:Diff/{self.page.diff}]]
 * Contenu copié détecté : {prob_WP} %"""
             else:
                 check_page.text = f"""{check_page.text}
-== Possible copy from WP on {page_name} (diff: {page.diff}) ==
+== Possible copy from WP on {page_name} (diff: {self.page.diff}) ==
 * Detection date: ~~~~~
-* Page: {page.page_name}
-* User: {page.contributor_name}
-* Diff: [[Special:Diff/{page.diff}]]
+* Page: {self.page.page_name}
+* User: {self.page.contributor_name}
+* Diff: [[Special:Diff/{self.page.diff}]]
 * Detected copied content: {prob_WP} %"""
             check_page.save("Mise à jour" if self.site.lang_bot == "fr" else "Update", bot=False, minor=False)
         if prob_WP >= 90:
-            if template_WP not in page.text:
-                page.text = "{{" + template_WP + "|" + page_name + "|" + str(round(prob_WP, 2)) + "}}\n" + page.text
-                page.save("copie de WP" if self.site.lang_bot == "fr" else "copy of WP", bot=False, minor=False)
+            if template_WP not in self.page.text:
+                self.page.text = "{{" + template_WP + "|" + page_name + "|" + str(round(prob_WP, 2)) + "}}\n" + self.page.text
+                self.page.save("copie de WP" if self.site.lang_bot == "fr" else "copy of WP", bot=False, minor=False)
 
             embed = _embed(
                 (f"Très probable copie de Wikipédia sur {self.site.lang}:{page_name}" if self.site.lang_bot == "fr" else f"Most likely copy from Wikipedia on {self.site.lang}:{page_name}"),
@@ -900,12 +900,12 @@ class wiki_task:
                             break
                     if ignored:
                         continue
-                page = self.site.page(page_name)
-                if page.special or not page.exists():
+                self.page = self.site.page(page_name)
+                if self.page.special or not self.page.exists():
                     continue
 
-                rights = page.contributor_rights()
-                is_revert = page.is_revert()
+                rights = self.page.contributor_rights()
+                is_revert = self.page.is_revert()
                 if not is_revert and "autoconfirmed" not in rights:
                     if self.site.bot_stopped():
                         self.send_message_bot_stopped()
@@ -913,12 +913,12 @@ class wiki_task:
                         break
 
                     if self.site.config.get("local_ai_model") or not self.site.config.get("disable_regex") or not self.site.config.get("disable_ai"):
-                        page.get_text_page_old()
+                        self.page.get_text_page_old()
 
-                    if not is_revert and self.site.config.get("local_ai_model"):
+                    if self.site.config.get("local_ai_model"):
                         print(f"Calcul du score de vandalisme (IA locale) sur {page_name}...")
                         try:
-                            self.check_vandalism_ai_local(page, self.test)
+                            self.check_vandalism_ai_local(self.test)
                             print(f"Probabilité de vandalisme (IA locale) : {self.proba_ai} %")
                         except Exception:
                             _safe_log_exc()
@@ -926,7 +926,7 @@ class wiki_task:
                     if not self.site.config.get("disable_regex"):
                         print(f"Calcul du score de vandalisme sur {page_name}...")
                         try:
-                            self.check_vandalism(page, self.test)
+                            self.check_vandalism(self.test)
                             print(f"Score de vandalisme : {self.vandalism_score}")
                         except Exception:
                             _safe_log_exc()
@@ -934,7 +934,7 @@ class wiki_task:
                     if not self.site.config.get("disable_ai"):
                         print(f"Calcul du score de vandalisme (IA Mistral) sur {page_name}...")
                         try:
-                            self.check_vandalism_ai(page, self.test)
+                            self.check_vandalism_ai(self.test)
                             print(f"Probabilité de vandalisme (IA Mistral) : {self.proba_ai} %")
                         except Exception:
                             _safe_log_exc()
