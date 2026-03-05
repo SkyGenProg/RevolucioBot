@@ -500,8 +500,12 @@ class get_page(pywikibot.Page):
         self.oldid = revision_oldid2 if revision_oldid2 is not None else -1
         contributor_name = self.contributor_name if revision_oldid is None else ""
         edit_reverted = False
+        check_if_user_reverted = False
         try:
             for rev in self.revisions(total=total, endtime=endtime):
+                if check_if_user_reverted:
+                    self.user_previous_reverted = rev.user == contributor_name
+                    break
                 is_revert = "mw-rollback" in rev.tags or "mw-undo" in rev.tags or "mw-manual-revert" in rev.tags
                 comment = re.sub(r"/\*[\s\S]*?\*/", "", rev.comment).strip().lower()
                 if rev.revid == revision_oldid:
@@ -515,8 +519,10 @@ class get_page(pywikibot.Page):
                 if (revision_oldid2 is None and rev.user != contributor_name and (revision_oldid is None or rev.revid <= revision_oldid)) or (revision_oldid2 is not None and rev.revid <= revision_oldid2):
                     self.oldid = rev.revid
                     self.contributor_before_edits = rev.user
-                    self.user_previous_reverted = is_revert and contributor_name in rev.comment and self.user_wiki != rev.user
-                    break
+                    if not is_revert:
+                        break
+                    else:
+                        check_if_user_reverted = True
                 edit_reverted = is_revert
         except Exception:
             try:
