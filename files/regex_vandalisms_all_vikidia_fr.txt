@@ -5,6 +5,7 @@ stupid:-3
 \bcock:-3
 \bass\b:-3
 \bpoop\b:-3
+faciste:-3
 hey ?hey:-5
 \bsuck:-5
 \bshit:-5
@@ -66,8 +67,8 @@ i laugh at:-30
 \bbidons?\b:-1
 \bnullite\b:-1
 \binfecte?s?\b:-1
-\bpenis\b:-3
-\bsexe\b:-3
+\bp[eé]nis\b:-3
+\bsexe?\b:-3
 \banus\b:-3
 \bvagin\b:-3
 \bsodomi:-3
@@ -100,6 +101,7 @@ pedophile:-3
 \bvomi\b:-3
 \bface de\b:-3
 \bbander\b:-3
+\bhomo:-3
 \bteub\b:-5
 \bbi+t+e:-5
 \bcon+erie:-5
@@ -163,6 +165,7 @@ t'?es moche:-20
 ta gueule:-20
 fil?s de pute?:-20
 \bpeniss+\b:-20
+\bfacho\b:-20
 \bni(k|qu)e? ta mere\b:-30
 \b(ma|ta) bit+e\b:-30
 \b(mon|ton|du) (anus|cul?)\b:-30
@@ -189,9 +192,9 @@ trous? d[eu] cul:-30
 \bta gu?eu?le?\b:-30
 \best gay\b:-30
 \bpauvre? daube:-30
-choubidou:-30
-ninipatalo:-30
-bachirx:-30
+choubidou:-100
+ninipatalo:-100
+bachirx:-100
 \bfnord\b:-100
 petit polisson:-30
 thesard stagiaire:-30
@@ -236,6 +239,7 @@ depeceur de bergen:-30
 adrienne serein:-30
 janseniste de carnaval:-30
 nous sommes des musulmans qui sont tres attaches a leur religion:-30
+(br[uû]ler|tuer|sales?|mort).*juifs?:-100
 redoutable psychopathe bien connu:-30
 madame nazma:-30
 recemment dans une? asile psychiatrique :-30
