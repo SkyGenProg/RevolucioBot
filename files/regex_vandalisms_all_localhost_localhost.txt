@@ -165,7 +165,7 @@ t'?es moche:-20
 ta gueule:-20
 fil?s de pute?:-20
 \bpeniss+\b:-20
-\bfacho\b:-20
+\bfachos?\b:-20
 \bni(k|qu)e? ta mere\b:-30
 \b(ma|ta) bit+e\b:-30
 \b(mon|ton|du) (anus|cul?)\b:-30
