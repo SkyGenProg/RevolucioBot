@@ -133,7 +133,7 @@ class revision_info:
         self.redirect = redirect
 
 class vandalism_score:
-    def __init__(self, files, revision: revision_info, bytes_uncommented_remove: int = -500, score_uncommented_remove: int = -1):
+    def __init__(self, files, revision: revision_info, bytes_uncommented_remove: int = 500, score_uncommented_remove: int = -1):
         self.files = files
         self.revision_info = revision
         self.bytes_uncommented_remove = bytes_uncommented_remove
@@ -448,6 +448,8 @@ class get_page(pywikibot.Page):
         self.level_block = self.source.config.get("level_block", 2)
         self.level_max = self.source.config.get("level_max", 3)
         self.level_min = self.source.config.get("level_min", 0)
+        self.bytes_uncommented_remove = self.source.config.get("bytes_uncommented_remove", 500)
+        self.score_uncommented_remove = self.source.config.get("score_uncommented_remove", -1)
 
         # alert page
         alert_page_tpl = self.source.config.get("alert_page")
@@ -651,7 +653,7 @@ class get_page(pywikibot.Page):
         text_old = self.text_page_oldid2 or ""
         revision = revision_info(text_new, text_old, self.commented, self.new_page, self.page_ns, self.isRedirectPage())
 
-        vand_score = vandalism_score(files, revision, self.source.config.get("bytes_uncommented_remove", 500), self.source.config.get("score_uncommented_remove", 500))
+        vand_score = vandalism_score(files, revision, self.bytes_uncommented_remove, self.score_uncommented_remove)
         vand = vand_score.calculate()
         self.vandalism_score_detect = vand_score.vandalism_score_detect
         return vand
