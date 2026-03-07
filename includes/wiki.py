@@ -123,6 +123,90 @@ def get_warn_level(t, level_min, level_max):
 # Public classes
 # ----------------------------
 
+class revision_info:
+    def __init__(self, text_new: str, text_old: str, commented: bool, new_page: bool, page_ns: int, redirect: bool):
+        self.text_new = text_new
+        self.text_old = text_old
+        self.commented = commented
+        self.new_page = new_page
+        self.page_ns = page_ns
+        self.redirect = redirect
+
+class vandalism_score:
+    def __init__(self, files, revision: revision_info, bytes_uncommented_remove: int = -500, score_uncommented_remove: int = -1):
+        self.files = files
+        self.revision_info = revision
+        self.bytes_uncommented_remove = bytes_uncommented_remove
+        self.score_uncommented_remove = score_uncommented_remove
+        self.vandalism_score_detect = []
+        self.vand = 0
+
+    @staticmethod
+    def _parse_scored_lines(lines: Iterable[str]) -> List[Tuple[str, int]]:
+        out: List[Tuple[str, int]] = []
+        for line in lines:
+            if not line or ":" not in line:
+                continue
+            key, score_s = line.rsplit(":", 1)
+            key = key.strip()
+            score = int(score_s.strip())
+            out.append((key, score))
+        return out
+
+    def score_regex_count(self, type_regex, filename, flags, ignore_if_regex_detected_in_old_version=False) -> int:
+        score_detected = 0
+        for pattern, score in self._parse_scored_lines(_read_lines(filename)):
+            hits = re.findall(pattern, self.revision_info.text_new, flags)
+            hits_old = re.findall(pattern, self.revision_info.text_old, flags)
+            times_pattern = len(hits)-len(hits_old)
+            if (not ignore_if_regex_detected_in_old_version or len(hits_old) == 0) and times_pattern > 0:
+                score_pattern = score*times_pattern
+                score_detected += score_pattern
+                self.vandalism_score_detect.append([type_regex, score, f"{pattern} ({score}x{times_pattern} = {score_pattern})"])
+        return score_detected
+
+    def calculate(self) -> int:
+        vand = 0
+        # add regex on all ns
+        vand += self.score_regex_count("add_regex_ns_all", self.files["add_regex_ns_all"], re.IGNORECASE)
+        # add regex on all ns (don't ignore case)
+        vand += self.score_regex_count("add_regex_ns_all_no_ignore_case", self.files["add_regex_ns_all_no_ignore_case"], 0)
+
+        if self.revision_info.page_ns == 0:
+            # add regex on ns 0
+            vand += self.score_regex_count("add_regex_ns_0", self.files["add_regex_ns_0"], re.IGNORECASE, True)
+            # add regex on ns 0
+            vand += self.score_regex_count("add_regex_ns_0_no_ignore_case", self.files["add_regex_ns_0_no_ignore_case"], 0, True)
+            # delete regex on ns 0
+            vand += self.score_regex_count("del_regex_ns_0", self.files["del_regex_ns_0"], re.IGNORECASE)
+            # delete regex on ns 0 (no comment)
+            if not self.revision_info.commented:
+                vand += self.score_regex_count("del_regex_ns_0_no_comment", self.files["del_regex_ns_0_no_comment"], re.IGNORECASE)
+            # size rules on ns 0
+            if self.revision_info.new_page:
+                vand_size = 0
+                vandalism_score_detect_size = []
+                for size_s, score in self._parse_scored_lines(_read_lines(self.files["size"])):
+                    size = int(size_s)
+                    if len(self.revision_info.text_new) < size:
+                        vandalism_score_detect_size.append(["size", score, size_s])
+                        vand_size += score
+                if vand_size < 0 and not self.revision_info.redirect:
+                    vand += vand_size
+                    for line in vandalism_score_detect_size:
+                        self.vandalism_score_detect.append(line)
+        # diff rules (no comment)
+        if not self.revision_info.commented:
+            delta = len(self.revision_info.text_new) - len(self.revision_info.text_old)
+            if delta < 0:
+                diff_s = -delta//self.bytes_uncommented_remove
+                score = self.score_uncommented_remove*diff_s
+                if score != 0:
+                    self.vandalism_score_detect.append(["diff", score, -diff_s*self.bytes_uncommented_remove])
+                    vand += score
+        self.vand = vand
+        return vand
+
 class get_wiki:
     def __init__(self, family: str, lang: str, user_wiki: str):
         self.user_wiki = user_wiki
@@ -414,7 +498,7 @@ class get_page(pywikibot.Page):
 
     def only_revert(self, summary: str = "") -> None:
         if self.text_page_oldid is None or self.text_page_oldid2 is None:
-            self.get_text_page_old()
+            self.get_text_page_old(total=50)
 
         self.text = "{{subst:User:%s/VandalismDelete}}" % self.user_wiki if self.new_page else (self.text_page_oldid2 or "")
 
@@ -486,7 +570,7 @@ class get_page(pywikibot.Page):
             self.list_contributor_rights = self.source.rights(self.contributor_name)
         return self.list_contributor_rights
 
-    def get_text_page_old(self, revision_oldid: Optional[int] = None, revision_oldid2: Optional[int] = None, total: Optional[int] = 50, endtime: Optional[str] = None) -> None:
+    def get_text_page_old(self, revision_oldid: Optional[int] = None, revision_oldid2: Optional[int] = None, total: Optional[int] = None, endtime: Optional[str] = None) -> None:
         """
         revision_oldid: new version / version to check
         revision_oldid2: old version / version to compare against
@@ -548,30 +632,6 @@ class get_page(pywikibot.Page):
         return any(tag in self.latest_revision.tags for tag in ("mw-undo", "mw-rollback", "mw-manual-revert")) \
             or any(k in self.latest_revision.comment for k in ("revert", "révoc", "cancel", "annul"))
 
-    @staticmethod
-    def _parse_scored_lines(lines: Iterable[str]) -> List[Tuple[str, int]]:
-        out: List[Tuple[str, int]] = []
-        for line in lines:
-            if not line or ":" not in line:
-                continue
-            key, score_s = line.rsplit(":", 1)
-            key = key.strip()
-            score = int(score_s.strip())
-            out.append((key, score))
-        return out
-
-    def score_regex_count(self, type_regex, filename, text_new, text_old, flags, ignore_if_regex_detected_in_old_version=False):
-        score_detected = 0
-        for pattern, score in self._parse_scored_lines(_read_lines(filename)):
-            hits = re.findall(pattern, text_new, flags)
-            hits_old = re.findall(pattern, text_old, flags)
-            times_pattern = len(hits)-len(hits_old)
-            if (not ignore_if_regex_detected_in_old_version or len(hits_old) == 0) and times_pattern > 0:
-                score_pattern = score*times_pattern
-                score_detected += score_pattern
-                self.vandalism_score_detect.append([type_regex, score, f"{pattern} ({score}x{times_pattern} = {score_pattern})"])
-        return score_detected
-
     def vandalism_score(self) -> int:
         """Score on a diff, including experienced users."""
         fam, lang = self.source.family, self.lang
@@ -587,49 +647,13 @@ class get_page(pywikibot.Page):
         for f_type in files:
             _ensure_file(files[f_type])
 
-        vand = 0
         text_new = self.text_page_oldid or ""
         text_old = self.text_page_oldid2 or ""
+        revision = revision_info(text_new, text_old, self.commented, self.new_page, self.page_ns, self.isRedirectPage())
 
-        # add regex on all ns
-        vand += self.score_regex_count("add_regex_ns_all", files["add_regex_ns_all"], text_new, text_old, re.IGNORECASE)
-        # add regex on all ns (don't ignore case)
-        vand += self.score_regex_count("add_regex_ns_all_no_ignore_case", files["add_regex_ns_all_no_ignore_case"], text_new, text_old, 0)
-
-        if self.page_ns == 0:
-            # add regex on ns 0
-            vand += self.score_regex_count("add_regex_ns_0", files["add_regex_ns_0"], text_new, text_old, re.IGNORECASE, True)
-            # add regex on ns 0
-            vand += self.score_regex_count("add_regex_ns_0_no_ignore_case", files["add_regex_ns_0_no_ignore_case"], text_new, text_old, 0, True)
-            # delete regex on ns 0
-            vand += self.score_regex_count("del_regex_ns_0", files["del_regex_ns_0"], text_old, text_new, re.IGNORECASE)
-            # delete regex on ns 0 (no comment)
-            if not self.commented:
-                vand += self.score_regex_count("del_regex_ns_0_no_comment", files["del_regex_ns_0_no_comment"], text_old, text_new, re.IGNORECASE)
-            # size rules on ns 0
-            if self.new_page:
-                vand_size = 0
-                vandalism_score_detect_size = []
-                for size_s, score in self._parse_scored_lines(_read_lines(files["size"])):
-                    size = int(size_s)
-                    if len(text_new) < size:
-                        vandalism_score_detect_size.append(["size", score, size_s])
-                        vand_size += score
-                if vand_size < 0 and not self.isRedirectPage():
-                    vand += vand_size
-                    for line in vandalism_score_detect_size:
-                        self.vandalism_score_detect.append(line)
-            # diff rules on ns 0 (no comment)
-            if not self.commented:
-                delta = len(text_new) - len(text_old)
-                if delta < 0:
-                    bytes_uncommented_remove = self.source.config.get("bytes_uncommented_remove", 500)
-                    diff_s = -delta//bytes_uncommented_remove
-                    score_uncommented_remove = self.source.config.get("score_uncommented_remove", -1)
-                    score = score_uncommented_remove*diff_s
-                    if score != 0:
-                        self.vandalism_score_detect.append(["diff", score, -diff_s*bytes_uncommented_remove])
-                        vand += score
+        vand_score = vandalism_score(files, revision, self.source.config.get("bytes_uncommented_remove", 500), self.source.config.get("score_uncommented_remove", 500))
+        vand = vand_score.calculate()
+        self.vandalism_score_detect = vand_score.vandalism_score_detect
         return vand
 
     def get_vandalism_report(self) -> str:

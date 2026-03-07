@@ -264,7 +264,7 @@ class wiki_task:
                 is_redirect = self.page.isRedirectPage()
                 if task_day and not is_redirect:
                     try:
-                        self.page.get_text_page_old(page_info["revid"], page_info["old_revid"] if int(page_info["old_revid"]) > 0 else None)
+                        self.page.get_text_page_old(page_info["revid"], page_info["old_revid"] if int(page_info["old_revid"]) > 0 else None, endtime=str(since.timestamp()))
                         self.vandalism_score = self.page.vandalism_score()
                         detailed_diff_info = self.site.add_detailed_diff_info(
                             detailed_diff_info, page_info, self.page.text_page_oldid, self.page.text_page_oldid2, self.vandalism_score, self.page.edit_reverted
@@ -286,7 +286,7 @@ class wiki_task:
 
                 is_revert = self.page.is_revert()
                 if self.site.config.get("local_ai_model") or not self.site.config.get("disable_regex") or not self.site.config.get("disable_ai"):
-                    self.page.get_text_page_old()
+                    self.page.get_text_page_old(total=50)
 
                 if not is_revert and self.site.config.get("local_ai_model"):
                     try:
@@ -913,7 +913,7 @@ class wiki_task:
                         break
 
                     if self.site.config.get("local_ai_model") or not self.site.config.get("disable_regex") or not self.site.config.get("disable_ai"):
-                        self.page.get_text_page_old()
+                        self.page.get_text_page_old(total=50)
 
                     if self.site.config.get("local_ai_model"):
                         print(f"Calcul du score de vandalisme (IA locale) sur {page_name}...")

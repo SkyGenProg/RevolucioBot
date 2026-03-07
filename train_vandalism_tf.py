@@ -125,15 +125,16 @@ def build_model(num_features, vocab_size=50000, seq_len=400, embed_dim=128, lstm
 # Main
 # -----------------------------
 def main():
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--csv", default="model/vikidia_fr/rc_wiki_vikidia_fr.csv", help="Chemin vers le CSV")
-    parser.add_argument("--outdir", default="model_vandalism", help="Dossier de sortie")
-    parser.add_argument("--batch", type=int, default=64)
-    parser.add_argument("--epochs", type=int, default=10)
-    parser.add_argument("--vocab", type=int, default=50000)
-    parser.add_argument("--seqlen", type=int, default=400)
-    parser.add_argument("--seed", type=int, default=42)
-    args = parser.parse_args()
+    arg = argparse.ArgumentParser()
+    required_arg = arg.add_argument_group("required arguments")
+    required_arg.add_argument("--csv", required=True, help="Chemin vers le CSV")
+    arg.add_argument("--outdir", default="model_vandalism", help="Dossier de sortie")
+    arg.add_argument("--batch", type=int, default=64)
+    arg.add_argument("--epochs", type=int, default=10)
+    arg.add_argument("--vocab", type=int, default=50000)
+    arg.add_argument("--seqlen", type=int, default=400)
+    arg.add_argument("--seed", type=int, default=42)
+    args = arg.parse_args()
 
     set_seed(args.seed)
     os.makedirs(args.outdir, exist_ok=True)

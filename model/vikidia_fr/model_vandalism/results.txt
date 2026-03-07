@@ -1,731 +1,731 @@
-Test metrics: {'loss': 0.4540088176727295, 'compile_metrics': 0.8724287748336792}
+Test metrics: {'loss': 0.48522675037384033, 'compile_metrics': 0.8630599975585938}
 Modèle exporté dans: model_vandalism/saved_model
 
 threshold=0.25
 --- Confusion matrix (test) ---
-[[112  69]
- [ 16 161]]
-TN=112  FP=69  FN=16  TP=161
+[[121  58]
+ [ 17 187]]
+TN=121  FP=58  FN=17  TP=187
 
-Faux-positifs (constructif->vandalisme) : 69
-Taux de faux-positifs (FPR) : 0.381
-Precision (vandalisme) : 0.700
+Faux-positifs (constructif->vandalisme) : 58
+Taux de faux-positifs (FPR) : 0.324
+Precision (vandalisme) : 0.763
 
 threshold=0.26
 --- Confusion matrix (test) ---
-[[113  68]
- [ 17 160]]
-TN=113  FP=68  FN=17  TP=160
+[[121  58]
+ [ 20 184]]
+TN=121  FP=58  FN=20  TP=184
 
-Faux-positifs (constructif->vandalisme) : 68
-Taux de faux-positifs (FPR) : 0.376
-Precision (vandalisme) : 0.702
+Faux-positifs (constructif->vandalisme) : 58
+Taux de faux-positifs (FPR) : 0.324
+Precision (vandalisme) : 0.760
 
 threshold=0.27
 --- Confusion matrix (test) ---
-[[113  68]
- [ 17 160]]
-TN=113  FP=68  FN=17  TP=160
+[[123  56]
+ [ 20 184]]
+TN=123  FP=56  FN=20  TP=184
 
-Faux-positifs (constructif->vandalisme) : 68
-Taux de faux-positifs (FPR) : 0.376
-Precision (vandalisme) : 0.702
+Faux-positifs (constructif->vandalisme) : 56
+Taux de faux-positifs (FPR) : 0.313
+Precision (vandalisme) : 0.767
 
 threshold=0.28
 --- Confusion matrix (test) ---
-[[115  66]
- [ 19 158]]
-TN=115  FP=66  FN=19  TP=158
+[[125  54]
+ [ 20 184]]
+TN=125  FP=54  FN=20  TP=184
 
-Faux-positifs (constructif->vandalisme) : 66
-Taux de faux-positifs (FPR) : 0.365
-Precision (vandalisme) : 0.705
+Faux-positifs (constructif->vandalisme) : 54
+Taux de faux-positifs (FPR) : 0.302
+Precision (vandalisme) : 0.773
 
 threshold=0.29
 --- Confusion matrix (test) ---
-[[115  66]
- [ 20 157]]
-TN=115  FP=66  FN=20  TP=157
+[[126  53]
+ [ 20 184]]
+TN=126  FP=53  FN=20  TP=184
 
-Faux-positifs (constructif->vandalisme) : 66
-Taux de faux-positifs (FPR) : 0.365
-Precision (vandalisme) : 0.704
+Faux-positifs (constructif->vandalisme) : 53
+Taux de faux-positifs (FPR) : 0.296
+Precision (vandalisme) : 0.776
 
 threshold=0.3
 --- Confusion matrix (test) ---
-[[119  62]
- [ 22 155]]
-TN=119  FP=62  FN=22  TP=155
+[[127  52]
+ [ 21 183]]
+TN=127  FP=52  FN=21  TP=183
 
-Faux-positifs (constructif->vandalisme) : 62
-Taux de faux-positifs (FPR) : 0.343
-Precision (vandalisme) : 0.714
+Faux-positifs (constructif->vandalisme) : 52
+Taux de faux-positifs (FPR) : 0.291
+Precision (vandalisme) : 0.779
 
 threshold=0.31
 --- Confusion matrix (test) ---
-[[120  61]
- [ 25 152]]
-TN=120  FP=61  FN=25  TP=152
+[[128  51]
+ [ 21 183]]
+TN=128  FP=51  FN=21  TP=183
 
-Faux-positifs (constructif->vandalisme) : 61
-Taux de faux-positifs (FPR) : 0.337
-Precision (vandalisme) : 0.714
+Faux-positifs (constructif->vandalisme) : 51
+Taux de faux-positifs (FPR) : 0.285
+Precision (vandalisme) : 0.782
 
 threshold=0.32
 --- Confusion matrix (test) ---
-[[120  61]
- [ 26 151]]
-TN=120  FP=61  FN=26  TP=151
+[[128  51]
+ [ 24 180]]
+TN=128  FP=51  FN=24  TP=180
 
-Faux-positifs (constructif->vandalisme) : 61
-Taux de faux-positifs (FPR) : 0.337
-Precision (vandalisme) : 0.712
+Faux-positifs (constructif->vandalisme) : 51
+Taux de faux-positifs (FPR) : 0.285
+Precision (vandalisme) : 0.779
 
 threshold=0.33
 --- Confusion matrix (test) ---
-[[122  59]
- [ 28 149]]
-TN=122  FP=59  FN=28  TP=149
+[[129  50]
+ [ 26 178]]
+TN=129  FP=50  FN=26  TP=178
 
-Faux-positifs (constructif->vandalisme) : 59
-Taux de faux-positifs (FPR) : 0.326
-Precision (vandalisme) : 0.716
+Faux-positifs (constructif->vandalisme) : 50
+Taux de faux-positifs (FPR) : 0.279
+Precision (vandalisme) : 0.781
 
 threshold=0.34
 --- Confusion matrix (test) ---
-[[122  59]
- [ 29 148]]
-TN=122  FP=59  FN=29  TP=148
+[[129  50]
+ [ 26 178]]
+TN=129  FP=50  FN=26  TP=178
 
-Faux-positifs (constructif->vandalisme) : 59
-Taux de faux-positifs (FPR) : 0.326
-Precision (vandalisme) : 0.715
+Faux-positifs (constructif->vandalisme) : 50
+Taux de faux-positifs (FPR) : 0.279
+Precision (vandalisme) : 0.781
 
 threshold=0.35
 --- Confusion matrix (test) ---
-[[123  58]
- [ 30 147]]
-TN=123  FP=58  FN=30  TP=147
+[[129  50]
+ [ 26 178]]
+TN=129  FP=50  FN=26  TP=178
 
-Faux-positifs (constructif->vandalisme) : 58
-Taux de faux-positifs (FPR) : 0.320
-Precision (vandalisme) : 0.717
+Faux-positifs (constructif->vandalisme) : 50
+Taux de faux-positifs (FPR) : 0.279
+Precision (vandalisme) : 0.781
 
 threshold=0.36
 --- Confusion matrix (test) ---
-[[125  56]
- [ 30 147]]
-TN=125  FP=56  FN=30  TP=147
+[[130  49]
+ [ 27 177]]
+TN=130  FP=49  FN=27  TP=177
 
-Faux-positifs (constructif->vandalisme) : 56
-Taux de faux-positifs (FPR) : 0.309
-Precision (vandalisme) : 0.724
+Faux-positifs (constructif->vandalisme) : 49
+Taux de faux-positifs (FPR) : 0.274
+Precision (vandalisme) : 0.783
 
 threshold=0.37
 --- Confusion matrix (test) ---
-[[126  55]
- [ 31 146]]
-TN=126  FP=55  FN=31  TP=146
+[[131  48]
+ [ 29 175]]
+TN=131  FP=48  FN=29  TP=175
 
-Faux-positifs (constructif->vandalisme) : 55
-Taux de faux-positifs (FPR) : 0.304
-Precision (vandalisme) : 0.726
+Faux-positifs (constructif->vandalisme) : 48
+Taux de faux-positifs (FPR) : 0.268
+Precision (vandalisme) : 0.785
 
 threshold=0.38
 --- Confusion matrix (test) ---
-[[130  51]
- [ 33 144]]
-TN=130  FP=51  FN=33  TP=144
+[[131  48]
+ [ 29 175]]
+TN=131  FP=48  FN=29  TP=175
 
-Faux-positifs (constructif->vandalisme) : 51
-Taux de faux-positifs (FPR) : 0.282
-Precision (vandalisme) : 0.738
+Faux-positifs (constructif->vandalisme) : 48
+Taux de faux-positifs (FPR) : 0.268
+Precision (vandalisme) : 0.785
 
 threshold=0.39
 --- Confusion matrix (test) ---
-[[133  48]
- [ 34 143]]
-TN=133  FP=48  FN=34  TP=143
+[[131  48]
+ [ 31 173]]
+TN=131  FP=48  FN=31  TP=173
 
 Faux-positifs (constructif->vandalisme) : 48
-Taux de faux-positifs (FPR) : 0.265
-Precision (vandalisme) : 0.749
+Taux de faux-positifs (FPR) : 0.268
+Precision (vandalisme) : 0.783
 
 threshold=0.4
 --- Confusion matrix (test) ---
-[[133  48]
- [ 35 142]]
-TN=133  FP=48  FN=35  TP=142
+[[131  48]
+ [ 34 170]]
+TN=131  FP=48  FN=34  TP=170
 
 Faux-positifs (constructif->vandalisme) : 48
-Taux de faux-positifs (FPR) : 0.265
-Precision (vandalisme) : 0.747
+Taux de faux-positifs (FPR) : 0.268
+Precision (vandalisme) : 0.780
 
 threshold=0.41
 --- Confusion matrix (test) ---
-[[134  47]
- [ 36 141]]
-TN=134  FP=47  FN=36  TP=141
+[[131  48]
+ [ 36 168]]
+TN=131  FP=48  FN=36  TP=168
 
-Faux-positifs (constructif->vandalisme) : 47
-Taux de faux-positifs (FPR) : 0.260
-Precision (vandalisme) : 0.750
+Faux-positifs (constructif->vandalisme) : 48
+Taux de faux-positifs (FPR) : 0.268
+Precision (vandalisme) : 0.778
 
 threshold=0.42
 --- Confusion matrix (test) ---
-[[134  47]
- [ 36 141]]
-TN=134  FP=47  FN=36  TP=141
+[[131  48]
+ [ 37 167]]
+TN=131  FP=48  FN=37  TP=167
 
-Faux-positifs (constructif->vandalisme) : 47
-Taux de faux-positifs (FPR) : 0.260
-Precision (vandalisme) : 0.750
+Faux-positifs (constructif->vandalisme) : 48
+Taux de faux-positifs (FPR) : 0.268
+Precision (vandalisme) : 0.777
 
 threshold=0.43
 --- Confusion matrix (test) ---
-[[136  45]
- [ 37 140]]
-TN=136  FP=45  FN=37  TP=140
+[[131  48]
+ [ 39 165]]
+TN=131  FP=48  FN=39  TP=165
 
-Faux-positifs (constructif->vandalisme) : 45
-Taux de faux-positifs (FPR) : 0.249
-Precision (vandalisme) : 0.757
+Faux-positifs (constructif->vandalisme) : 48
+Taux de faux-positifs (FPR) : 0.268
+Precision (vandalisme) : 0.775
 
 threshold=0.44
 --- Confusion matrix (test) ---
-[[136  45]
- [ 37 140]]
-TN=136  FP=45  FN=37  TP=140
+[[133  46]
+ [ 39 165]]
+TN=133  FP=46  FN=39  TP=165
 
-Faux-positifs (constructif->vandalisme) : 45
-Taux de faux-positifs (FPR) : 0.249
-Precision (vandalisme) : 0.757
+Faux-positifs (constructif->vandalisme) : 46
+Taux de faux-positifs (FPR) : 0.257
+Precision (vandalisme) : 0.782
 
 threshold=0.45
 --- Confusion matrix (test) ---
-[[136  45]
- [ 37 140]]
-TN=136  FP=45  FN=37  TP=140
+[[135  44]
+ [ 40 164]]
+TN=135  FP=44  FN=40  TP=164
 
-Faux-positifs (constructif->vandalisme) : 45
-Taux de faux-positifs (FPR) : 0.249
-Precision (vandalisme) : 0.757
+Faux-positifs (constructif->vandalisme) : 44
+Taux de faux-positifs (FPR) : 0.246
+Precision (vandalisme) : 0.788
 
 threshold=0.46
 --- Confusion matrix (test) ---
-[[139  42]
- [ 37 140]]
-TN=139  FP=42  FN=37  TP=140
+[[135  44]
+ [ 41 163]]
+TN=135  FP=44  FN=41  TP=163
 
-Faux-positifs (constructif->vandalisme) : 42
-Taux de faux-positifs (FPR) : 0.232
-Precision (vandalisme) : 0.769
+Faux-positifs (constructif->vandalisme) : 44
+Taux de faux-positifs (FPR) : 0.246
+Precision (vandalisme) : 0.787
 
 threshold=0.47
 --- Confusion matrix (test) ---
-[[139  42]
- [ 37 140]]
-TN=139  FP=42  FN=37  TP=140
+[[136  43]
+ [ 41 163]]
+TN=136  FP=43  FN=41  TP=163
 
-Faux-positifs (constructif->vandalisme) : 42
-Taux de faux-positifs (FPR) : 0.232
-Precision (vandalisme) : 0.769
+Faux-positifs (constructif->vandalisme) : 43
+Taux de faux-positifs (FPR) : 0.240
+Precision (vandalisme) : 0.791
 
 threshold=0.48
 --- Confusion matrix (test) ---
-[[139  42]
- [ 38 139]]
-TN=139  FP=42  FN=38  TP=139
+[[136  43]
+ [ 41 163]]
+TN=136  FP=43  FN=41  TP=163
 
-Faux-positifs (constructif->vandalisme) : 42
-Taux de faux-positifs (FPR) : 0.232
-Precision (vandalisme) : 0.768
+Faux-positifs (constructif->vandalisme) : 43
+Taux de faux-positifs (FPR) : 0.240
+Precision (vandalisme) : 0.791
 
 threshold=0.49
 --- Confusion matrix (test) ---
-[[139  42]
- [ 39 138]]
-TN=139  FP=42  FN=39  TP=138
+[[138  41]
+ [ 42 162]]
+TN=138  FP=41  FN=42  TP=162
 
-Faux-positifs (constructif->vandalisme) : 42
-Taux de faux-positifs (FPR) : 0.232
-Precision (vandalisme) : 0.767
+Faux-positifs (constructif->vandalisme) : 41
+Taux de faux-positifs (FPR) : 0.229
+Precision (vandalisme) : 0.798
 
 threshold=0.5
 --- Confusion matrix (test) ---
-[[139  42]
- [ 39 138]]
-TN=139  FP=42  FN=39  TP=138
+[[139  40]
+ [ 42 162]]
+TN=139  FP=40  FN=42  TP=162
 
-Faux-positifs (constructif->vandalisme) : 42
-Taux de faux-positifs (FPR) : 0.232
-Precision (vandalisme) : 0.767
+Faux-positifs (constructif->vandalisme) : 40
+Taux de faux-positifs (FPR) : 0.223
+Precision (vandalisme) : 0.802
 
 threshold=0.51
 --- Confusion matrix (test) ---
-[[139  42]
- [ 42 135]]
-TN=139  FP=42  FN=42  TP=135
+[[141  38]
+ [ 43 161]]
+TN=141  FP=38  FN=43  TP=161
 
-Faux-positifs (constructif->vandalisme) : 42
-Taux de faux-positifs (FPR) : 0.232
-Precision (vandalisme) : 0.763
+Faux-positifs (constructif->vandalisme) : 38
+Taux de faux-positifs (FPR) : 0.212
+Precision (vandalisme) : 0.809
 
 threshold=0.52
 --- Confusion matrix (test) ---
-[[139  42]
- [ 42 135]]
-TN=139  FP=42  FN=42  TP=135
+[[145  34]
+ [ 46 158]]
+TN=145  FP=34  FN=46  TP=158
 
-Faux-positifs (constructif->vandalisme) : 42
-Taux de faux-positifs (FPR) : 0.232
-Precision (vandalisme) : 0.763
+Faux-positifs (constructif->vandalisme) : 34
+Taux de faux-positifs (FPR) : 0.190
+Precision (vandalisme) : 0.823
 
 threshold=0.53
 --- Confusion matrix (test) ---
-[[141  40]
- [ 43 134]]
-TN=141  FP=40  FN=43  TP=134
+[[146  33]
+ [ 51 153]]
+TN=146  FP=33  FN=51  TP=153
 
-Faux-positifs (constructif->vandalisme) : 40
-Taux de faux-positifs (FPR) : 0.221
-Precision (vandalisme) : 0.770
+Faux-positifs (constructif->vandalisme) : 33
+Taux de faux-positifs (FPR) : 0.184
+Precision (vandalisme) : 0.823
 
 threshold=0.54
 --- Confusion matrix (test) ---
-[[142  39]
- [ 43 134]]
-TN=142  FP=39  FN=43  TP=134
+[[148  31]
+ [ 53 151]]
+TN=148  FP=31  FN=53  TP=151
 
-Faux-positifs (constructif->vandalisme) : 39
-Taux de faux-positifs (FPR) : 0.215
-Precision (vandalisme) : 0.775
+Faux-positifs (constructif->vandalisme) : 31
+Taux de faux-positifs (FPR) : 0.173
+Precision (vandalisme) : 0.830
 
 threshold=0.55
 --- Confusion matrix (test) ---
-[[142  39]
- [ 43 134]]
-TN=142  FP=39  FN=43  TP=134
+[[151  28]
+ [ 54 150]]
+TN=151  FP=28  FN=54  TP=150
 
-Faux-positifs (constructif->vandalisme) : 39
-Taux de faux-positifs (FPR) : 0.215
-Precision (vandalisme) : 0.775
+Faux-positifs (constructif->vandalisme) : 28
+Taux de faux-positifs (FPR) : 0.156
+Precision (vandalisme) : 0.843
 
 threshold=0.56
 --- Confusion matrix (test) ---
-[[142  39]
- [ 44 133]]
-TN=142  FP=39  FN=44  TP=133
+[[151  28]
+ [ 58 146]]
+TN=151  FP=28  FN=58  TP=146
 
-Faux-positifs (constructif->vandalisme) : 39
-Taux de faux-positifs (FPR) : 0.215
-Precision (vandalisme) : 0.773
+Faux-positifs (constructif->vandalisme) : 28
+Taux de faux-positifs (FPR) : 0.156
+Precision (vandalisme) : 0.839
 
 threshold=0.57
 --- Confusion matrix (test) ---
-[[145  36]
- [ 45 132]]
-TN=145  FP=36  FN=45  TP=132
+[[151  28]
+ [ 61 143]]
+TN=151  FP=28  FN=61  TP=143
 
-Faux-positifs (constructif->vandalisme) : 36
-Taux de faux-positifs (FPR) : 0.199
-Precision (vandalisme) : 0.786
+Faux-positifs (constructif->vandalisme) : 28
+Taux de faux-positifs (FPR) : 0.156
+Precision (vandalisme) : 0.836
 
 threshold=0.58
 --- Confusion matrix (test) ---
-[[145  36]
- [ 45 132]]
-TN=145  FP=36  FN=45  TP=132
+[[151  28]
+ [ 62 142]]
+TN=151  FP=28  FN=62  TP=142
 
-Faux-positifs (constructif->vandalisme) : 36
-Taux de faux-positifs (FPR) : 0.199
-Precision (vandalisme) : 0.786
+Faux-positifs (constructif->vandalisme) : 28
+Taux de faux-positifs (FPR) : 0.156
+Precision (vandalisme) : 0.835
 
 threshold=0.59
 --- Confusion matrix (test) ---
-[[147  34]
- [ 45 132]]
-TN=147  FP=34  FN=45  TP=132
+[[152  27]
+ [ 62 142]]
+TN=152  FP=27  FN=62  TP=142
 
-Faux-positifs (constructif->vandalisme) : 34
-Taux de faux-positifs (FPR) : 0.188
-Precision (vandalisme) : 0.795
+Faux-positifs (constructif->vandalisme) : 27
+Taux de faux-positifs (FPR) : 0.151
+Precision (vandalisme) : 0.840
 
 threshold=0.6
 --- Confusion matrix (test) ---
-[[149  32]
- [ 46 131]]
-TN=149  FP=32  FN=46  TP=131
+[[152  27]
+ [ 64 140]]
+TN=152  FP=27  FN=64  TP=140
 
-Faux-positifs (constructif->vandalisme) : 32
-Taux de faux-positifs (FPR) : 0.177
-Precision (vandalisme) : 0.804
+Faux-positifs (constructif->vandalisme) : 27
+Taux de faux-positifs (FPR) : 0.151
+Precision (vandalisme) : 0.838
 
 threshold=0.61
 --- Confusion matrix (test) ---
-[[150  31]
- [ 47 130]]
-TN=150  FP=31  FN=47  TP=130
+[[154  25]
+ [ 66 138]]
+TN=154  FP=25  FN=66  TP=138
 
-Faux-positifs (constructif->vandalisme) : 31
-Taux de faux-positifs (FPR) : 0.171
-Precision (vandalisme) : 0.807
+Faux-positifs (constructif->vandalisme) : 25
+Taux de faux-positifs (FPR) : 0.140
+Precision (vandalisme) : 0.847
 
 threshold=0.62
 --- Confusion matrix (test) ---
-[[151  30]
- [ 48 129]]
-TN=151  FP=30  FN=48  TP=129
+[[154  25]
+ [ 71 133]]
+TN=154  FP=25  FN=71  TP=133
 
-Faux-positifs (constructif->vandalisme) : 30
-Taux de faux-positifs (FPR) : 0.166
-Precision (vandalisme) : 0.811
+Faux-positifs (constructif->vandalisme) : 25
+Taux de faux-positifs (FPR) : 0.140
+Precision (vandalisme) : 0.842
 
 threshold=0.63
 --- Confusion matrix (test) ---
-[[151  30]
- [ 48 129]]
-TN=151  FP=30  FN=48  TP=129
+[[154  25]
+ [ 71 133]]
+TN=154  FP=25  FN=71  TP=133
 
-Faux-positifs (constructif->vandalisme) : 30
-Taux de faux-positifs (FPR) : 0.166
-Precision (vandalisme) : 0.811
+Faux-positifs (constructif->vandalisme) : 25
+Taux de faux-positifs (FPR) : 0.140
+Precision (vandalisme) : 0.842
 
 threshold=0.64
 --- Confusion matrix (test) ---
-[[153  28]
- [ 49 128]]
-TN=153  FP=28  FN=49  TP=128
+[[155  24]
+ [ 76 128]]
+TN=155  FP=24  FN=76  TP=128
 
-Faux-positifs (constructif->vandalisme) : 28
-Taux de faux-positifs (FPR) : 0.155
-Precision (vandalisme) : 0.821
+Faux-positifs (constructif->vandalisme) : 24
+Taux de faux-positifs (FPR) : 0.134
+Precision (vandalisme) : 0.842
 
 threshold=0.65
 --- Confusion matrix (test) ---
-[[153  28]
- [ 51 126]]
-TN=153  FP=28  FN=51  TP=126
+[[155  24]
+ [ 77 127]]
+TN=155  FP=24  FN=77  TP=127
 
-Faux-positifs (constructif->vandalisme) : 28
-Taux de faux-positifs (FPR) : 0.155
-Precision (vandalisme) : 0.818
+Faux-positifs (constructif->vandalisme) : 24
+Taux de faux-positifs (FPR) : 0.134
+Precision (vandalisme) : 0.841
 
 threshold=0.66
 --- Confusion matrix (test) ---
-[[154  27]
- [ 54 123]]
-TN=154  FP=27  FN=54  TP=123
+[[155  24]
+ [ 77 127]]
+TN=155  FP=24  FN=77  TP=127
 
-Faux-positifs (constructif->vandalisme) : 27
-Taux de faux-positifs (FPR) : 0.149
-Precision (vandalisme) : 0.820
+Faux-positifs (constructif->vandalisme) : 24
+Taux de faux-positifs (FPR) : 0.134
+Precision (vandalisme) : 0.841
 
 threshold=0.67
 --- Confusion matrix (test) ---
-[[154  27]
- [ 54 123]]
-TN=154  FP=27  FN=54  TP=123
+[[155  24]
+ [ 77 127]]
+TN=155  FP=24  FN=77  TP=127
 
-Faux-positifs (constructif->vandalisme) : 27
-Taux de faux-positifs (FPR) : 0.149
-Precision (vandalisme) : 0.820
+Faux-positifs (constructif->vandalisme) : 24
+Taux de faux-positifs (FPR) : 0.134
+Precision (vandalisme) : 0.841
 
 threshold=0.68
 --- Confusion matrix (test) ---
-[[154  27]
- [ 56 121]]
-TN=154  FP=27  FN=56  TP=121
+[[156  23]
+ [ 78 126]]
+TN=156  FP=23  FN=78  TP=126
 
-Faux-positifs (constructif->vandalisme) : 27
-Taux de faux-positifs (FPR) : 0.149
-Precision (vandalisme) : 0.818
+Faux-positifs (constructif->vandalisme) : 23
+Taux de faux-positifs (FPR) : 0.128
+Precision (vandalisme) : 0.846
 
 threshold=0.69
 --- Confusion matrix (test) ---
-[[156  25]
- [ 58 119]]
-TN=156  FP=25  FN=58  TP=119
+[[156  23]
+ [ 80 124]]
+TN=156  FP=23  FN=80  TP=124
 
-Faux-positifs (constructif->vandalisme) : 25
-Taux de faux-positifs (FPR) : 0.138
-Precision (vandalisme) : 0.826
+Faux-positifs (constructif->vandalisme) : 23
+Taux de faux-positifs (FPR) : 0.128
+Precision (vandalisme) : 0.844
 
 threshold=0.7
 --- Confusion matrix (test) ---
-[[157  24]
- [ 58 119]]
-TN=157  FP=24  FN=58  TP=119
+[[157  22]
+ [ 83 121]]
+TN=157  FP=22  FN=83  TP=121
 
-Faux-positifs (constructif->vandalisme) : 24
-Taux de faux-positifs (FPR) : 0.133
-Precision (vandalisme) : 0.832
+Faux-positifs (constructif->vandalisme) : 22
+Taux de faux-positifs (FPR) : 0.123
+Precision (vandalisme) : 0.846
 
 threshold=0.71
 --- Confusion matrix (test) ---
-[[157  24]
- [ 58 119]]
-TN=157  FP=24  FN=58  TP=119
+[[157  22]
+ [ 85 119]]
+TN=157  FP=22  FN=85  TP=119
 
-Faux-positifs (constructif->vandalisme) : 24
-Taux de faux-positifs (FPR) : 0.133
-Precision (vandalisme) : 0.832
+Faux-positifs (constructif->vandalisme) : 22
+Taux de faux-positifs (FPR) : 0.123
+Precision (vandalisme) : 0.844
 
 threshold=0.72
 --- Confusion matrix (test) ---
-[[157  24]
- [ 58 119]]
-TN=157  FP=24  FN=58  TP=119
+[[157  22]
+ [ 86 118]]
+TN=157  FP=22  FN=86  TP=118
 
-Faux-positifs (constructif->vandalisme) : 24
-Taux de faux-positifs (FPR) : 0.133
-Precision (vandalisme) : 0.832
+Faux-positifs (constructif->vandalisme) : 22
+Taux de faux-positifs (FPR) : 0.123
+Precision (vandalisme) : 0.843
 
 threshold=0.73
 --- Confusion matrix (test) ---
-[[158  23]
- [ 60 117]]
-TN=158  FP=23  FN=60  TP=117
+[[158  21]
+ [ 86 118]]
+TN=158  FP=21  FN=86  TP=118
 
-Faux-positifs (constructif->vandalisme) : 23
-Taux de faux-positifs (FPR) : 0.127
-Precision (vandalisme) : 0.836
+Faux-positifs (constructif->vandalisme) : 21
+Taux de faux-positifs (FPR) : 0.117
+Precision (vandalisme) : 0.849
 
 threshold=0.74
 --- Confusion matrix (test) ---
-[[163  18]
- [ 61 116]]
-TN=163  FP=18  FN=61  TP=116
+[[159  20]
+ [ 90 114]]
+TN=159  FP=20  FN=90  TP=114
 
-Faux-positifs (constructif->vandalisme) : 18
-Taux de faux-positifs (FPR) : 0.099
-Precision (vandalisme) : 0.866
+Faux-positifs (constructif->vandalisme) : 20
+Taux de faux-positifs (FPR) : 0.112
+Precision (vandalisme) : 0.851
 
 threshold=0.75
 --- Confusion matrix (test) ---
-[[164  17]
- [ 62 115]]
-TN=164  FP=17  FN=62  TP=115
+[[161  18]
+ [ 90 114]]
+TN=161  FP=18  FN=90  TP=114
 
-Faux-positifs (constructif->vandalisme) : 17
-Taux de faux-positifs (FPR) : 0.094
-Precision (vandalisme) : 0.871
+Faux-positifs (constructif->vandalisme) : 18
+Taux de faux-positifs (FPR) : 0.101
+Precision (vandalisme) : 0.864
 
 threshold=0.76
 --- Confusion matrix (test) ---
-[[164  17]
- [ 63 114]]
-TN=164  FP=17  FN=63  TP=114
+[[162  17]
+ [ 92 112]]
+TN=162  FP=17  FN=92  TP=112
 
 Faux-positifs (constructif->vandalisme) : 17
-Taux de faux-positifs (FPR) : 0.094
-Precision (vandalisme) : 0.870
+Taux de faux-positifs (FPR) : 0.095
+Precision (vandalisme) : 0.868
 
 threshold=0.77
 --- Confusion matrix (test) ---
-[[164  17]
- [ 65 112]]
-TN=164  FP=17  FN=65  TP=112
+[[162  17]
+ [ 96 108]]
+TN=162  FP=17  FN=96  TP=108
 
 Faux-positifs (constructif->vandalisme) : 17
-Taux de faux-positifs (FPR) : 0.094
-Precision (vandalisme) : 0.868
+Taux de faux-positifs (FPR) : 0.095
+Precision (vandalisme) : 0.864
 
 threshold=0.78
 --- Confusion matrix (test) ---
-[[164  17]
- [ 67 110]]
-TN=164  FP=17  FN=67  TP=110
+[[162  17]
+ [ 98 106]]
+TN=162  FP=17  FN=98  TP=106
 
 Faux-positifs (constructif->vandalisme) : 17
-Taux de faux-positifs (FPR) : 0.094
-Precision (vandalisme) : 0.866
+Taux de faux-positifs (FPR) : 0.095
+Precision (vandalisme) : 0.862
 
 threshold=0.79
 --- Confusion matrix (test) ---
-[[164  17]
- [ 70 107]]
-TN=164  FP=17  FN=70  TP=107
+[[163  16]
+ [100 104]]
+TN=163  FP=16  FN=100  TP=104
 
-Faux-positifs (constructif->vandalisme) : 17
-Taux de faux-positifs (FPR) : 0.094
-Precision (vandalisme) : 0.863
+Faux-positifs (constructif->vandalisme) : 16
+Taux de faux-positifs (FPR) : 0.089
+Precision (vandalisme) : 0.867
 
 threshold=0.8
 --- Confusion matrix (test) ---
-[[165  16]
- [ 72 105]]
-TN=165  FP=16  FN=72  TP=105
+[[164  15]
+ [101 103]]
+TN=164  FP=15  FN=101  TP=103
 
-Faux-positifs (constructif->vandalisme) : 16
-Taux de faux-positifs (FPR) : 0.088
-Precision (vandalisme) : 0.868
+Faux-positifs (constructif->vandalisme) : 15
+Taux de faux-positifs (FPR) : 0.084
+Precision (vandalisme) : 0.873
 
 threshold=0.81
 --- Confusion matrix (test) ---
-[[167  14]
- [ 75 102]]
-TN=167  FP=14  FN=75  TP=102
+[[164  15]
+ [105  99]]
+TN=164  FP=15  FN=105  TP=99
 
-Faux-positifs (constructif->vandalisme) : 14
-Taux de faux-positifs (FPR) : 0.077
-Precision (vandalisme) : 0.879
+Faux-positifs (constructif->vandalisme) : 15
+Taux de faux-positifs (FPR) : 0.084
+Precision (vandalisme) : 0.868
 
 threshold=0.82
 --- Confusion matrix (test) ---
-[[168  13]
- [ 76 101]]
-TN=168  FP=13  FN=76  TP=101
+[[165  14]
+ [107  97]]
+TN=165  FP=14  FN=107  TP=97
 
-Faux-positifs (constructif->vandalisme) : 13
-Taux de faux-positifs (FPR) : 0.072
-Precision (vandalisme) : 0.886
+Faux-positifs (constructif->vandalisme) : 14
+Taux de faux-positifs (FPR) : 0.078
+Precision (vandalisme) : 0.874
 
 threshold=0.83
 --- Confusion matrix (test) ---
-[[170  11]
- [ 79  98]]
-TN=170  FP=11  FN=79  TP=98
+[[166  13]
+ [107  97]]
+TN=166  FP=13  FN=107  TP=97
 
-Faux-positifs (constructif->vandalisme) : 11
-Taux de faux-positifs (FPR) : 0.061
-Precision (vandalisme) : 0.899
+Faux-positifs (constructif->vandalisme) : 13
+Taux de faux-positifs (FPR) : 0.073
+Precision (vandalisme) : 0.882
 
 threshold=0.84
 --- Confusion matrix (test) ---
-[[172   9]
- [ 79  98]]
-TN=172  FP=9  FN=79  TP=98
+[[167  12]
+ [109  95]]
+TN=167  FP=12  FN=109  TP=95
 
-Faux-positifs (constructif->vandalisme) : 9
-Taux de faux-positifs (FPR) : 0.050
-Precision (vandalisme) : 0.916
+Faux-positifs (constructif->vandalisme) : 12
+Taux de faux-positifs (FPR) : 0.067
+Precision (vandalisme) : 0.888
 
 threshold=0.85
 --- Confusion matrix (test) ---
-[[174   7]
- [ 80  97]]
-TN=174  FP=7  FN=80  TP=97
+[[167  12]
+ [111  93]]
+TN=167  FP=12  FN=111  TP=93
 
-Faux-positifs (constructif->vandalisme) : 7
-Taux de faux-positifs (FPR) : 0.039
-Precision (vandalisme) : 0.933
+Faux-positifs (constructif->vandalisme) : 12
+Taux de faux-positifs (FPR) : 0.067
+Precision (vandalisme) : 0.886
 
 threshold=0.86
 --- Confusion matrix (test) ---
-[[174   7]
- [ 82  95]]
-TN=174  FP=7  FN=82  TP=95
+[[168  11]
+ [113  91]]
+TN=168  FP=11  FN=113  TP=91
 
-Faux-positifs (constructif->vandalisme) : 7
-Taux de faux-positifs (FPR) : 0.039
-Precision (vandalisme) : 0.931
+Faux-positifs (constructif->vandalisme) : 11
+Taux de faux-positifs (FPR) : 0.061
+Precision (vandalisme) : 0.892
 
 threshold=0.87
 --- Confusion matrix (test) ---
-[[175   6]
- [ 89  88]]
-TN=175  FP=6  FN=89  TP=88
+[[168  11]
+ [117  87]]
+TN=168  FP=11  FN=117  TP=87
 
-Faux-positifs (constructif->vandalisme) : 6
-Taux de faux-positifs (FPR) : 0.033
-Precision (vandalisme) : 0.936
+Faux-positifs (constructif->vandalisme) : 11
+Taux de faux-positifs (FPR) : 0.061
+Precision (vandalisme) : 0.888
 
 threshold=0.88
 --- Confusion matrix (test) ---
-[[176   5]
- [ 98  79]]
-TN=176  FP=5  FN=98  TP=79
+[[170   9]
+ [123  81]]
+TN=170  FP=9  FN=123  TP=81
 
-Faux-positifs (constructif->vandalisme) : 5
-Taux de faux-positifs (FPR) : 0.028
-Precision (vandalisme) : 0.940
+Faux-positifs (constructif->vandalisme) : 9
+Taux de faux-positifs (FPR) : 0.050
+Precision (vandalisme) : 0.900
 
 threshold=0.89
 --- Confusion matrix (test) ---
-[[176   5]
- [103  74]]
-TN=176  FP=5  FN=103  TP=74
+[[170   9]
+ [125  79]]
+TN=170  FP=9  FN=125  TP=79
 
-Faux-positifs (constructif->vandalisme) : 5
-Taux de faux-positifs (FPR) : 0.028
-Precision (vandalisme) : 0.937
+Faux-positifs (constructif->vandalisme) : 9
+Taux de faux-positifs (FPR) : 0.050
+Precision (vandalisme) : 0.898
 
 threshold=0.9
 --- Confusion matrix (test) ---
-[[176   5]
- [108  69]]
-TN=176  FP=5  FN=108  TP=69
+[[172   7]
+ [128  76]]
+TN=172  FP=7  FN=128  TP=76
 
-Faux-positifs (constructif->vandalisme) : 5
-Taux de faux-positifs (FPR) : 0.028
-Precision (vandalisme) : 0.932
+Faux-positifs (constructif->vandalisme) : 7
+Taux de faux-positifs (FPR) : 0.039
+Precision (vandalisme) : 0.916
 
 threshold=0.91
 --- Confusion matrix (test) ---
-[[176   5]
- [119  58]]
-TN=176  FP=5  FN=119  TP=58
+[[172   7]
+ [132  72]]
+TN=172  FP=7  FN=132  TP=72
 
-Faux-positifs (constructif->vandalisme) : 5
-Taux de faux-positifs (FPR) : 0.028
-Precision (vandalisme) : 0.921
+Faux-positifs (constructif->vandalisme) : 7
+Taux de faux-positifs (FPR) : 0.039
+Precision (vandalisme) : 0.911
 
 threshold=0.92
 --- Confusion matrix (test) ---
-[[177   4]
- [130  47]]
-TN=177  FP=4  FN=130  TP=47
+[[172   7]
+ [137  67]]
+TN=172  FP=7  FN=137  TP=67
 
-Faux-positifs (constructif->vandalisme) : 4
-Taux de faux-positifs (FPR) : 0.022
-Precision (vandalisme) : 0.922
+Faux-positifs (constructif->vandalisme) : 7
+Taux de faux-positifs (FPR) : 0.039
+Precision (vandalisme) : 0.905
 
 threshold=0.93
 --- Confusion matrix (test) ---
-[[179   2]
- [136  41]]
-TN=179  FP=2  FN=136  TP=41
+[[172   7]
+ [140  64]]
+TN=172  FP=7  FN=140  TP=64
 
-Faux-positifs (constructif->vandalisme) : 2
-Taux de faux-positifs (FPR) : 0.011
-Precision (vandalisme) : 0.953
+Faux-positifs (constructif->vandalisme) : 7
+Taux de faux-positifs (FPR) : 0.039
+Precision (vandalisme) : 0.901
 
 threshold=0.94
 --- Confusion matrix (test) ---
-[[179   2]
- [148  29]]
-TN=179  FP=2  FN=148  TP=29
+[[173   6]
+ [145  59]]
+TN=173  FP=6  FN=145  TP=59
 
-Faux-positifs (constructif->vandalisme) : 2
-Taux de faux-positifs (FPR) : 0.011
-Precision (vandalisme) : 0.935
+Faux-positifs (constructif->vandalisme) : 6
+Taux de faux-positifs (FPR) : 0.034
+Precision (vandalisme) : 0.908
 
 threshold=0.95
 --- Confusion matrix (test) ---
-[[181   0]
- [157  20]]
-TN=181  FP=0  FN=157  TP=20
+[[175   4]
+ [152  52]]
+TN=175  FP=4  FN=152  TP=52
 
-Faux-positifs (constructif->vandalisme) : 0
-Taux de faux-positifs (FPR) : 0.000
-Precision (vandalisme) : 1.000
+Faux-positifs (constructif->vandalisme) : 4
+Taux de faux-positifs (FPR) : 0.022
+Precision (vandalisme) : 0.929
 
 threshold=0.96
 --- Confusion matrix (test) ---
-[[181   0]
- [166  11]]
-TN=181  FP=0  FN=166  TP=11
+[[177   2]
+ [161  43]]
+TN=177  FP=2  FN=161  TP=43
 
-Faux-positifs (constructif->vandalisme) : 0
-Taux de faux-positifs (FPR) : 0.000
-Precision (vandalisme) : 1.000
+Faux-positifs (constructif->vandalisme) : 2
+Taux de faux-positifs (FPR) : 0.011
+Precision (vandalisme) : 0.956
 
 threshold=0.97
 --- Confusion matrix (test) ---
-[[181   0]
- [174   3]]
-TN=181  FP=0  FN=174  TP=3
+[[179   0]
+ [171  33]]
+TN=179  FP=0  FN=171  TP=33
 
 Faux-positifs (constructif->vandalisme) : 0
 Taux de faux-positifs (FPR) : 0.000
@@ -733,19 +733,19 @@ Precision (vandalisme) : 1.000
 
 threshold=0.98
 --- Confusion matrix (test) ---
-[[181   0]
- [177   0]]
-TN=181  FP=0  FN=177  TP=0
+[[179   0]
+ [192  12]]
+TN=179  FP=0  FN=192  TP=12
 
 Faux-positifs (constructif->vandalisme) : 0
 Taux de faux-positifs (FPR) : 0.000
-Precision (vandalisme) : 0.000
+Precision (vandalisme) : 1.000
 
 threshold=0.99
 --- Confusion matrix (test) ---
-[[181   0]
- [177   0]]
-TN=181  FP=0  FN=177  TP=0
+[[179   0]
+ [204   0]]
+TN=179  FP=0  FN=204  TP=0
 
 Faux-positifs (constructif->vandalisme) : 0
 Taux de faux-positifs (FPR) : 0.000

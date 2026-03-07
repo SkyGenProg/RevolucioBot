@@ -32,12 +32,12 @@ if __name__ == "__main__":
     else:
         site = get_wiki(args.wiki, args.lang, "RevolucioBot")
     page = site.page(args.page)
-    page.get_text_page_old(int(args.diff), int(args.oldid) if args.oldid is not None else None, total=None)
+    page.get_text_page_old(int(args.diff), int(args.oldid) if args.oldid is not None else None)
     vandalism_score = page.vandalism_score()
     detected = page.get_vandalism_report()
     pywikibot.output(detected)
     pywikibot.output("Score : " + str(vandalism_score))
-    pywikibot.output("Revoqué : " + str(page.edit_reverted))
+    pywikibot.output("Révoqué : " + str(page.edit_reverted))
     pywikibot.output("Utilisateur révoqué précédemment : " + str(page.user_previous_reverted))
     pywikibot.output("Date : " + str(page.timestamp))
     revision1_text = page.text_page_oldid

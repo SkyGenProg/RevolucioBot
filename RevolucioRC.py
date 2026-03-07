@@ -2,10 +2,8 @@
 
 import argparse, os, pywikibot, difflib, csv, traceback, time
 from urllib.parse import quote
-from includes.wiki import get_wiki, prompt_ai
-from config import api_key, model
+from includes.wiki import get_wiki
 from version import ver
-from mistralai import Mistral
 from datetime import datetime, timedelta
 from urllib.error import HTTPError
 
@@ -14,11 +12,8 @@ required_arg = arg.add_argument_group("required arguments")
 required_arg.add_argument("--wiki", required=True)
 required_arg.add_argument("--lang", required=True)
 arg.add_argument("--user")
-required_arg.add_argument("--limit", required=True)
-arg.add_argument("--use_ai")
+required_arg.add_argument("--limit", type=int, required=True)
 args = arg.parse_args()
-
-client = Mistral(api_key=api_key)
 
 if __name__ == "__main__":
     pywikibot.output("Revolució %s" % ver)
@@ -30,7 +25,7 @@ if __name__ == "__main__":
     else:
         site = get_wiki(args.wiki, args.lang, "RevolucioBot")
     site.get_trusted()
-    timestamp = str((datetime.now() - timedelta(seconds=int(args.limit))).timestamp())
+    timestamp = str((datetime.now() - timedelta(seconds=args.limit)).timestamp())
     site.rc_pages(timestamp=timestamp, rctoponly=False)
     output_file = f"rc_wiki_{args.wiki}_{args.lang}.csv"
     csv_file = open(output_file, "w", newline="", encoding="utf-8")
@@ -46,17 +41,22 @@ if __name__ == "__main__":
         "new",
         "diff",
         "comment",
+        "commented",
+        "new_page",
         "diff_url",
-        "score_algo",
-        "prob_vand",
         "reverted"
     ])
-    for page_info in site.diffs_rc:
+    total = len(site.diffs_rc)
+    start_time = datetime.now()
+    for i, page_info in enumerate(site.diffs_rc, 0):
+        if i > 0 and i % 100 == 0:
+            elapsed = datetime.now() - start_time
+            speed = i / elapsed.total_seconds()
+            remaining = timedelta(seconds=(total - i) / speed)
+            pywikibot.output(f"Progression : {i+1}/{total} ({i/total:.1%})\r\nTemps écoulé : {elapsed}\r\nTemps restant estimé : {remaining}")
         status_ok = False
         while not status_ok:
             try:
-                prog = 100*site.diffs_rc.index(page_info)/len(site.diffs_rc)
-                pywikibot.output(f"{prog} %")
                 page_name = page_info["title"]
                 user = page_info["user"]
                 ignored = False
@@ -67,6 +67,7 @@ if __name__ == "__main__":
                             ignored = True
                             break
                     if ignored:
+                        status_ok = True
                         continue
                 if ignored or user in site.trusted:
                     status_ok = True
@@ -81,37 +82,11 @@ if __name__ == "__main__":
                     continue
                 pywikibot.output("Page : " + page_name)
                 page.get_text_page_old(int(page_info["revid"]), int(page_info["old_revid"]) if int(page_info["old_revid"]) > 0 else None, endtime=timestamp)
-                vandalism_score = page.vandalism_score()
-                detected = page.get_vandalism_report()
-                pywikibot.output(detected)
-                pywikibot.output(f"Score : {vandalism_score}, reverted : {page.edit_reverted}")
                 revision1_text = page.text_page_oldid
                 revision2_text = page.text_page_oldid2
                 diff = difflib.unified_diff(revision2_text.splitlines(), revision1_text.splitlines())
                 diff_text = "\n".join(diff)
                 diff_comment = page.comment
-                if args.use_ai:
-                    prompt = prompt_ai(args.lang, page.timestamp, page.url, page.page_name, diff_text, page.comment)
-                    pywikibot.output("Prompt :")
-                    pywikibot.output(prompt)
-                    pywikibot.output("Analyse de l'IA : ")
-                    chat_response = client.chat.complete(
-                        model = model,
-                        messages = [
-                            {
-                                "role": "user",
-                                "content": prompt,
-                            },
-                        ]
-                    )
-                    ia_text = chat_response.choices[0].message.content
-                    pywikibot.output(ia_text)
-                    prob_vand = ""
-                    for line in ia_text.splitlines():
-                        if "Probabilité de vandalisme" in line:
-                            prob_vand = line.split(":")[-1].strip()
-                else:
-                    prob_vand = "-1"
                 diff_url = (
                     f"{site.url}/w/index.php?"
                     f"title={quote(page.page_name.replace(' ', '_'))}"
@@ -122,16 +97,16 @@ if __name__ == "__main__":
                     page.timestamp.isoformat(),
                     f"{args.lang}.{args.wiki}",
                     page.page_name,
-                    page.page_ns,
+                    int(page.page_ns),
                     page_info["revid"],
                     page_info["old_revid"],
                     page.text_page_oldid2,
                     page.text_page_oldid,
                     diff_text,
                     diff_comment,
+                    page.commented,
+                    page.new_page,
                     diff_url,
-                    vandalism_score,
-                    prob_vand,
                     page.edit_reverted
                 ])
                 status_ok = True
