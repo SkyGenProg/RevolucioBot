@@ -219,6 +219,7 @@ class get_wiki:
 
         self.lang_bot = self.config.get("lang_bot", "en")
         self.days_clean_warnings = self.config.get("days_clean_warnings", 365)
+        self.days_warn_expiry = self.config.get("days_warn_expiry", 90)  # Nb de jours avant qu'un avertissement soit considéré "expiré"
 
         self.site = pywikibot.Site(lang, family, self.user_wiki)
 
@@ -460,6 +461,7 @@ class get_page(pywikibot.Page):
 
         self.alert_request = False
         self.warn_level = -1
+        self.last_warning_date = None
 
     # ---- revert + warnings
 
@@ -524,6 +526,16 @@ class get_page(pywikibot.Page):
         if self.warn_level >= self.level_max:
             self.warn_level = self.level_max
 
+        # Récupération de la date du dernier avertissement posé par le bot
+        self.last_warning_date = None
+        try:
+            for rev in self.talk.revisions(total=50):
+                if self.user_wiki.lower() in rev.user.lower():
+                    self.last_warning_date = rev.timestamp
+                    break
+        except Exception:
+            pass
+
     def warn_revert(self, summary: str = "") -> None:
         self.get_warnings_user()
 
@@ -532,10 +544,47 @@ class get_page(pywikibot.Page):
         else:
             link_diff = f"[[Special:Diff/{self.oldid}/{self.diff}]]"
 
-        self.talk.text += f"\n{{{{subst:User:{self.user_wiki}/Vandalism{self.warn_level}|{self.page_name}|{summary}|{link_diff}}}}} <!-- level={self.warn_level} -->"
-        self.talk.save(f"Bot : Avertissement {self.warn_level} sur [[{self.page_name}]]" if self.lang_bot == "fr" else f"Bot: Warning {self.warn_level} on [[{self.page_name}]]", bot=False, minor=False)
+        # Vérification de l'expiration des avertissements :
+        # Si le dernier avertissement date de plus de `days_warn_expiry` jours,
+        # on considère que l'historique est "périmé" et on réémet un avertissement
+        # de rappel au lieu de déclencher directement la demande de blocage.
+        days_warn_expiry = self.source.days_warn_expiry
+        warn_expired = False
+        if self.warn_level >= self.level_block and self.last_warning_date is not None and days_warn_expiry > 0:
+            now_utc = datetime.datetime.utcnow().replace(tzinfo=datetime.timezone.utc)
+            last_warn_aware = self.last_warning_date
+            if last_warn_aware.tzinfo is None:
+                last_warn_aware = last_warn_aware.replace(tzinfo=datetime.timezone.utc)
+            age_days = (now_utc - last_warn_aware).days
+            if age_days >= days_warn_expiry:
+                warn_expired = True
+                pywikibot.output(
+                    f"Avertissements de {self.contributor_name} expirés ({age_days} jours >= {days_warn_expiry}). "
+                    f"Envoi d'un dernier avertissement plutôt que d'une demande de blocage."
+                    if self.lang_bot == "fr" else
+                    f"Warnings for {self.contributor_name} expired ({age_days} days >= {days_warn_expiry}). "
+                    f"Sending a final warning instead of a block request."
+                )
+                # On redescend le niveau pour émettre un avertissement "final" sans bloquer
+                self.warn_level = self.level_block - 1
 
-        if self.warn_level == self.level_block:
+        self.talk.text += f"\n{{{{subst:User:{self.user_wiki}/Vandalism{self.warn_level}|{self.page_name}|{summary}|{link_diff}}}}} <!-- level={self.warn_level} -->"
+
+        if warn_expired:
+            save_summary = (
+                f"Bot : Dernier avertissement (anciens avertissements expirés) sur [[{self.page_name}]]"
+                if self.lang_bot == "fr"
+                else f"Bot: Final warning (old warnings expired) on [[{self.page_name}]]"
+            )
+        else:
+            save_summary = (
+                f"Bot : Avertissement {self.warn_level} sur [[{self.page_name}]]"
+                if self.lang_bot == "fr"
+                else f"Bot: Warning {self.warn_level} on [[{self.page_name}]]"
+            )
+        self.talk.save(save_summary, bot=False, minor=False)
+
+        if self.warn_level == self.level_block and not warn_expired:
             alert = pywikibot.Page(self.source.site, self.alert_page)
             alert.text += f"\n{{{{subst:User:{self.user_wiki}/Alert|{self.contributor_name}}}}}"
             alert.save(f"Bot : Alerte vandalisme concernant [[Special:Contributions/{self.contributor_name}|{self.contributor_name}]] !" if self.lang_bot == "fr" else "Bot: Vandalism alert about [[Special:Contributions/{self.contributor_name}|{self.contributor_name}]] !", bot=False, minor=False)
