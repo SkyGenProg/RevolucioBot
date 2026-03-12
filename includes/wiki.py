@@ -448,7 +448,7 @@ class get_page(pywikibot.Page):
         self.level_block = self.source.config.get("level_block", 2)
         self.level_max = self.source.config.get("level_max", 3)
         self.level_min = self.source.config.get("level_min", 0)
-        self.bytes_uncommented_remove = self.source.config.get("bytes_uncommented_remove", 500)
+        self.bytes_uncommented_remove = self.source.config.get("bytes_uncommented_remove", 250)
         self.score_uncommented_remove = self.source.config.get("score_uncommented_remove", -1)
 
         # alert page

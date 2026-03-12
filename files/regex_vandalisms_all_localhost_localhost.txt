@@ -239,7 +239,7 @@ depeceur de bergen:-30
 adrienne serein:-30
 janseniste de carnaval:-30
 nous sommes des musulmans qui sont tres attaches a leur religion:-30
-(br[uû]ler|tuer|sales?|mort).*juifs?:-100
+(br[uû]l[eé]r?|tu[eé]r?|sales?|mort)[a-zA-Z\s]*jui(f|ve)s?:-100
 redoutable psychopathe bien connu:-30
 madame nazma:-30
 recemment dans une? asile psychiatrique :-30
