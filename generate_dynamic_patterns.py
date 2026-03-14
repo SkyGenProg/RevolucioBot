@@ -5,7 +5,7 @@ from __future__ import annotations
 import argparse
 import csv
 import json
-import os
+import os, sys
 import re
 from collections import Counter
 from datetime import datetime, timezone
@@ -18,6 +18,8 @@ from includes.dynamic_patterns import (
     phrase_candidates,
     tokenize_training_text,
 )
+
+csv.field_size_limit(sys.maxsize)
 
 
 def _utc_iso_now() -> str:
