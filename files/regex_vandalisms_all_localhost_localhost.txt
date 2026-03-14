@@ -101,7 +101,7 @@ pedophile:-3
 \bvomi\b:-3
 \bface de\b:-3
 \bbander\b:-3
-\bhomo:-3
+\bhomo(sexuel)?\b:-3
 \bteub\b:-5
 \bbi+t+e:-5
 \bcon+erie:-5
