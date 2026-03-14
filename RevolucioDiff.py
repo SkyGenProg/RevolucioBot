@@ -37,7 +37,8 @@ if __name__ == "__main__":
     detected = page.get_vandalism_report()
     pywikibot.output(detected)
     pywikibot.output("Score : " + str(vandalism_score))
-    pywikibot.output("Révoqué : " + str(page.edit_reverted))
+    pywikibot.output("Modification ignorée : " + str(page.contributor_is_trusted()))
+    pywikibot.output("Révoqué depuis : " + str(page.edit_reverted))
     pywikibot.output("Utilisateur révoqué précédemment : " + str(page.user_previous_reverted))
     pywikibot.output("Date : " + str(page.timestamp))
     revision1_text = page.text_page_oldid
