@@ -619,7 +619,10 @@ class get_page(pywikibot.Page):
         return (
             self.contributor_name == self.user_wiki
             or self.contributor_name in self.source.trusted
-            or ((self.page_ns == 2 or self.page_ns == 3) and self.contributor_name in self.page_name)
+            or ((self.page_ns == 2 or self.page_ns == 3) 
+                and (self.contributor_name in self.page_name 
+                     or "{{brouillon" in self.text.lower() 
+                     or "brouillon" in self.page_name))
         )
 
     def contributor_rights(self) -> List[str]:
@@ -659,6 +662,7 @@ class get_page(pywikibot.Page):
                     self.commented = True
                 if (revision_oldid2 is None and rev.user != contributor_name and (revision_oldid is None or rev.revid <= revision_oldid)) or (revision_oldid2 is not None and rev.revid <= revision_oldid2):
                     self.oldid = rev.revid
+                    self.contributor_name = contributor_name
                     self.contributor_before_edits = rev.user
                     if not is_revert:
                         break
