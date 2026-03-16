@@ -153,12 +153,12 @@ class vandalism_score:
             out.append((key, score))
         return out
 
-    def score_regex_count(self, type_regex, filename, flags, ignore_if_regex_detected_in_old_version=False) -> int:
+    def score_regex_count(self, type_regex, filename, flags, ignore_if_regex_detected_in_old_version=False, delete_of_content=False) -> int:
         score_detected = 0
         for pattern, score in self._parse_scored_lines(_read_lines(filename)):
             hits = re.findall(pattern, self.revision_info.text_new, flags)
             hits_old = re.findall(pattern, self.revision_info.text_old, flags)
-            times_pattern = len(hits)-len(hits_old)
+            times_pattern = (len(hits_old)-len(hits)) if delete_of_content else (len(hits)-len(hits_old))
             if (not ignore_if_regex_detected_in_old_version or len(hits_old) == 0) and times_pattern > 0:
                 score_pattern = score*times_pattern
                 score_detected += score_pattern
@@ -178,10 +178,10 @@ class vandalism_score:
             # add regex on ns 0
             vand += self.score_regex_count("add_regex_ns_0_no_ignore_case", self.files["add_regex_ns_0_no_ignore_case"], 0, True)
             # delete regex on ns 0
-            vand += self.score_regex_count("del_regex_ns_0", self.files["del_regex_ns_0"], re.IGNORECASE)
+            vand += self.score_regex_count("del_regex_ns_0", self.files["del_regex_ns_0"], re.IGNORECASE, False, True)
             # delete regex on ns 0 (no comment)
             if not self.revision_info.commented:
-                vand += self.score_regex_count("del_regex_ns_0_no_comment", self.files["del_regex_ns_0_no_comment"], re.IGNORECASE)
+                vand += self.score_regex_count("del_regex_ns_0_no_comment", self.files["del_regex_ns_0_no_comment"], re.IGNORECASE, False, True)
             # size rules on ns 0
             if self.revision_info.new_page:
                 vand_size = 0
