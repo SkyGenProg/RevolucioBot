@@ -7,7 +7,7 @@ stupid:-3
 \bpoop\b:-3
 \bpenis\b:-3
 \bsex\b:-3
-\bhomo(sexuel)?\b:-3
+\bhomo(sexual)?\b:-3
 hey ?hey:-5
 \bsuck:-5
 \bshit:-5
