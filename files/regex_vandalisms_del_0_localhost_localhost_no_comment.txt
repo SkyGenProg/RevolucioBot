@@ -7,4 +7,4 @@
 \<gallery:-5
 \{\{références:-5
 \{\{palette:-10
-(?s)\{\{Infobox[^}]*?\n(.*?)\n\}\}:-10
+\{\{Infobox[^}]*?\n(.*?)\n\}\}:-10
