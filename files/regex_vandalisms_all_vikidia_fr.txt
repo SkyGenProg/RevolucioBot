@@ -5,12 +5,6 @@ stupid:-3
 \bcock:-3
 \bass\b:-3
 \bpoop\b:-3
-\bdictatures?\b:-3
-\bdictateurs?\b:-3
-\bfas?cistes?\b:-3
-\bnazis?\b:-3
-\bhitler\b:-3
-\bracistes?\b:-3
 hey ?hey:-5
 \bsuck:-5
 \bshit:-5
@@ -18,6 +12,13 @@ hey ?hey:-5
 \b1337\b:-5
 \bgay\b:-5
 \bno-?lifes?\b:-5
+\bdictatures?\b:-10
+\bdictateurs?\b:-10
+\bfas?c?istes?\b:-10
+\bnazis?\b:-10
+\bhitler\b:-10
+\bracistes?\b:-10
+(^|\n)[A-Za-z0-9]+($|\n):-10
 \bbitch(es)?\b:-20
 \basshole:-20
 \bfuck:-20
@@ -85,24 +86,24 @@ i laugh at:-30
 \bmeuf(s)?\b:-3
 \bculs?\b:-3
 \bpd\b:-3
-\bpede\b:-3
+\bp[eé]d[eé]\b:-3
 \babruti:-3
-\bimbecile:-3
+\bimb[eé]cile:-3
 \binculte:-3
 \bincompeten:-3
-\bdebile?s?\b:-3
-\bcretin:-3
-\blapins? cretin:+10
+\bd[eé]bile?s?\b:-3
+\bcr[eé]tin:-3
+\blapins? cr[eé]tin:+10
 \btapette:-3
 \bidiot\b:-3
 \bfoute?(nt)?\b:-3
 \bpowa+\b:-3
 \bpour+aves?:-3
 \bchiot+es?\b:-3
-pedophile:-3
+p[eé]dophile:-3
 \bsuce(use)\b:-3
 \bsodomi:-3
-\bobsede:-3
+\bobs[eé]d[eé]:-3
 \bvomi\b:-3
 \bface de\b:-3
 \bbander\b:-3
@@ -114,7 +115,7 @@ pedophile:-3
 \bpu?ta?in:-5
 \bchie(r|nt|s)?\b:-5
 \btrop nul\b:-5
-\brien a rien\b:-5
+\brien [aà] rien\b:-5
 \bai marre\b:-5
 \bglandus?\b:-5
 \bcapos?\b:-5
@@ -146,12 +147,12 @@ pedophile:-3
 \bm[ae]+rdr?es?\b:-20
 \bmadres?\b:+20
 \bmerdi(que|er):-20
-\bta mere\b:-20
-\bla mere a\b:-20
+\bta m[eéè]re\b:-20
+\bla m[eéè]re a\b:-20
 \sniquer?s?\b:-20
 \snike(r|nt)\b:-20
 \bnik\b:-20
-\bencule:-20
+\bencul[eé]:-20
 \bcouil+e:-20
 \bsen fou\b:-20
 \btres stupide\b:-20
@@ -171,10 +172,10 @@ ta gueule:-20
 fil?s de pute?:-20
 \bpeniss+\b:-20
 \bfachos?\b:-30
-\bni(k|qu)e? ta mere\b:-30
+\bni(k|qu)e? ta m[eéè]re\b:-30
 \b(ma|ta) bit+e\b:-30
 \b(mon|ton|du) (anus|cul?)\b:-30
-\bta mere en\b:-30
+\bta m[eéè]re en\b:-30
 (de|de la|dla|grosses?) m[ae]+r+de\b:-30
 \b(pauvre|sombre|gros|petit) crétin\b:-30
 (de|petites?|grosses?) tapette:-30
@@ -239,18 +240,18 @@ murder suspect:-30
 ernst12:-30
 thierry olmec:-30
 bobonne elfix:-30
-chasseur de pedophiles:-30
+chasseur de p[eé]dophiles:-30
 depeceur de bergen:-30
 adrienne serein:-30
 janseniste de carnaval:-30
-nous sommes des musulmans qui sont tres attaches a leur religion:-30
+nous sommes des musulmans qui sont tr[eéè]s attach[eéè]s [aà] leur religion:-30
 (br[uû]l[eé]r?|tu[eé]r?|sales?|mort)[a-zA-Z\s]*jui(f|ve)s?:-100
 redoutable psychopathe bien connu:-30
 madame nazma:-30
-recemment dans une? asile psychiatrique :-30
+r[eé]cemment dans une? asile psychiatrique :-30
 toute la splendeur de la culture pornographique:-30
-penis*\.jpg:-30
-ejaculation*\.jpg:-30
+p[eé]nis*\.jpg:-30
+[eé]jaculation*\.jpg:-30
 les photos de mon sexe:-30
 la Nazma:-30
 se mansturpant dessus:-30
