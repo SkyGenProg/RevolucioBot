@@ -15,7 +15,6 @@ hey ?hey:-5
 \b1337\b:-5
 \bgay\b:-5
 \bno-?lifes?\b:-5
-(^|\n)[A-Za-z0-9]+($|\n):-10
 \bbitch(es)?\b:-20
 \basshole:-20
 \bfuck:-20
