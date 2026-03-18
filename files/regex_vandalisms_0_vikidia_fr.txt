@@ -188,6 +188,7 @@ geocities:-5
 hautetfort:-5
 free\.fr:-5
 orange\.fr:-5
+(^|\n)[A-Za-z0-9]+($|\n):-10
 # element [1-3]\b:-25
 \* element [A-C]\b:-25
 [Tt]exte de sous-titre:-25
