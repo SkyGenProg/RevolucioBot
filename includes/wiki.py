@@ -503,7 +503,9 @@ class get_page(pywikibot.Page):
         if self.text_page_oldid is None or self.text_page_oldid2 is None:
             self.get_text_page_old(total=50)
 
-        self.text = "{{subst:User:%s/VandalismDelete}}" % self.user_wiki if self.new_page else (self.text_page_oldid2 or "")
+        self.text = f"""{{{{subst:User:{self.user_wiki}/VandalismDelete}}}}
+
+{self.text}""" if self.new_page else (self.text_page_oldid2 or "")
 
         if self.lang_bot == "fr":
             if self.contributor_before_edits != "":
