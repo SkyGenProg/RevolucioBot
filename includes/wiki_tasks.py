@@ -736,7 +736,7 @@ class wiki_task:
             _send_webhook(webhooks_url[self.site.family], {"embeds": [embed_base]})
             _send_embed_chunked(webhooks_url[self.site.family], {k: v for k, v in embed_base.items() if k != "fields"}, detected)
 
-        if not test and webhooks_url.get(self.site.family) and self.page.alert_request:
+        if not test and webhooks_url.get(self.site.family) and self.page.alert_request and not self.page.alert_request_done:
             self.block_alert()
 
     # ----------------------------
@@ -775,7 +775,7 @@ class wiki_task:
                 "color": 13371938,
             }
             _send_webhook(webhooks_url_ai.get(self.site.family), {"embeds": [embed]})
-            if webhooks_url.get(self.site.family) and self.page.alert_request:
+            if not test and webhooks_url.get(self.site.family) and self.page.alert_request and not self.page.alert_request_done:
                 self.block_alert()
             return
 
@@ -830,7 +830,7 @@ class wiki_task:
         }
         _send_embed_chunked(webhooks_url_ai.get(self.site.family), embed_base, result_ai)
 
-        if not test and webhooks_url.get(self.site.family) and self.page.alert_request:
+        if not test and webhooks_url.get(self.site.family) and self.page.alert_request and not self.page.alert_request_done:
             self.block_alert()
 
     # ----------------------------
@@ -911,8 +911,8 @@ class wiki_task:
         }
         _send_embed_chunked(webhooks_url_ai.get(self.site.family), embed_base, "")
 
-        if not test and webhooks_url.get(self.site.family) and self.page.alert_request:
-            self.block_alert(self.page)
+        if not test and webhooks_url.get(self.site.family) and self.page.alert_request and not self.page.alert_request_done:
+            self.block_alert()
 
     # ----------------------------
     # Alerts / copy detection / stats
@@ -920,10 +920,10 @@ class wiki_task:
 
     def block_alert(self) -> None:
         if self.site.lang_bot == "fr":
-            title = "Demande de blocage de " + self.page.contributor_name
+            title = f"Demande de blocage de {self.page.contributor_name}"
             desc = "Un vandale est à bloquer."
         else:
-            title = "Request to block against " + self.page.contributor_name
+            title = f"Request to block against {self.page.contributor_name}"
             desc = "A vandal must be blocked."
 
         embed = {
@@ -934,6 +934,7 @@ class wiki_task:
             "color": 16711680,
         }
         _send_webhook(webhooks_url.get(self.site.family), {"embeds": [embed]})
+        self.page.alert_request_done = True
 
     def check_WP(self) -> None:
         page_name = self.page.page_name
