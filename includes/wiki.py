@@ -459,6 +459,7 @@ class get_page(pywikibot.Page):
             self.alert_page = "Project:Alerte" if self.lang_bot == "fr" else "Project:Alert"
 
         self.alert_request = False
+        self.alert_request_done = False
         self.warn_level = -1
 
     # ---- revert + warnings
@@ -538,7 +539,7 @@ class get_page(pywikibot.Page):
         if self.warn_level == self.level_block:
             alert = pywikibot.Page(self.source.site, self.alert_page)
             alert.text += f"\n{{{{subst:User:{self.user_wiki}/Alert|{self.contributor_name}}}}}"
-            alert.save(f"Bot : Alerte vandalisme concernant [[Special:Contributions/{self.contributor_name}|{self.contributor_name}]] !" if self.lang_bot == "fr" else "Bot: Vandalism alert about [[Special:Contributions/{self.contributor_name}|{self.contributor_name}]] !", bot=False, minor=False)
+            alert.save(f"Bot : Alerte vandalisme concernant [[Special:Contributions/{self.contributor_name}|{self.contributor_name}]] !" if self.lang_bot == "fr" else f"Bot: Vandalism alert about [[Special:Contributions/{self.contributor_name}|{self.contributor_name}]] !", bot=False, minor=False)
             self.alert_request = True
 
     # ---- vandalism scoring
