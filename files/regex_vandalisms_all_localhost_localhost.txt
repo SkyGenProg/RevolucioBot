@@ -12,12 +12,6 @@ hey ?hey:-5
 \b1337\b:-5
 \bgay\b:-5
 \bno-?lifes?\b:-5
-\bdictatures?\b:-10
-\bdictateurs?\b:-10
-\bfas?c?h?istes?\b:-10
-\bnazis?\b:-10
-\bhitler\b:-10
-\bracistes?\b:-10
 \bbitch(es)?\b:-20
 \basshole:-20
 \bfuck:-20
@@ -72,6 +66,12 @@ i laugh at:-30
 \bbidons?\b:-1
 \bnullite\b:-1
 \binfecte?s?\b:-1
+\bdictatures?\b:-1
+\bdictateurs?\b:-1
+\bnazis?\b:-1
+\bhitler\b:-1
+\bfas?c?h?istes?\b:-3
+\bracistes?\b:-3
 \bp[eé]nis\b:-3
 \bsexe?\b:-3
 \banus\b:-3
