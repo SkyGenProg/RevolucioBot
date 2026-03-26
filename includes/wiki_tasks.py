@@ -683,7 +683,7 @@ class wiki_task:
                 decision=getattr(self.page, "last_vandalism_reason", ""),
             )
 
-        if self.vandalism_score < 0 and webhooks_url.get(self.site.family):
+        if webhooks_url.get(self.site.family):
             if not test and self.page.vand_to_revert:
                 title = (
                     f"Modification non-constructive révoquée sur {self.site.lang}:{page_name}"
@@ -710,14 +710,14 @@ class wiki_task:
                 color = 12138760
             else:
                 title = (
-                    f"Modification à vérifier sur {self.site.lang}:{page_name}"
+                    f"Modification sur {self.site.lang}:{page_name}"
                     if self.site.lang_bot == "fr"
-                    else f"Edit to verify on {self.site.lang}:{page_name}"
+                    else f"Edit on {self.site.lang}:{page_name}"
                 )
                 description = (
-                    "Cette modification est peut-être non-constructive"
+                    "Modification à vérifier"
                     if self.site.lang_bot == "fr"
-                    else "This edit is maybe unconstructive"
+                    else "Edit to check"
                 )
                 color = 12161032
             fields = [
@@ -734,7 +734,8 @@ class wiki_task:
             }
 
             _send_webhook(webhooks_url[self.site.family], {"embeds": [embed_base]})
-            _send_embed_chunked(webhooks_url[self.site.family], {k: v for k, v in embed_base.items() if k != "fields"}, detected)
+            if detected != "":
+                _send_embed_chunked(webhooks_url[self.site.family], {k: v for k, v in embed_base.items() if k != "fields"}, detected)
 
         if not test and webhooks_url.get(self.site.family) and self.page.alert_request and not self.page.alert_request_done:
             self.block_alert()
