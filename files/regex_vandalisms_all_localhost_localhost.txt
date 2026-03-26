@@ -46,7 +46,7 @@ i laugh at:-30
 БЛаблабла:-30
 ТЫ ПЕДЕРАСТ:-30
 Пидор:-30
-\banes?\b:-1
+\b[aâ]nes?\b:-1
 \bcopine:-1
 \bbatard:-1
 \bsales?\b:-1
@@ -60,7 +60,7 @@ i laugh at:-30
 \bprofiteur\b:-1
 \bperver[st]\b:-1
 \bassassin:-1
-\blachete:-1
+\blach[eéè]te:-1
 \bperfidie:-1
 \bhypocri(te|sie):-1
 \bbidons?\b:-1
@@ -89,7 +89,7 @@ i laugh at:-30
 \babruti:-3
 \bimb[eé]cile:-3
 \binculte:-3
-\bincompeten:-3
+\bincomp[eé]ten:-3
 \bd[eé]bile?s?\b:-3
 \bcr[eé]tin:-3
 \blapins? cr[eé]tin:+10
@@ -126,14 +126,15 @@ p[eé]dophile:-3
 \bcriss+\b:-10
 \bfif\b:-10
 \b(de)?caliss:-10
-\bemm?erde:-10
+\bemm?erd[eéè]:-10
 \bzizis?\b:-10
 \bcrétin\b:-10
 \bfdp\b:-10
+\bnik\b:-10
 \bcacas?\b:-20
 \bpipis?\b:-20
 \bprout:-20
-\bpetasses?:-20
+\bp[eéè]tasses?:-20
 \bpuputes?\b:-20
 \bco+n+a+(r+|s+):-20
 \bconnes?\b:-20
@@ -148,19 +149,18 @@ p[eé]dophile:-3
 \bmerdi(que|er):-20
 \bta m[eéè]re\b:-20
 \bla m[eéè]re a\b:-20
-\sniquer?s?\b:-20
-\snike(r|nt)\b:-20
-\bnik\b:-20
+\sniqu[eéè]r?s?\b:-20
+\snik[eéè](r|nt)\b:-20
 \bencul[eé]:-20
 \bcouil+e:-20
-\bsen fou\b:-20
+\bs'?en fou\b:-20
 \btres stupide\b:-20
 gros nul:-20
 \bgros tas\b:-20
 \bgrosse pine\b:-20
 \bqui pue?\b:-20
-\benfoire\b:-20
-'enfoires\b:-20
+\benfoir[eéè]\b:-20
+'enfoir[eéè]s\b:-20
 \bcasse\s+toi:-20
 \btarlou[sz]e:-20
 \bpisse(r|nt)?\b:-20
@@ -169,7 +169,7 @@ t'?es moche:-20
 \bfoufoune:-20
 ta gueule:-20
 fil?s de pute?:-20
-\bpeniss+\b:-20
+\bp[eéè]niss+\b:-20
 \bfachos?\b:-30
 \bni(k|qu)e? ta m[eéè]re\b:-30
 \b(ma|ta) bit+e\b:-30
