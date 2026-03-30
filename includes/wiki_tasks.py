@@ -749,7 +749,7 @@ class wiki_task:
             return
 
         diff_text = self.page.get_diff()
-        prompt = prompt_ai(self.site.lang_bot, self.page.latest_revision.timestamp, self.page.url, self.page.page_name, diff_text, self.page.latest_revision.comment)
+        prompt = prompt_ai(self.site.lang_bot, self.page.timestamp, self.page.url, self.page.page_name, diff_text, self.page.comment)
         if self.site.lang_bot == "fr":
             proba_re = r"probabilité de vandalisme.*:[^0-9]*([\d\.,]+)[^0-9]*%"
             title_base = f"Analyse de l'IA (Mistral) sur {self.site.lang}:{self.page.page_name}"
