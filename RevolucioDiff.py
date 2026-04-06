@@ -36,11 +36,14 @@ if __name__ == "__main__":
     vandalism_score = page.vandalism_score()
     detected = page.get_vandalism_report()
     pywikibot.output(detected)
+    pywikibot.output("Date de la modification : " + str(page.timestamp))
     pywikibot.output("Score : " + str(vandalism_score))
     pywikibot.output("Modification ignorée : " + str(page.contributor_is_trusted()))
     pywikibot.output("Révoqué depuis : " + str(page.edit_reverted))
+    pywikibot.output("Utilisateur : " + str(page.contributor_name))
     pywikibot.output("Utilisateur révoqué précédemment : " + str(page.user_previous_reverted))
-    pywikibot.output("Date : " + str(page.timestamp))
+    pywikibot.output("Auteur de la page : " + str(page.author))
+    pywikibot.output("Date de création de la page : " + str(page.timestamp_created))
     revision1_text = page.text_page_oldid
     revision2_text = page.text_page_oldid2
     diff = difflib.unified_diff(revision2_text.splitlines(), revision1_text.splitlines())

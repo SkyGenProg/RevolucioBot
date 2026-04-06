@@ -41,7 +41,11 @@ with open(args.csv_file, newline='', encoding='utf-8') as f:
         commented = row["commented"].strip().lower() == "true"
         new_page = row["new_page"].strip().lower() == "true"
         namespace = int(row["namespace"])
-        revision = revision_info(new, old, commented, new_page, namespace, "redirect" in new.lower())
+        timestamp = datetime.strptime(row["date"], "%Y-%m-%dT%H:%M:%SZ")
+        contributor_name = row["contributor_name"]
+        timestamp_created = datetime.strptime(row["timestamp_created"], "%Y-%m-%dT%H:%M:%SZ")
+        author = row["author"]
+        revision = revision_info(new, old, commented, new_page, namespace, "redirect" in new.lower(), timestamp, contributor_name, timestamp_created, author)
         files = {
             "add_regex_ns_0": f"regex_vandalisms_0_{fam}_{lang}.txt",
             "add_regex_ns_0_no_ignore_case": f"regex_vandalisms_0_{fam}_{lang}_no_ignore_case.txt",
