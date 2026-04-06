@@ -122,13 +122,17 @@ def get_warn_level(t, level_min, level_max):
 # ----------------------------
 
 class revision_info:
-    def __init__(self, text_new: str, text_old: str, commented: bool, new_page: bool, page_ns: int, redirect: bool):
+    def __init__(self, text_new: str, text_old: str, commented: bool, new_page: bool, page_ns: int, redirect: bool, timestamp: str, contributor_name: str, timestamp_created: str, author: str):
         self.text_new = text_new
         self.text_old = text_old
         self.commented = commented
         self.new_page = new_page
         self.page_ns = page_ns
         self.redirect = redirect
+        self.timestamp = timestamp
+        self.contributor_name = contributor_name
+        self.timestamp_created = timestamp_created
+        self.author = author
 
 class vandalism_score:
     def __init__(self, files, revision: revision_info, bytes_uncommented_remove: int = 500, score_uncommented_remove: int = -1):
@@ -169,16 +173,19 @@ class vandalism_score:
         vand += self.score_regex_count("add_regex_ns_all", self.files["add_regex_ns_all"], re.IGNORECASE)
         # add regex on all ns (don't ignore case)
         vand += self.score_regex_count("add_regex_ns_all_no_ignore_case", self.files["add_regex_ns_all_no_ignore_case"], 0)
-
+        diff_dt = self.revision_info.timestamp - self.revision_info.timestamp_created
+        diff_dt_seconds = diff_dt.total_seconds()
+        lim_dt = 86400*7
         if self.revision_info.page_ns == 0:
             # add regex on ns 0
             vand += self.score_regex_count("add_regex_ns_0", self.files["add_regex_ns_0"], re.IGNORECASE, True)
             # add regex on ns 0
             vand += self.score_regex_count("add_regex_ns_0_no_ignore_case", self.files["add_regex_ns_0_no_ignore_case"], 0, True)
-            # delete regex on ns 0
-            vand += self.score_regex_count("del_regex_ns_0", self.files["del_regex_ns_0"], re.IGNORECASE, False, True)
-            # delete regex on ns 0 (no comment)
-            if not self.revision_info.commented:
+            # delete regex on ns 0 (the user if not the author and the page created > 1 week)
+            if self.revision_info.contributor_name != self.revision_info.author and diff_dt_seconds > lim_dt:
+                vand += self.score_regex_count("del_regex_ns_0", self.files["del_regex_ns_0"], re.IGNORECASE, False, True)
+            # delete regex on ns 0 (the user if not the author and the page created > 1 week, no comment)
+            if not self.revision_info.commented and self.revision_info.contributor_name != self.revision_info.author and diff_dt_seconds > lim_dt:
                 vand += self.score_regex_count("del_regex_ns_0_no_comment", self.files["del_regex_ns_0_no_comment"], re.IGNORECASE, False, True)
             # size rules on ns 0
             if self.revision_info.new_page:
@@ -193,8 +200,8 @@ class vandalism_score:
                     vand += vand_size
                     for line in vandalism_score_detect_size:
                         self.vandalism_score_detect.append(line)
-        # diff rules (no comment)
-        if not self.revision_info.commented:
+        # diff rules (no commented or score < 0 and the user if not the author and the page created > 1 week)
+        if not self.revision_info.commented and self.revision_info.contributor_name != self.revision_info.author and diff_dt_seconds > lim_dt:
             delta = len(self.revision_info.text_new) - len(self.revision_info.text_old)
             if delta < 0:
                 diff_s = -delta//self.bytes_uncommented_remove
@@ -434,6 +441,8 @@ class get_page(pywikibot.Page):
                 self.page_ns = -1
                 self.diff = None
                 self.size = None
+            self.author = ""
+            self.timestamp_created = None
             self.contributor_before_edits = ""
 
         # thresholds
@@ -594,6 +603,9 @@ class get_page(pywikibot.Page):
         edit_reverted = False
         check_if_user_reverted = False
         try:
+            first_revision = next(self.revisions(total=1, reverse=True))
+            self.timestamp_created = first_revision.timestamp
+            self.author = first_revision.user
             for rev in self.revisions(total=total, endtime=endtime):
                 if check_if_user_reverted:
                     self.user_previous_reverted = rev.user == contributor_name
@@ -658,7 +670,7 @@ class get_page(pywikibot.Page):
 
         text_new = self.text_page_oldid or ""
         text_old = self.text_page_oldid2 or ""
-        revision = revision_info(text_new, text_old, self.commented, self.new_page, self.page_ns, self.isRedirectPage())
+        revision = revision_info(text_new, text_old, self.commented, self.new_page, self.page_ns, self.isRedirectPage(), self.timestamp, self.contributor_name, self.timestamp_created, self.author)
 
         vand_score = vandalism_score(files, revision, self.bytes_uncommented_remove, self.score_uncommented_remove)
         vand = vand_score.calculate()

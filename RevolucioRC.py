@@ -33,6 +33,7 @@ if __name__ == "__main__":
     writer.writerow([
         "date",
         "wiki",
+        "contributor_name",
         "page",
         "namespace",
         "revid",
@@ -43,6 +44,8 @@ if __name__ == "__main__":
         "comment",
         "commented",
         "new_page",
+        "timestamp_created",
+        "author",
         "diff_url",
         "reverted"
     ])
@@ -96,6 +99,7 @@ if __name__ == "__main__":
                 writer.writerow([
                     page.timestamp.isoformat(),
                     f"{args.lang}.{args.wiki}",
+                    page.contributor_name,
                     page.page_name,
                     int(page.page_ns),
                     page_info["revid"],
@@ -106,6 +110,8 @@ if __name__ == "__main__":
                     diff_comment,
                     page.commented,
                     page.new_page,
+                    page.timestamp_created.isoformat(),
+                    page.author,
                     diff_url,
                     page.edit_reverted
                 ])
