@@ -727,7 +727,7 @@ class wiki_task:
             embed_base = {
                 "title": title,
                 "description": description,
-                "url": self.page.protocol + "//" + self.page.url + self.page.articlepath + url_diff(self.page.diff, self.page.oldid),
+                "url": self.page.protocol + "//" + self.page.url + self.page.scriptpath + "/" + url_diff(self.page.diff, self.page.oldid),
                 "author": {"name": self.page.contributor_name},
                 "color": color,
                 "fields": fields,
@@ -771,7 +771,7 @@ class wiki_task:
             embed = {
                 "title": fail_title,
                 "description": "",
-                "url": self.page.protocol + "//" + self.page.url + self.page.articlepath + url_diff(self.page.diff, self.page.oldid),
+                "url": self.page.protocol + "//" + self.page.url + self.page.scriptpath + "/" + url_diff(self.page.diff, self.page.oldid),
                 "author": {"name": self.page.contributor_name},
                 "color": 13371938,
             }
@@ -825,7 +825,7 @@ class wiki_task:
         embed_base = {
             "title": title,
             "description": "",
-            "url": self.page.protocol + "//" + self.page.url + self.page.articlepath + url_diff(self.page.diff, self.page.oldid),
+            "url": self.page.protocol + "//" + self.page.url + self.page.scriptpath + "/" + url_diff(self.page.diff, self.page.oldid),
             "author": {"name": self.page.contributor_name},
             "color": color,
         }
@@ -906,7 +906,7 @@ class wiki_task:
         embed_base = {
             "title": title,
             "description": "",
-            "url": self.page.protocol + "//" + self.page.url + self.page.articlepath + url_diff(self.page.diff, self.page.oldid),
+            "url": self.page.protocol + "//" + self.page.url + self.page.scriptpath + "/" + url_diff(self.page.diff, self.page.oldid),
             "author": {"name": self.page.contributor_name},
             "color": color,
         }
@@ -951,7 +951,7 @@ class wiki_task:
             return {
                 "title": title,
                 "description": desc,
-                "url": self.page.protocol + "//" + self.page.url + self.page.articlepath + url_diff(self.page.diff, self.page.oldid),
+                "url": self.page.protocol + "//" + self.page.url + self.page.scriptpath + "/" + url_diff(self.page.diff, self.page.oldid),
                 "author": {"name": self.page.contributor_name},
                 "color": color,
                 "fields": [{"name": ("Probabilité de copie" if self.site.lang_bot == "fr" else "Probability of copy"), "value": f"{round(prob_WP, 2)} %", "inline": True}],
