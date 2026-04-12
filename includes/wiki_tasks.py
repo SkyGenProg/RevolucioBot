@@ -6,7 +6,9 @@ Scheduled tasks for the wiki bot.
 from __future__ import annotations
 
 import datetime
+import csv
 import json
+import os
 import re
 import time
 import traceback
@@ -27,12 +29,19 @@ except ImportError:
     pywikibot.warning("Numpy is not installed. It is required for local AI.")
 from typing import Any, Dict, Optional
 
-from mistralai import Mistral
+try:
+    from mistralai import Mistral
+except ImportError:
+    try:
+        from mistralai.client import Mistral
+    except ImportError:
+        Mistral = None
 
 from config import api_key, headers, model, webhooks_url, webhooks_url_ai
+from generate_dynamic_patterns import generate_from_csv
 from includes.wiki import request_site, prompt_ai
 
-client = Mistral(api_key=api_key)
+client = Mistral(api_key=api_key) if Mistral is not None and api_key else None
 
 def _safe_log_exc() -> None:
     try:
@@ -60,6 +69,131 @@ def _send_embed_chunked(url: Optional[str], embed_base: Dict[str, Any], text: st
         embed = dict(embed_base)
         embed["description"] = chunk
         _send_webhook(url, {"embeds": [embed]})
+
+def _rc_context(page, page_info: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
+    context: Dict[str, Any] = {
+        "wiki": getattr(getattr(page, "source", None), "family", ""),
+        "lang": getattr(getattr(page, "source", None), "lang", ""),
+        "page": getattr(page, "page_name", ""),
+        "user": getattr(page, "contributor_name", ""),
+        "diff": getattr(page, "diff", None),
+        "oldid": getattr(page, "oldid", None),
+        "ns": getattr(page, "page_ns", None),
+    }
+    if page_info is not None:
+        context["rc_user"] = page_info.get("user")
+        context["rc_revid"] = page_info.get("revid")
+        context["rc_old_revid"] = page_info.get("old_revid")
+        context["rc_title"] = page_info.get("title")
+    return context
+
+
+def _log_rc_event(event: str, **context: Any) -> None:
+    return
+
+
+def _auto_corpus_path(site) -> str:
+    return f"auto_corpus_{site.family}_{site.lang}.csv"
+
+
+def _append_reverted_training_row(site, page, *, source: str, summary: str, result_regex: str = "", result_ai: str = "") -> bool:
+    if page.text_page_oldid is None or page.text_page_oldid2 is None:
+        return False
+
+    path = _auto_corpus_path(site)
+    file_exists = os.path.exists(path)
+    try:
+        with open(path, "a", newline="", encoding="utf-8") as handle:
+            writer = csv.writer(handle)
+            if not file_exists or os.path.getsize(path) == 0:
+                writer.writerow(
+                    [
+                        "date",
+                        "wiki",
+                        "page",
+                        "namespace",
+                        "revid",
+                        "old_revid",
+                        "old",
+                        "new",
+                        "diff",
+                        "comment",
+                        "commented",
+                        "new_page",
+                        "diff_url",
+                        "reverted",
+                        "source",
+                        "summary",
+                        "regex_report",
+                        "ai_report",
+                    ]
+                )
+            writer.writerow(
+                [
+                    getattr(page, "timestamp", datetime.datetime.utcnow()).isoformat(),
+                    f"{site.lang}.{site.family}",
+                    page.page_name,
+                    int(page.page_ns),
+                    page.diff,
+                    page.oldid,
+                    page.text_page_oldid2 or "",
+                    page.text_page_oldid or "",
+                    page.get_diff(),
+                    getattr(page, "comment", ""),
+                    bool(page.commented),
+                    bool(page.new_page),
+                    page.protocol + "//" + page.url + page.articlepath + url_diff(page.diff, page.oldid),
+                    1,
+                    source,
+                    summary,
+                    result_regex,
+                    result_ai,
+                ]
+            )
+        return True
+    except OSError:
+        _safe_log_exc()
+        return False
+
+
+def _refresh_dynamic_patterns(site) -> dict[str, object] | None:
+    corpus_path = _auto_corpus_path(site)
+    if not os.path.exists(corpus_path):
+        return None
+    try:
+        return generate_from_csv(
+            wiki=site.family,
+            lang=site.lang,
+            csv_file=corpus_path,
+            holdout_ratio=0,
+            min_token_hits=2,
+            min_phrase_hits=2,
+            min_precision=0.75,
+            review_support_threshold=3,
+            max_rules=120,
+        )
+    except Exception:
+        _safe_log_exc()
+        return None
+
+
+def _learn_from_revert(site, page, *, source: str, summary: str, result_regex: str = "", result_ai: str = "", test: bool = False) -> None:
+    if test:
+        return
+    if not _append_reverted_training_row(site, page, source=source, summary=summary, result_regex=result_regex, result_ai=result_ai):
+        _log_rc_event("auto_learn_corpus_append_failed", **_rc_context(page), source=source)
+        return
+    _log_rc_event("auto_learn_corpus_appended", **_rc_context(page), source=source, corpus_path=_auto_corpus_path(site))
+    result = _refresh_dynamic_patterns(site)
+    if result is not None:
+        _log_rc_event(
+            "auto_learn_patterns_refreshed",
+            **_rc_context(page),
+            source=source,
+            rules_count=result.get("rules_count"),
+            precision=result.get("precision"),
+            regex_path=result.get("regex_path"),
+        )
 
 def url_diff(diff: int, oldid: int) -> str:
     if oldid == -1:
@@ -227,6 +361,10 @@ class wiki_task:
             return
 
         detailed_diff_info: Dict[int, Dict[str, Any]] = {}
+        rc_total = 0
+        pages_total = 0
+        skipped_total = 0
+        analyzed_total = 0
 
         if task_day:
             pywikibot.output(f"Tâches réalisées tous les jours ({self.site.family} {self.site.lang}).")
@@ -238,6 +376,8 @@ class wiki_task:
             since = self.datetime_utcnow - datetime.timedelta(minutes=10)
             pywikibot.output(f"Récupération des RC des 10 dernières minutes sur {self.site.family} {self.site.lang}...")
             self.site.rc_pages(timestamp=since.strftime("%Y%m%d%H%M%S"))
+
+        rc_total = len(self.site.diffs_rc)
 
         pages_checked: set[str] = set()
 
@@ -252,14 +392,31 @@ class wiki_task:
                             ignored = True
                             break
                     if ignored:
+                        _log_rc_event(
+                            "ignored_page_pattern",
+                            wiki=self.site.family,
+                            lang=self.site.lang,
+                            page=page_name,
+                            rc_user=page_info.get("user"),
+                            rc_revid=page_info.get("revid"),
+                            reason="ignore_config_match",
+                        )
+                        skipped_total += 1
                         continue
 
                 self.page = self.site.page(page_name)
 
                 if self.page.special or not self.page.exists():
+                    _log_rc_event(
+                        "ignored_unprocessable_page",
+                        **_rc_context(self.page, page_info),
+                        reason="special_page" if self.page.special else "page_missing",
+                    )
+                    skipped_total += 1
                     continue
 
                 pywikibot.output("Page : " + page_name)
+                pages_total += 1
 
                 is_redirect = self.page.isRedirectPage()
                 if task_day and not is_redirect:
@@ -273,18 +430,30 @@ class wiki_task:
                         _safe_log_exc()
 
                 if page_name in pages_checked:
+                    _log_rc_event(
+                        "ignored_duplicate_page_in_batch",
+                        **_rc_context(self.page, page_info),
+                        reason="already_checked",
+                    )
+                    skipped_total += 1
                     continue
                 pages_checked.add(page_name)
 
                 if is_redirect:
                     if self.site.config.get("correct_redirects"):
                         pywikibot.output("Correction de redirection sur la page " + str(self.page))
+                        _log_rc_event("ignored_redirect_fixed", **_rc_context(self.page, page_info), reason="redirect")
                         self.page.redirects()
                     else:
                         pywikibot.output(f"La page {self.page} est une redirection.")
+                        _log_rc_event("ignored_redirect", **_rc_context(self.page, page_info), reason="redirect")
+                    skipped_total += 1
                     continue
 
                 is_revert = self.page.is_revert()
+                if is_revert:
+                    _log_rc_event("ignored_human_revert", **_rc_context(self.page, page_info), reason="already_revert")
+                    skipped_total += 1
                 if self.site.config.get("local_ai_model") or not self.site.config.get("disable_regex") or not self.site.config.get("disable_ai"):
                     self.page.get_text_page_old(total=50)
 
@@ -297,6 +466,7 @@ class wiki_task:
                 if not is_revert and not self.site.config.get("disable_regex"):
                     try:
                         self.check_vandalism(self.test)
+                        analyzed_total += 1
                     except Exception:
                         _safe_log_exc()
 
@@ -323,6 +493,17 @@ class wiki_task:
 
             except Exception:
                 _safe_log_exc()
+
+        _log_rc_event(
+            "cycle_summary",
+            wiki=self.site.family,
+            lang=self.site.lang,
+            rc=rc_total,
+            pages_seen=pages_total,
+            analyzed=analyzed_total,
+            skipped=skipped_total,
+            task_day=int(task_day),
+        )
 
         if task_day:
             self.site.get_trusted()
@@ -444,14 +625,62 @@ class wiki_task:
         page_name = self.page.page_name
         self.vandalism_score = self.page.vandalism_get_score_current()
         detected = self.page.get_vandalism_report()
+        _log_rc_event(
+            "regex_scored",
+            **_rc_context(self.page),
+            score=self.vandalism_score,
+            vand_to_revert=int(bool(self.page.vand_to_revert)),
+            dynamic_review=int(bool(self.page.dynamic_review_request)),
+            decision=getattr(self.page, "last_vandalism_reason", ""),
+        )
 
         if self.page.vand_to_revert and not self.page.reverted:
-            self.page.revert(
+            revert_summary = (
                 f"Modification non-constructive détectée par expressions rationnelles (score : {self.vandalism_score})"
                 if self.site.lang_bot == "fr"
-                else f"Unconstructive edit reverted by regex (score: {self.vandalism_score})",
+                else f"Unconstructive edit reverted by regex (score: {self.vandalism_score})"
+            )
+            self.page.revert(
+                revert_summary,
                 test,
                 result_regex=detected
+            )
+            _learn_from_revert(
+                self.site,
+                self.page,
+                source="regex",
+                summary=revert_summary,
+                result_regex=detected,
+                test=test,
+            )
+            _log_rc_event(
+                "reverted_regex",
+                **_rc_context(self.page),
+                score=self.vandalism_score,
+                mode="test" if test else "live",
+                decision=getattr(self.page, "last_vandalism_reason", ""),
+                report=detected[:400],
+            )
+
+        if not self.page.reverted and (
+            self.page.dynamic_review_request or self.vandalism_score <= self.page.limit2
+        ):
+            _log_rc_event(
+                "signaled_regex",
+                **_rc_context(self.page),
+                score=self.vandalism_score,
+                reason="dynamic_review" if self.page.dynamic_review_request else "suspicious_regex_score",
+                dynamic_review=int(bool(self.page.dynamic_review_request)),
+                report=detected[:400],
+            )
+
+        if not self.page.reverted:
+            _log_rc_event(
+                "ignored_after_regex_analysis",
+                **_rc_context(self.page),
+                score=self.vandalism_score,
+                dynamic_review=int(bool(self.page.dynamic_review_request)),
+                decision=getattr(self.page, "last_vandalism_reason", ""),
             )
 
         if webhooks_url.get(self.site.family):
@@ -491,7 +720,6 @@ class wiki_task:
                     else "Edit to check"
                 )
                 color = 12161032
-
             fields = [
                 {"name": "Score", "value": str(self.vandalism_score), "inline": True},
             ]
@@ -559,12 +787,30 @@ class wiki_task:
 
         if (self.proba_ai >= self.page.limit_ai or (self.proba_ai >= self.page.limit_ai2 and self.vandalism_score is not None and self.vandalism_score <= self.page.limit2)) and "autoconfirmed" not in user_rights:
             if not self.page.reverted:
-                self.page.revert(f"Modification non-constructive détectée par IA à {self.proba_ai} %" if self.site.lang_bot == "fr" else f"Non-constructive edit detected by AI ({self.proba_ai} %)", test, result_ai)
+                revert_summary = f"Modification non-constructive détectée par IA à {self.proba_ai} %" if self.site.lang_bot == "fr" else f"Non-constructive edit detected by AI ({self.proba_ai} %)"
+                self.page.revert(revert_summary, test, result_ai)
+                _learn_from_revert(
+                    self.site,
+                    self.page,
+                    source="ai_remote",
+                    summary=revert_summary,
+                    result_ai=result_ai,
+                    test=test,
+                )
             color = 13371938
         elif self.proba_ai >= self.page.limit_ai2 and "autoconfirmed" not in user_rights:
             self.page.get_warnings_user()
             if (self.page.warn_level > self.page.level_min or self.page.user_previous_reverted) and not self.page.reverted:
-                self.page.revert(f"Modification non-constructive détectée par IA à {self.proba_ai} %" if self.site.lang_bot == "fr" else f"Non-constructive edit detected by AI ({self.proba_ai} %)", test, result_ai)
+                revert_summary = f"Modification non-constructive détectée par IA à {self.proba_ai} %" if self.site.lang_bot == "fr" else f"Non-constructive edit detected by AI ({self.proba_ai} %)"
+                self.page.revert(revert_summary, test, result_ai)
+                _learn_from_revert(
+                    self.site,
+                    self.page,
+                    source="ai_remote",
+                    summary=revert_summary,
+                    result_ai=result_ai,
+                    test=test,
+                )
                 color = 13371938
             else:
                 color = 12138760
@@ -624,12 +870,30 @@ class wiki_task:
 
         if (self.proba_ai >= self.page.limit_ai_local or (self.proba_ai >= self.page.limit_ai_local2 and self.vandalism_score is not None and self.vandalism_score <= self.page.limit2)) and "autoconfirmed" not in user_rights:
             if not self.page.reverted:
-                self.page.revert(f"Modification non-constructive détectée par IA locale à {round(self.proba_ai, 2)} %" if self.site.lang_bot == "fr" else f"Non-constructive edit detected by local AI ({round(self.proba_ai, 2)} %)", test, f"Modification non-constructive détectée par IA locale à {round(self.proba_ai, 2)} %" if self.site.lang_bot == "fr" else f"Non-constructive edit detected by local AI ({round(self.proba_ai, 2)} %)")
+                revert_summary = f"Modification non-constructive détectée par IA locale à {round(self.proba_ai, 2)} %" if self.site.lang_bot == "fr" else f"Non-constructive edit detected by local AI ({round(self.proba_ai, 2)} %)"
+                self.page.revert(revert_summary, test, revert_summary)
+                _learn_from_revert(
+                    self.site,
+                    self.page,
+                    source="ai_local",
+                    summary=revert_summary,
+                    result_ai=revert_summary,
+                    test=test,
+                )
             color = 13371938
         elif self.proba_ai >= self.page.limit_ai_local2 and "autoconfirmed" not in user_rights:
             self.page.get_warnings_user()
             if (self.page.warn_level > self.page.level_min or self.page.user_previous_reverted) and not self.page.reverted:
-                self.page.revert(f"Modification non-constructive détectée par IA locale à {round(self.proba_ai, 2)} %" if self.site.lang_bot == "fr" else f"Non-constructive edit detected by local AI ({round(self.proba_ai, 2)} %)", test, f"Modification non-constructive détectée par IA locale à {round(self.proba_ai, 2)} %" if self.site.lang_bot == "fr" else f"Non-constructive edit detected by local AI ({round(self.proba_ai, 2)} %)")
+                revert_summary = f"Modification non-constructive détectée par IA locale à {round(self.proba_ai, 2)} %" if self.site.lang_bot == "fr" else f"Non-constructive edit detected by local AI ({round(self.proba_ai, 2)} %)"
+                self.page.revert(revert_summary, test, revert_summary)
+                _learn_from_revert(
+                    self.site,
+                    self.page,
+                    source="ai_local",
+                    summary=revert_summary,
+                    result_ai=revert_summary,
+                    test=test,
+                )
                 color = 13371938
             else:
                 color = 12138760
@@ -878,6 +1142,7 @@ class wiki_task:
             except Exception:
                 _safe_log_exc()
 
+            pywikibot.output(f"Cycle terminé ({self.site.family} {self.site.lang}) : attente du prochain passage dans 10 minutes.")
             time.sleep(600)  # Pause de 10 minutes
 
     def execute_direct(self) -> None:
@@ -903,13 +1168,29 @@ class wiki_task:
                             ignored = True
                             break
                     if ignored:
+                        _log_rc_event(
+                            "ignored_page_pattern",
+                            wiki=self.site.family,
+                            lang=self.site.lang,
+                            page=page_name,
+                            rc_user=change.get("user"),
+                            rc_revid=change.get("revision", {}).get("new") if isinstance(change.get("revision"), dict) else None,
+                            reason="ignore_config_match",
+                        )
                         continue
                 self.page = self.site.page(page_name)
                 if self.page.special or not self.page.exists():
+                    _log_rc_event(
+                        "ignored_unprocessable_page",
+                        **_rc_context(self.page),
+                        reason="special_page" if self.page.special else "page_missing",
+                    )
                     continue
 
                 rights = self.page.contributor_rights()
                 is_revert = self.page.is_revert()
+                if is_revert:
+                    _log_rc_event("ignored_human_revert", **_rc_context(self.page), reason="already_revert")
                 if not is_revert and "autoconfirmed" not in rights:
                     if self.site.bot_stopped():
                         self.send_message_bot_stopped()
@@ -934,6 +1215,12 @@ class wiki_task:
                             print(f"Score de vandalisme : {self.vandalism_score}")
                         except Exception:
                             _safe_log_exc()
+                elif "autoconfirmed" in rights:
+                    _log_rc_event(
+                        "ignored_autoconfirmed_direct",
+                        **_rc_context(self.page),
+                        rights="|".join(rights),
+                    )
 
                     if not self.site.config.get("disable_ai"):
                         print(f"Calcul du score de vandalisme (IA Mistral) sur {page_name}...")
