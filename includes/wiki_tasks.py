@@ -839,12 +839,14 @@ class wiki_task:
     # ----------------------------
 
     def check_vandalism_ai_local(self, test = False) -> None:
-        if self.page.contributor_is_trusted():
+        local_ai_model = self.site.config.get("local_ai_model")
+        num_feat_norm = self.site.config.get("num_feat_norm")
+        if not local_ai_model or not num_feat_norm or self.page.contributor_is_trusted():
             return
 
         diff_text = self.page.get_diff()
-        model_dir = "../" + self.site.config.get("local_ai_model")
-        norm_json = "../" + self.site.config.get("num_feat_norm")
+        model_dir = "../" + local_ai_model
+        norm_json = "../" + num_feat_norm
         try:
             prob = predict(
                 model_dir=model_dir,
@@ -930,7 +932,7 @@ class wiki_task:
         embed = {
             "title": title,
             "description": desc,
-            "url": self.page.protocol + "//" + self.page.url + self.page.articlepath + self.page.alert_page.replace(" ", "_"),
+            "url": self.page.protocol + "//" + self.page.url + self.page.articlepath + "Special:Contributions/" + self.page.contributor_name,
             "author": {"name": self.page.contributor_name},
             "color": 16711680,
         }

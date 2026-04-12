@@ -510,7 +510,7 @@ class get_page(pywikibot.Page):
         if alert_page_tpl:
             self.alert_page = datetime.datetime.now().strftime(alert_page_tpl.replace("\r", "").replace("\n", ""))
         else:
-            self.alert_page = "Project:Alerte" if self.lang_bot == "fr" else "Project:Alert"
+            self.alert_page = None
 
         self.alert_request = False
         self.alert_request_done = False
@@ -593,9 +593,10 @@ class get_page(pywikibot.Page):
         self.talk.save(f"Bot : Avertissement {self.warn_level} sur [[{self.page_name}]]" if self.lang_bot == "fr" else f"Bot: Warning {self.warn_level} on [[{self.page_name}]]", bot=False, minor=False)
 
         if self.warn_level == self.level_block:
-            alert = pywikibot.Page(self.source.site, self.alert_page)
-            alert.text += f"\n{{{{subst:User:{self.user_wiki}/Alert|{self.contributor_name}}}}}"
-            alert.save(f"Bot : Alerte vandalisme concernant [[Special:Contributions/{self.contributor_name}|{self.contributor_name}]] !" if self.lang_bot == "fr" else f"Bot: Vandalism alert about [[Special:Contributions/{self.contributor_name}|{self.contributor_name}]] !", bot=False, minor=False)
+            if self.alert_page:
+                alert = pywikibot.Page(self.source.site, self.alert_page)
+                alert.text += f"\n{{{{subst:User:{self.user_wiki}/Alert|{self.contributor_name}}}}}"
+                alert.save(f"Bot : Alerte vandalisme concernant [[Special:Contributions/{self.contributor_name}|{self.contributor_name}]] !" if self.lang_bot == "fr" else f"Bot: Vandalism alert about [[Special:Contributions/{self.contributor_name}|{self.contributor_name}]] !", bot=False, minor=False)
             self.alert_request = True
 
     # ---- vandalism scoring

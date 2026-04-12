@@ -8,9 +8,13 @@ WIKIS = [
     ("dicoado", "dicoado", "RevolucioBot", False),
     ("wikipedia", "fr", "RevolucioBot", True),
 ]
-#WIKIS = [
-#    ("localhost", "localhost", "RevolucioBot", False)
-#]
+
+testing = False
+
+if testing:
+    WIKIS = [
+        ("localhost", "localhost", "RevolucioBot", False)
+    ]
 
 webhooks_url = {'support': os.getenv("revolucio_webhook_url_support"),
                 'localhost': os.getenv("revolucio_webhook_url_localhost"),
