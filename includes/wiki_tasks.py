@@ -324,9 +324,6 @@ class wiki_task:
                 if self.site.config.get("check_WP") and self.page.text.strip():
                     self.check_WP()
 
-                if not self.site.config.get("disable_regex"):
-                    self.check_vandalism(self.test)
-
                 edit_replace = self.page.edit_replace()
                 pywikibot.output(f"{edit_replace} recherche(s)-remplacement(s) sur la page {self.page}.")
 
