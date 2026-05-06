@@ -956,52 +956,24 @@ class wiki_task:
                 "fields": [{"name": ("Probabilité de copie" if self.site.lang_bot == "fr" else "Probability of copy"), "value": f"{round(prob_WP, 2)} %", "inline": True}],
             }
 
-        if prob_WP >= 50:
-            check_page = pywikibot.Page(self.site.site, f"User:{self.site.user_wiki}/WP")
-            if self.site.lang_bot == "fr":
-                check_page.text = f"""{check_page.text}
-== Possible copie de WP sur {page_name} (diff : {self.page.diff}) ==
-* Date de détection : ~~~~~
-* Page : {self.page.page_name}
-* Utilisateur : {self.page.contributor_name}
-* Diff : [[Special:Diff/{self.page.diff}]]
-* Contenu copié détecté : {prob_WP} %"""
-            else:
-                check_page.text = f"""{check_page.text}
-== Possible copy from WP on {page_name} (diff: {self.page.diff}) ==
-* Detection date: ~~~~~
-* Page: {self.page.page_name}
-* User: {self.page.contributor_name}
-* Diff: [[Special:Diff/{self.page.diff}]]
-* Detected copied content: {prob_WP} %"""
-            check_page.save("Mise à jour" if self.site.lang_bot == "fr" else "Update", bot=False, minor=False)
-        if prob_WP >= 90:
-            if template_WP not in self.page.text:
-                self.page.text = "{{" + template_WP + "|" + page_name + "|" + str(round(prob_WP, 2)) + "}}\n" + self.page.text
-                self.page.save("copie de WP" if self.site.lang_bot == "fr" else "copy of WP", bot=False, minor=False)
-
-            embed = _embed(
-                (f"Très probable copie de Wikipédia sur {self.site.lang}:{page_name}" if self.site.lang_bot == "fr" else f"Most likely copy from Wikipedia on {self.site.lang}:{page_name}"),
-                ("Cette page copie très probablement Wikipédia." if self.site.lang_bot == "fr" else "This page most likely copies Wikipedia."),
-                13371938,
-            )
-            _send_webhook(webhooks_url.get(self.site.family), {"embeds": [embed]})
-
-        elif prob_WP >= 75:
-            embed = _embed(
-                (f"Probable copie de Wikipédia sur {self.site.lang}:{page_name}" if self.site.lang_bot == "fr" else f"Likely copy from Wikipedia on {self.site.lang}:{page_name}"),
-                ("Cette page copie probablement Wikipédia." if self.site.lang_bot == "fr" else "This page likely copies Wikipedia."),
-                12138760,
-            )
-            _send_webhook(webhooks_url.get(self.site.family), {"embeds": [embed]})
-
-        elif prob_WP >= 50:
-            embed = _embed(
-                (f"Possible copie de Wikipédia sur {self.site.lang}:{page_name}" if self.site.lang_bot == "fr" else f"Possible copy from Wikipedia on {self.site.lang}:{page_name}"),
-                ("Cette page copie possiblement Wikipédia." if self.site.lang_bot == "fr" else "This page likely copies Wikipedia."),
-                12138760,
-            )
-            _send_webhook(webhooks_url.get(self.site.family), {"embeds": [embed]})
+        if score_check_WP > 1000:
+            if prob_WP >= 75:
+                if template_WP not in self.page.text:
+                    self.page.text = "{{" + template_WP + "|" + page_name + "|" + str(round(prob_WP, 2)) + "}}\n" + self.page.text
+                    self.page.save("copie de WP" if self.site.lang_bot == "fr" else "copy of WP", bot=False, minor=False)
+                    embed = _embed(
+                        (f"Copie de Wikipédia sur {self.site.lang}:{page_name}" if self.site.lang_bot == "fr" else f"Copy from Wikipedia on {self.site.lang}:{page_name}"),
+                        ("Cette page copie probablement Wikipédia." if self.site.lang_bot == "fr" else "This page likely copies Wikipedia."),
+                        13371938,
+                    )
+                    _send_webhook(webhooks_url.get(self.site.family), {"embeds": [embed]})
+            elif prob_WP >= 50:
+                embed = _embed(
+                    (f"Possible copie de Wikipédia sur {self.site.lang}:{page_name}" if self.site.lang_bot == "fr" else f"Possible copy from Wikipedia on {self.site.lang}:{page_name}"),
+                    ("Cette page copie peut-être Wikipédia." if self.site.lang_bot == "fr" else "This page maybe copies Wikipedia."),
+                    12138760,
+                )
+                _send_webhook(webhooks_url.get(self.site.family), {"embeds": [embed]})
 
     def _daily_stats_and_webhook(self, detailed_diff_info: Dict[int, Dict[str, Any]], since: datetime.datetime) -> None:
         pywikibot.output("Sauvegarde des modifications récentes du jour.")
