@@ -36,6 +36,7 @@ except ImportError:
         from mistralai.client import Mistral
     except ImportError:
         Mistral = None
+        pywikibot.warning("Mistral AI is not installed.")
 
 from config import api_key, headers, model, webhooks_url, webhooks_url_ai
 from generate_dynamic_patterns import generate_from_csv
