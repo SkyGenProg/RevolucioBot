@@ -27,7 +27,14 @@ except ImportError:
     pywikibot.warning("Numpy is not installed. It is required for local AI.")
 from typing import Any, Dict, Optional
 
-from mistralai.client import Mistral
+try:
+    from mistralai import Mistral
+except ImportError:
+    try:
+        from mistralai.client import Mistral
+    except ImportError:
+        Mistral = None
+        pywikibot.warning("Mistral AI is not installed.")
 
 from config import api_key, headers, model, webhooks_url, webhooks_url_ai
 from includes.wiki import request_site, prompt_ai
