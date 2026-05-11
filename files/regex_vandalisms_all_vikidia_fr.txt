@@ -200,6 +200,7 @@ trous? d[eu] cul:-30
 choubidou:-100
 ninipatalo:-100
 bachirx:-100
+greenpickles:-100
 \bfnord\b:-100
 petit polisson:-30
 thesard stagiaire:-30
