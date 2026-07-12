@@ -6,5 +6,7 @@
 \{\{taxobox:-2
 \<gallery:-5
 \{\{références:-5
+\{\{voir:-5
 \{\{palette:-10
 \{\{Infobox[^}]*?\n(.*?)\n\}\}:-10
+\{\{portail:-10
