@@ -6,3 +6,4 @@
 \<gallery:-5
 \{\{références:-5
 \{\{(Infobox|Boîte)[^}]*?\n(.*?)\n\}\}:-10
+\{\{portail:-10
