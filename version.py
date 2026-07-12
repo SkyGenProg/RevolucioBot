@@ -1,4 +1,4 @@
 # -*- coding: utf-8 -*-
 
-ver = "6.11.3"
-release_date = "12/07/2026"
+ver = "7.0.0-beta.1"
+release_date = "/07/2026"
