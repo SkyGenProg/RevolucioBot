@@ -56,3 +56,5 @@ choubidou:-100
 ninipatalo:-100
 bachirx:-100
 greenpickles:-100
+\{\{delete:+100
+\{\{speedy:+100
