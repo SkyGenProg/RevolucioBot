@@ -6,7 +6,14 @@ from includes.wiki import get_wiki, prompt_ai
 from includes.wiki_tasks import predict
 from config import api_key, model
 from version import ver
-from mistralai import Mistral
+try:
+    from mistralai import Mistral
+except ImportError:
+    try:
+        from mistralai.client import Mistral
+    except ImportError:
+        Mistral = None
+        pywikibot.warning("Mistral AI is not installed.")
 
 arg = argparse.ArgumentParser()
 required_arg = arg.add_argument_group("required arguments")
@@ -20,7 +27,10 @@ arg.add_argument("--use_ai")
 arg.add_argument("--use_local_ai")
 args = arg.parse_args()
 
-client = Mistral(api_key=api_key)
+if Mistral is not None:
+    client = Mistral(api_key=api_key)
+else:
+    client = None
 
 if __name__ == "__main__":
     pywikibot.output("Revolució %s" % ver)
@@ -50,7 +60,7 @@ if __name__ == "__main__":
     diff_text = "\n".join(diff)
     pywikibot.output("Diff :")
     pywikibot.output(diff_text)
-    if args.use_ai:
+    if args.use_ai and client is not None:
         prompt = prompt_ai(args.lang, page.timestamp, page.url, page.page_name, diff_text, page.comment)
         pywikibot.output("Prompt :")
         pywikibot.output(prompt)

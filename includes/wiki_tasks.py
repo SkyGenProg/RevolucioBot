@@ -761,6 +761,9 @@ class wiki_task:
             if not api_key or not model:
                 pywikibot.error("api_key or model not specified in venv.")
                 return
+            elif client is None:
+                pywikibot.error("Mistral AI is not installed.")
+                return
             else:
                 chat_response = client.chat.complete(model=model, messages=[{"role": "user", "content": prompt}])
                 result_ai = chat_response.choices[0].message.content

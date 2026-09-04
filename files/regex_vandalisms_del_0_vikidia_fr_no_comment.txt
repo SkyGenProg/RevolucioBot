@@ -5,5 +5,5 @@
 ==.+==\n(\n)?[^\n=]+:-2
 \<gallery:-5
 \{\{références:-5
-\{\{(Infobox|Boîte)[^}]*?\n(.*?)\n\}\}:-10
+\{\{(Infobox|Boîte)[^}]*?\n(.*?)\}\}:-10
 \{\{portail:-10
