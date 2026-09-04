@@ -39,7 +39,10 @@ except ImportError:
 from config import api_key, headers, model, webhooks_url, webhooks_url_ai
 from includes.wiki import request_site, prompt_ai
 
-client = Mistral(api_key=api_key)
+if Mistral is not None:
+    client = Mistral(api_key=api_key)
+else:
+    client = None
 
 def _safe_log_exc() -> None:
     try:
@@ -538,6 +541,9 @@ class wiki_task:
         try:
             if not api_key or not model:
                 pywikibot.error("api_key or model not specified in venv.")
+                return
+            elif client is None:
+                pywikibot.error("Mistral AI is not installed.")
                 return
             else:
                 chat_response = client.chat.complete(model=model, messages=[{"role": "user", "content": prompt}])
