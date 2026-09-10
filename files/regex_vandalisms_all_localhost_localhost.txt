@@ -142,7 +142,6 @@ p[eé]dophile:-3
 \bcons\b:-20
 \{\{cons\}\}:+20
 \bput1:-20
-\bd(e )?la balle\b:-20
 \b(un|mon|son|ton|de|du|le|fait) caca\b:-20
 \bm[ae]+rdr?es?\b:-20
 \bmadres?\b:+20
