@@ -156,9 +156,8 @@ def predict(model_dir, norm_json, old, new, diff, comment):
     return prob
 
 class wiki_task:
-    def __init__(self, site, start_task_day: bool = False, start_task_month: bool = False, ignore_task_month: bool = False, test: bool = False):
+    def __init__(self, site, start_task_day: bool = False, start_task_month: bool = False, ignore_task_month: bool = False):
         self.site = site
-        self.test = test
         self.start_task_day = start_task_day
         self.start_task_month = start_task_month and not ignore_task_month
         self.ignore_task_month = ignore_task_month
@@ -297,19 +296,19 @@ class wiki_task:
 
                 if not is_revert and self.site.config.get("local_ai_model"):
                     try:
-                        self.check_vandalism_ai_local(self.test)
+                        self.check_vandalism_ai_local(self.site.config.get("local_ai_only_for_test"))
                     except Exception:
                         _safe_log_exc()
 
                 if not is_revert and not self.site.config.get("disable_regex"):
                     try:
-                        self.check_vandalism(self.test)
+                        self.check_vandalism(self.site.config.get("regex_only_for_test"))
                     except Exception:
                         _safe_log_exc()
 
                 if not is_revert and not self.site.config.get("disable_ai"):
                     try:
-                        self.check_vandalism_ai(self.test)
+                        self.check_vandalism_ai(self.site.config.get("ai_only_for_test"))
                     except Exception:
                         _safe_log_exc()
 
@@ -904,7 +903,7 @@ class wiki_task:
                     if self.site.config.get("local_ai_model"):
                         print(f"Calcul du score de vandalisme (IA locale) sur {page_name}...")
                         try:
-                            self.check_vandalism_ai_local(self.test)
+                            self.check_vandalism_ai_local(self.site.config.get("local_ai_only_for_test"))
                             print(f"Probabilité de vandalisme (IA locale) : {self.proba_ai} %")
                         except Exception:
                             _safe_log_exc()
@@ -912,7 +911,7 @@ class wiki_task:
                     if not self.site.config.get("disable_regex"):
                         print(f"Calcul du score de vandalisme sur {page_name}...")
                         try:
-                            self.check_vandalism(self.test)
+                            self.check_vandalism(self.site.config.get("regex_only_for_test"))
                             print(f"Score de vandalisme : {self.vandalism_score}")
                         except Exception:
                             _safe_log_exc()
@@ -920,7 +919,7 @@ class wiki_task:
                     if not self.site.config.get("disable_ai"):
                         print(f"Calcul du score de vandalisme (IA Mistral) sur {page_name}...")
                         try:
-                            self.check_vandalism_ai(self.test)
+                            self.check_vandalism_ai(self.site.config.get("ai_only_for_test"))
                             print(f"Probabilité de vandalisme (IA Mistral) : {self.proba_ai} %")
                         except Exception:
                             _safe_log_exc()
