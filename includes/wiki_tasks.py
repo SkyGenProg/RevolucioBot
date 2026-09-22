@@ -608,12 +608,10 @@ class wiki_task:
             return
 
         diff_text = self.page.get_diff()
-        model_dir = "../" + local_ai_model
-        norm_json = "../" + num_feat_norm
         try:
             prob = predict(
-                model_dir=model_dir,
-                norm_json=norm_json,
+                model_dir=local_ai_model,
+                norm_json=num_feat_norm,
                 old=self.page.text_page_oldid2,
                 new=self.page.text_page_oldid,
                 diff=diff_text,
@@ -621,6 +619,7 @@ class wiki_task:
             )
         except Exception:
             pywikibot.error(traceback.format_exc())
+            self.proba_ai = None
             return
         self.proba_ai = prob*100
 
