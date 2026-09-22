@@ -8,10 +8,6 @@ from config import WIKIS
 from version import ver
 import threading
 
-arg = argparse.ArgumentParser()
-arg.add_argument("--test")
-args = arg.parse_args()
-
 def ensure_workdir(dirname="files"):
     os.makedirs(dirname, exist_ok=True)
     os.chdir(dirname)
@@ -24,7 +20,7 @@ def main():
         if direct:
             # Stream global "recentchange" (tous wikis), on filtre ensuite sur frwiki
             site = get_wiki(family, lang, user)
-            task = wiki_task(site, False, False, True, args.test)
+            task = wiki_task(site, False, False, True)
             t = threading.Thread(
                 target=task.execute_direct,
                 name=f"task:{family}:{lang}",
