@@ -12,6 +12,7 @@ import time
 import traceback
 import pywikibot
 from pywikibot.comms.eventstreams import EventStreams
+from requests_sse import InvalidStatusCodeError
 try:
     import tensorflow as tf
 except ImportError:
@@ -865,63 +866,81 @@ class wiki_task:
             pywikibot.warning("api_key or model not specified in venv.")
         if not webhooks_url[self.site.family]:
             pywikibot.warning(f"Discord webhook url of {self.site.family} not specified in venv.")
-        stream = EventStreams(streams="recentchange")
-        for change in stream:
+        stopped = False
+        while not stopped:
             try:
-                if change.get("wiki") != "frwiki":
-                    continue
-                if change.get("bot"):
-                    continue
-                if change.get("type") not in ("edit", "new"):
-                    continue
-                page_name = change.get("title")
-                ignored = False
-                pages_ignore = self.site.config.get("ignore")
-                if pages_ignore is not None:
-                    for page_ignore in pages_ignore:
-                        if page_ignore in page_name:
-                            ignored = True
-                            break
-                    if ignored:
-                        continue
-                self.page = self.site.page(page_name)
-                if self.page.special or not self.page.exists():
-                    continue
+                stream = EventStreams(streams="recentchange")
+                for change in stream:
+                    try:
+                        if change.get("wiki") != "frwiki":
+                            continue
+                        if change.get("bot"):
+                            continue
+                        if change.get("type") not in ("edit", "new"):
+                            continue
+                        page_name = change.get("title")
+                        ignored = False
+                        pages_ignore = self.site.config.get("ignore")
+                        if pages_ignore is not None:
+                            for page_ignore in pages_ignore:
+                                if page_ignore in page_name:
+                                    ignored = True
+                                    break
+                            if ignored:
+                                continue
+                        self.page = self.site.page(page_name)
+                        if self.page.special or not self.page.exists():
+                            continue
 
-                rights = self.page.contributor_rights()
-                is_revert = self.page.is_revert()
-                if not is_revert and "autoconfirmed" not in rights:
-                    if self.site.bot_stopped():
-                        self.send_message_bot_stopped()
-                        print("Le bot a été arrêté.")
-                        break
+                        rights = self.page.contributor_rights()
+                        is_revert = self.page.is_revert()
+                        if not is_revert and "autoconfirmed" not in rights:
+                            if self.site.bot_stopped():
+                                self.send_message_bot_stopped()
+                                print("Le bot a été arrêté.")
+                                stopped = True
+                                break
 
-                    if self.site.config.get("local_ai_model") or not self.site.config.get("disable_regex") or not self.site.config.get("disable_ai"):
-                        self.page.get_text_page_old(total=50)
+                            if self.site.config.get("local_ai_model") or not self.site.config.get("disable_regex") or not self.site.config.get("disable_ai"):
+                                self.page.get_text_page_old(total=50)
 
-                    if self.site.config.get("local_ai_model"):
-                        print(f"Calcul du score de vandalisme (IA locale) sur {page_name}...")
-                        try:
-                            self.check_vandalism_ai_local(self.site.config.get("local_ai_only_for_test"))
-                            print(f"Probabilité de vandalisme (IA locale) : {self.proba_ai} %")
-                        except Exception:
-                            _safe_log_exc()
+                            if self.site.config.get("local_ai_model"):
+                                print(f"Calcul du score de vandalisme (IA locale) sur {page_name}...")
+                                try:
+                                    self.check_vandalism_ai_local(self.site.config.get("local_ai_only_for_test"))
+                                    print(f"Probabilité de vandalisme (IA locale) : {self.proba_ai} %")
+                                except Exception:
+                                    _safe_log_exc()
 
-                    if not self.site.config.get("disable_regex"):
-                        print(f"Calcul du score de vandalisme sur {page_name}...")
-                        try:
-                            self.check_vandalism(self.site.config.get("regex_only_for_test"))
-                            print(f"Score de vandalisme : {self.vandalism_score}")
-                        except Exception:
-                            _safe_log_exc()
+                            if not self.site.config.get("disable_regex"):
+                                print(f"Calcul du score de vandalisme sur {page_name}...")
+                                try:
+                                    self.check_vandalism(self.site.config.get("regex_only_for_test"))
+                                    print(f"Score de vandalisme : {self.vandalism_score}")
+                                except Exception:
+                                    _safe_log_exc()
 
-                    if not self.site.config.get("disable_ai"):
-                        print(f"Calcul du score de vandalisme (IA Mistral) sur {page_name}...")
-                        try:
-                            self.check_vandalism_ai(self.site.config.get("ai_only_for_test"))
-                            print(f"Probabilité de vandalisme (IA Mistral) : {self.proba_ai} %")
-                        except Exception:
-                            _safe_log_exc()
+                            if not self.site.config.get("disable_ai"):
+                                print(f"Calcul du score de vandalisme (IA Mistral) sur {page_name}...")
+                                try:
+                                    self.check_vandalism_ai(self.site.config.get("ai_only_for_test"))
+                                    print(f"Probabilité de vandalisme (IA Mistral) : {self.proba_ai} %")
+                                except Exception:
+                                    _safe_log_exc()
 
-            except Exception:
-                _safe_log_exc()
+                    except Exception:
+                        _safe_log_exc()
+
+            except InvalidStatusCodeError as e:
+                pywikibot.warning(
+                    f"EventStreams indisponible ({e}). "
+                    "Nouvelle tentative dans 10 secondes."
+                )
+                time.sleep(10)
+
+            except (OSError, ConnectionError) as e:
+                pywikibot.warning(
+                    f"Erreur réseau EventStreams ({e}). "
+                    "Nouvelle tentative dans 10 secondes."
+                )
+                time.sleep(10)
