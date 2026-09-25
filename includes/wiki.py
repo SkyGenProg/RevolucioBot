@@ -606,7 +606,7 @@ class get_page(pywikibot.Page):
         """
         self.commented = False
         if revision_oldid is not None:
-            text_new = self.getOldVersion(oldid=revision_oldid)
+            text_new = self.get_revision(revision_oldid, content=True).text
         else:
             text_new = self.text
 
@@ -650,7 +650,7 @@ class get_page(pywikibot.Page):
 
         if self.oldid not in (-1, 0):
             self.new_page = False
-            text_old = self.getOldVersion(oldid=self.oldid)
+            text_old = self.get_revision(self.oldid, content=True).text
         else:
             self.new_page = True
             text_old = ""
@@ -715,7 +715,7 @@ class get_page(pywikibot.Page):
 
     def check_WP(self, page_name_WP: Optional[str] = None, diff: Optional[int] = None, lang: Optional[str] = None) -> int:
         page_name_WP = page_name_WP or self.page_name
-        text_to_check = (self.text.strip() if diff is None else (self.getOldVersion(oldid=diff) or "")).strip()
+        text_to_check = (self.text.strip() if diff is None else (self.get_revision(diff, content=True).text or "")).strip()
         lang = lang or self.lang_bot
 
         url = _api_url(
