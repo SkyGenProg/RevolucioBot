@@ -150,27 +150,16 @@ c[' ]est nul:-20
 \b(une?|le|la) con(ne)?\b:-20
 \b[dl]es cons\b:-20
 \bfai?s chier\b:-20
-\brevoluciobot\b:-30
-\bsimonk\b:-30
-\bsimon2001\b:-30
 \?{3,}:-3
 \bwé\b:-3
 \^\^:-3
-&lt;ref\b:+10
 \.edu:+5
 \.gov:+5
 \.imdb\.com:+5
 \.gouv\.fr:+5
 \.gov\.ca:+5
 \.gouv\.qc\.ca:+5
-google\.:+5
-wikipedia\.org:+10
-wikimedia\.:+10
-wikisource\.org:+10
-wikiquote\.org:+10
-site.*=:+10
 [Ss]ite officiel:+5
-\.pdf:+1
 tres bon:-1
 complet:-1
 gratuit:-1
@@ -188,7 +177,6 @@ geocities:-5
 hautetfort:-5
 free\.fr:-5
 orange\.fr:-5
-(^|\n)[A-Za-z0-9]+($|\n):-5
 # element [1-3]\b:-25
 \* element [A-C]\b:-25
 [Tt]exte de sous-titre:-25
@@ -211,8 +199,6 @@ Entrez le texte non formate ici:-25
 ''Texte italique'':-25
 \[\[Sp[eé]cial:Contrib(ution)?s:-25
 \[\[[Uu](ser|tilisateur)::-25
-\b0?\d\W\d\d\W\d\d\W\d\d\W\d\d\b:-5
-\S+@\S+\.[a-z]+:-5
 \bmeurt\b:-1
 \bdecedee?\b:-1
 \bmorte?\b:-1

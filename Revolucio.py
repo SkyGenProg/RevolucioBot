@@ -7,7 +7,7 @@ import threading
 
 from includes.wiki import get_wiki
 from includes.wiki_tasks import wiki_task
-from config import WIKIS
+from config import WIKIS, WIKIS_TEST
 from version import ver
 
 logging.basicConfig(
@@ -20,9 +20,10 @@ logging.getLogger().addHandler(logging.StreamHandler())
 
 def parse_args():
     p = argparse.ArgumentParser()
-    p.add_argument("--start_task_day", action="count")
-    p.add_argument("--start_task_month", action="count")
-    p.add_argument("--ignore_task_month", action="count")
+    p.add_argument("--start_task_day", action="store_true")
+    p.add_argument("--start_task_month", action="store_true")
+    p.add_argument("--ignore_task_month", action="store_true")
+    p.add_argument("--test", action="store_true")
     return p.parse_args()
 
 
@@ -33,7 +34,8 @@ def ensure_workdir(dirname="files"):
 
 def start_tasks(args):
     threads = []
-    for family, lang, user, direct in WIKIS:
+    WIKIS_SELECT = WIKIS_TEST if args.test else WIKIS
+    for family, lang, user, direct in WIKIS_SELECT:
         if not direct:
             site = get_wiki(family, lang, user)
             task = wiki_task(site, args.start_task_day, args.start_task_month, args.ignore_task_month)

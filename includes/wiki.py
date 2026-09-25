@@ -8,6 +8,7 @@ from __future__ import annotations
 import datetime
 import difflib
 import json
+import os
 import re
 import traceback
 import urllib.error
@@ -210,22 +211,28 @@ class vandalism_score:
         vand = 0
         # add regex on all ns
         vand += self.score_regex_count("add_regex_ns_all", self.files["add_regex_ns_all"], re.IGNORECASE)
+        vand += self.score_regex_count("add_regex_ns_all_global", self.files["add_regex_ns_all_global"], re.IGNORECASE)
         # add regex on all ns (don't ignore case)
         vand += self.score_regex_count("add_regex_ns_all_no_ignore_case", self.files["add_regex_ns_all_no_ignore_case"], 0)
+        vand += self.score_regex_count("add_regex_ns_all_no_ignore_case_global", self.files["add_regex_ns_all_no_ignore_case_global"], 0)
         diff_dt = self.revision_info.timestamp - self.revision_info.timestamp_created
         diff_dt_seconds = diff_dt.total_seconds()
         lim_dt = 86400*7
         if self.revision_info.page_ns == 0:
             # add regex on ns 0
             vand += self.score_regex_count("add_regex_ns_0", self.files["add_regex_ns_0"], re.IGNORECASE, True)
+            vand += self.score_regex_count("add_regex_ns_0_global", self.files["add_regex_ns_0_global"], re.IGNORECASE, True)
             # add regex on ns 0
             vand += self.score_regex_count("add_regex_ns_0_no_ignore_case", self.files["add_regex_ns_0_no_ignore_case"], 0, True)
+            vand += self.score_regex_count("add_regex_ns_0_no_ignore_case_global", self.files["add_regex_ns_0_no_ignore_case_global"], 0, True)
             # delete regex on ns 0 (the user if not the author and the page created > 1 week)
             if self.revision_info.contributor_name != self.revision_info.author and diff_dt_seconds > lim_dt:
                 vand += self.score_regex_count("del_regex_ns_0", self.files["del_regex_ns_0"], re.IGNORECASE, False, True)
+                vand += self.score_regex_count("del_regex_ns_0_global", self.files["del_regex_ns_0_global"], re.IGNORECASE, False, True)
             # delete regex on ns 0 (the user if not the author and the page created > 1 week, no comment)
             if not self.revision_info.commented and self.revision_info.contributor_name != self.revision_info.author and diff_dt_seconds > lim_dt:
                 vand += self.score_regex_count("del_regex_ns_0_no_comment", self.files["del_regex_ns_0_no_comment"], re.IGNORECASE, False, True)
+                vand += self.score_regex_count("del_regex_ns_0_no_comment_global", self.files["del_regex_ns_0_no_comment_global"], re.IGNORECASE, False, True)
             # size rules on ns 0
             if self.revision_info.new_page:
                 vand_size = 0
@@ -262,6 +269,8 @@ class get_wiki:
         self.lang = lang
 
         config_filename = f"config_{family}_{lang}.txt"
+        if not os.path.exists(config_filename):
+            config_filename = f"config_{family}_default.txt"
         _ensure_file(config_filename)
         self.config = _load_json_config(config_filename)
 
@@ -499,6 +508,7 @@ class get_page(pywikibot.Page):
         self.limit_ai_local = self.source.config.get("limit_ai_local", 98)
         self.limit_ai_local2 = self.source.config.get("limit_ai_local2", 97)
         self.limit_ai_local3 = self.source.config.get("limit_ai_local3", 50)
+        self.enable_warnings = self.source.config.get("enable_warnings", False)
         self.level_block = self.source.config.get("level_block", 2)
         self.level_max = self.source.config.get("level_max", 3)
         self.level_min = self.source.config.get("level_min", 0)
@@ -551,7 +561,8 @@ class get_page(pywikibot.Page):
             test_page.save("Ajout vandalisme", bot=False, minor=False)
         else:
             self.only_revert(summary)
-            self.warn_revert(summary)
+            if self.enable_warnings:
+                self.warn_revert(summary)
 
     def only_revert(self, summary: str = "") -> None:
         if self.text_page_oldid is None or self.text_page_oldid2 is None:
@@ -650,7 +661,7 @@ class get_page(pywikibot.Page):
         """
         self.commented = False
         if revision_oldid is not None:
-            text_new = self.getOldVersion(oldid=revision_oldid)
+            text_new = self.get_revision(revision_oldid, content=True).text
         else:
             text_new = self.text
 
@@ -694,7 +705,7 @@ class get_page(pywikibot.Page):
 
         if self.oldid not in (-1, 0):
             self.new_page = False
-            text_old = self.getOldVersion(oldid=self.oldid)
+            text_old = self.get_revision(self.oldid, content=True).text
         else:
             self.new_page = True
             text_old = ""
@@ -715,12 +726,18 @@ class get_page(pywikibot.Page):
         files = {
             "add_regex_ns_0": f"regex_vandalisms_0_{fam}_{lang}.txt",
             "add_regex_ns_0_no_ignore_case": f"regex_vandalisms_0_{fam}_{lang}_no_ignore_case.txt",
+            "add_regex_ns_0_global": f"regex_vandalisms_0_{fam}_global.txt",
+            "add_regex_ns_0_no_ignore_case_global": f"regex_vandalisms_0_{fam}_global_no_ignore_case.txt",
             "add_regex_ns_all": f"regex_vandalisms_all_{fam}_{lang}.txt",
             "add_regex_ns_all_no_ignore_case": f"regex_vandalisms_all_{fam}_{lang}_no_ignore_case.txt",
+            "add_regex_ns_all_global": f"regex_vandalisms_all_{fam}_global.txt",
+            "add_regex_ns_all_no_ignore_case_global": f"regex_vandalisms_all_{fam}_global_no_ignore_case.txt",
             "del_regex_ns_0": f"regex_vandalisms_del_0_{fam}_{lang}.txt",
             "del_regex_ns_0_no_comment": f"regex_vandalisms_del_0_{fam}_{lang}_no_comment.txt",
-            "size": f"size_vandalisms_0_{fam}_{lang}.txt",
-            "dynamic_patterns": f"dynamic_patterns_{fam}_{lang}.txt",
+            "del_regex_ns_0_global": f"regex_vandalisms_del_0_{fam}_global.txt",
+            "del_regex_ns_0_no_comment_global": f"regex_vandalisms_del_0_{fam}_global_no_comment.txt",
+            "size": f"size_vandalisms_0_{fam}.txt",
+            "dynamic_patterns": f"dynamic_patterns_{fam}_{lang}.txt"
         }
         for f_type in files:
             _ensure_file(files[f_type])
@@ -738,9 +755,9 @@ class get_page(pywikibot.Page):
     def get_vandalism_report(self) -> str:
         detected_lines: List[str] = []
         for kind, score, payload in self.vandalism_score_detect:
-            if kind == "add_regex_ns_0" or kind == "add_regex_ns_0_no_ignore_case" or kind == "add_regex_ns_all" or kind == "add_regex_ns_all_no_ignore_case":
+            if kind == "add_regex_ns_0" or kind == "add_regex_ns_0_no_ignore_case" or kind == "add_regex_ns_all" or kind == "add_regex_ns_all_no_ignore_case" or kind == "add_regex_ns_0_global" or kind == "add_regex_ns_0_no_ignore_case_global" or kind == "add_regex_ns_all_global" or kind == "add_regex_ns_all_no_ignore_case_global":
                 detected_lines.append(f"{score} - + {payload}")
-            elif kind == "del_regex_ns_0" or kind == "del_regex_ns_0_no_comment":
+            elif kind == "del_regex_ns_0" or kind == "del_regex_ns_0_no_comment" or kind == "del_regex_ns_0_global" or kind == "del_regex_ns_0_no_comment_global":
                 detected_lines.append(f"{score} - - {payload}")
             elif kind == "size":
                 detected_lines.append(f"{score} - size < {payload}")
@@ -759,7 +776,7 @@ class get_page(pywikibot.Page):
 
     def check_WP(self, page_name_WP: Optional[str] = None, diff: Optional[int] = None, lang: Optional[str] = None) -> int:
         page_name_WP = page_name_WP or self.page_name
-        text_to_check = (self.text.strip() if diff is None else (self.getOldVersion(oldid=diff) or "")).strip()
+        text_to_check = (self.text.strip() if diff is None else (self.get_revision(diff, content=True).text or "")).strip()
         lang = lang or self.lang_bot
 
         url = _api_url(

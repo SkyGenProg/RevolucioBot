@@ -3,18 +3,28 @@
 import os
 
 WIKIS = [
-    ("vikidia", "fr", "RevolucioBot", False),
+    ("vikidia", "ar", "RevolucioBot", False),
+    ("vikidia", "ca", "RevolucioBot", False),
+    ("vikidia", "de", "RevolucioBot", False),
+    ("vikidia", "el", "RevolucioBot", False),
     ("vikidia", "en", "RevolucioBot", False),
+    ("vikidia", "es", "RevolucioBot", False),
+    ("vikidia", "eu", "RevolucioBot", False),
+    ("vikidia", "fr", "RevolucioBot", False),
+    ("vikidia", "hy", "RevolucioBot", False),
+    ("vikidia", "it", "RevolucioBot", False),
+    ("vikidia", "oc", "RevolucioBot", False),
+    ("vikidia", "pt", "RevolucioBot", False),
+    ("vikidia", "ru", "RevolucioBot", False),
+    ("vikidia", "scn", "RevolucioBot", False),
+    #("vikidia", "uk", "RevolucioBot", False),
     ("dicoado", "dicoado", "RevolucioBot", False),
     ("wikipedia", "fr", "RevolucioBot", True),
 ]
 
-testing = False
-
-if testing:
-    WIKIS = [
-        ("localhost", "localhost", "RevolucioBot", False)
-    ]
+WIKIS_TEST = [
+    ("localhost", "localhost", "RevolucioBot", False)
+]
 
 webhooks_url = {'support': os.getenv("revolucio_webhook_url_support"),
                 'localhost': os.getenv("revolucio_webhook_url_localhost"),
