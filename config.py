@@ -17,7 +17,7 @@ WIKIS = [
     ("vikidia", "pt", "RevolucioBot", False),
     ("vikidia", "ru", "RevolucioBot", False),
     ("vikidia", "scn", "RevolucioBot", False),
-    ("vikidia", "uk", "RevolucioBot", False),
+    #("vikidia", "uk", "RevolucioBot", False),
     ("dicoado", "dicoado", "RevolucioBot", False),
     ("wikipedia", "fr", "RevolucioBot", True),
 ]
