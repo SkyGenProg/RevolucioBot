@@ -8,6 +8,7 @@ from __future__ import annotations
 import datetime
 import difflib
 import json
+import os
 import re
 import traceback
 import urllib.error
@@ -225,6 +226,8 @@ class get_wiki:
         self.lang = lang
 
         config_filename = f"config_{family}_{lang}.txt"
+        if not os.path.exists(config_filename):
+            config_filename = f"config_{family}_default.txt"
         _ensure_file(config_filename)
         self.config = _load_json_config(config_filename)
 
