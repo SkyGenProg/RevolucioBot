@@ -1,1 +1,1 @@
-{"lang_bot": "en", "trusted_groups": "sysop|patroller|autopatrol|bot", "enable_warnings": false, "disable_del_categories": true, "clear_talks": false, "check_WP": true, "correct_redirects": false}
+{"lang_bot": "en", "trusted_groups": "sysop|patroller|autopatrol|bot", "enable_warnings": false, "disable_del_categories": true, "clear_talks": false, "check_WP": true, "correct_redirects": false, "disable_ai": true}
