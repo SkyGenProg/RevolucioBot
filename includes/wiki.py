@@ -20,6 +20,7 @@ import pywikibot
 from pywikibot import pagegenerators
 
 from config import headers
+from includes.dynamic_patterns import DynamicRule, extract_changed_text, normalize_detection_text, parse_dynamic_rule_line
 
 
 # ----------------------------
@@ -168,6 +169,44 @@ class vandalism_score:
                 self.vandalism_score_detect.append([type_regex, score, f"{pattern} ({score}x{times_pattern} = {score_pattern})"])
         return score_detected
 
+    def score_dynamic_patterns(self, filename: str) -> int:
+        rules: list[DynamicRule] = []
+        for raw_line in _read_lines(filename):
+            line = raw_line.strip()
+            if not line or line.startswith("#"):
+                continue
+            rule = parse_dynamic_rule_line(line)
+            if rule is not None:
+                rules.append(rule)
+
+        if not rules:
+            return 0
+
+        added_text, _removed_text = extract_changed_text(self.revision_info.text_old, self.revision_info.text_new)
+        focus_raw = added_text if added_text else self.revision_info.text_new
+        focus = normalize_detection_text(focus_raw)
+        if not focus:
+            return 0
+
+        score_detected = 0
+        for rule in rules:
+            try:
+                if not rule.pattern.search(focus):
+                    continue
+            except re.error:
+                continue
+
+            payload = (
+                f"{rule.label} [{rule.status}] "
+                f"(support={rule.support}, precision={round(rule.precision, 4)}) :: {rule.pattern.pattern}"
+            )
+            if rule.status == "active":
+                score_detected += rule.score
+                self.vandalism_score_detect.append(["dynamic_active", rule.score, payload])
+            else:
+                self.vandalism_score_detect.append(["dynamic_review", 0, payload])
+        return score_detected
+
     def calculate(self) -> int:
         vand = 0
         # add regex on all ns
@@ -216,6 +255,10 @@ class vandalism_score:
                 if score != 0:
                     self.vandalism_score_detect.append(["diff", score, -diff_s*self.bytes_uncommented_remove])
                     vand += score
+
+        dynamic_patterns_file = self.files.get("dynamic_patterns")
+        if dynamic_patterns_file:
+            vand += self.score_dynamic_patterns(dynamic_patterns_file)
         self.vand = vand
         return vand
 
@@ -251,7 +294,7 @@ class get_wiki:
 
     def bot_stopped(self) -> bool:
         self.talk_page = pywikibot.Page(self.site, f"User Talk:{self.user_wiki}")
-        return self.talk_page.text.lower() != "{{/stop}}"
+        return self.talk_page.text.strip().lower() != "{{/stop}}"
 
     def get_trusted(self) -> None:
         trusted_groups = self.config.get("trusted_groups", "sysop")
@@ -423,7 +466,9 @@ class get_page(pywikibot.Page):
         self.text_page_oldid: Optional[str] = None
         self.text_page_oldid2: Optional[str] = None
         self.vandalism_score_detect: List[List[Any]] = []
+        self.dynamic_review_request = False
         self.vand_to_revert = False
+        self.last_vandalism_reason = ""
         self.user_previous_reverted = False
         self.edit_reverted = False # Reverted by an user
         self.reverted = False # Reverted by the bot
@@ -570,6 +615,7 @@ class get_page(pywikibot.Page):
     def vandalism_get_score_current(self) -> int:
         """Score on current revision, ignoring experienced contributors."""
         if self.contributor_is_trusted():
+            self.last_vandalism_reason = "trusted_contributor"
             return 0
 
         user_rights = self.contributor_rights()
@@ -577,11 +623,20 @@ class get_page(pywikibot.Page):
 
         if vand <= self.limit and "autoconfirmed" not in user_rights:
             self.vand_to_revert = True
+            self.last_vandalism_reason = "score_below_limit"
         elif vand <= self.limit2 and "autoconfirmed" not in user_rights:
             self.get_warnings_user()
             self.vand_to_revert = self.warn_level > self.level_min or self.user_previous_reverted
+            if self.vand_to_revert:
+                self.last_vandalism_reason = "repeat_offender_or_warned"
+            else:
+                self.last_vandalism_reason = "suspicious_but_not_warned_enough"
         else:
             self.vand_to_revert = False
+            if "autoconfirmed" in user_rights:
+                self.last_vandalism_reason = "autoconfirmed_contributor"
+            else:
+                self.last_vandalism_reason = "score_above_thresholds"
         return vand
 
     def contributor_is_trusted(self) -> bool:
@@ -681,7 +736,8 @@ class get_page(pywikibot.Page):
             "del_regex_ns_0_no_comment": f"regex_vandalisms_del_0_{fam}_{lang}_no_comment.txt",
             "del_regex_ns_0_global": f"regex_vandalisms_del_0_{fam}_global.txt",
             "del_regex_ns_0_no_comment_global": f"regex_vandalisms_del_0_{fam}_global_no_comment.txt",
-            "size": f"size_vandalisms_0_{fam}.txt"
+            "size": f"size_vandalisms_0_{fam}.txt",
+            "dynamic_patterns": f"dynamic_patterns_{fam}_{lang}.txt"
         }
         for f_type in files:
             _ensure_file(files[f_type])
@@ -693,6 +749,7 @@ class get_page(pywikibot.Page):
         vand_score = vandalism_score(files, revision, self.bytes_uncommented_remove, self.score_uncommented_remove)
         vand = vand_score.calculate()
         self.vandalism_score_detect = vand_score.vandalism_score_detect
+        self.dynamic_review_request = any(kind == "dynamic_review" for kind, _score, _payload in self.vandalism_score_detect)
         return vand
 
     def get_vandalism_report(self) -> str:
@@ -707,6 +764,10 @@ class get_page(pywikibot.Page):
             elif kind == "diff":
                 op = ">" if int(payload) > 0 else "<"
                 detected_lines.append(f"{score} - diff {op} {payload}")
+            elif kind == "dynamic_active":
+                detected_lines.append(f"{score} - dyn {payload}")
+            elif kind == "dynamic_review":
+                detected_lines.append(f"{score} - dyn-review {payload}")
             else:
                 detected_lines.append(f"{score} - + {payload}")
         return "\n".join(detected_lines)
