@@ -42,5 +42,4 @@ headers = {
     "user-agent": "Mozilla/5.0 Revolucio",
 }
 
-api_key = os.getenv("revolucio_api_key")
-model = os.getenv("revolucio_model")
+model = os.getenv("GEMINI_MODEL")

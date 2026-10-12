@@ -31,19 +31,19 @@ except ImportError:
 from typing import Any, Dict, Optional
 
 try:
-    from mistralai import Mistral
+    from google import genai
 except ImportError:
-    try:
-        from mistralai.client import Mistral
-    except ImportError:
-        Mistral = None
-        pywikibot.warning("Mistral AI is not installed.")
+    genai = None
+    pywikibot.warning("Gemini is not installed.")
 
-from config import api_key, headers, model, webhooks_url, webhooks_url_ai
+from config import headers, model, webhooks_url, webhooks_url_ai
 from generate_dynamic_patterns import generate_from_csv
 from includes.wiki import request_site, prompt_ai
 
-client = Mistral(api_key=api_key) if Mistral is not None and api_key else None
+if genai is not None:
+    client = genai.Client()
+else:
+    client = None
 
 def _safe_log_exc() -> None:
     try:
@@ -750,23 +750,23 @@ class wiki_task:
         prompt = prompt_ai(self.site.lang_bot, self.page.timestamp, self.page.url, self.page.page_name, diff_text, self.page.comment)
         if self.site.lang_bot == "fr":
             proba_re = r"probabilité de vandalisme.*:[^0-9]*([\d\.,]+)[^0-9]*%"
-            title_base = f"Analyse de l'IA (Mistral) sur {self.site.lang}:{self.page.page_name}"
-            fail_title = f"Analyse de l'IA (Mistral) échouée sur {self.site.lang}:{self.page.page_name}"
+            title_base = f"Analyse de l'IA (Gemini) sur {self.site.lang}:{self.page.page_name}"
+            fail_title = f"Analyse de l'IA (Gemini) échouée sur {self.site.lang}:{self.page.page_name}"
         else:
             proba_re = r"probability of vandalism.*:[^0-9]*([\d\.,]+)[^0-9]*%"
-            title_base = f"AI analysis (Mistral) on {self.site.lang}:{self.page.page_name}"
-            fail_title = f"AI analysis (Mistral) failed on {self.site.lang}:{self.page.page_name}"
+            title_base = f"AI analysis (Gemini) on {self.site.lang}:{self.page.page_name}"
+            fail_title = f"AI analysis (Gemini) failed on {self.site.lang}:{self.page.page_name}"
 
         try:
-            if not api_key or not model:
-                pywikibot.error("api_key or model not specified in venv.")
+            if not model:
+                pywikibot.error("model not specified in venv.")
                 return
             elif client is None:
-                pywikibot.error("Mistral AI is not installed.")
+                pywikibot.error("Gemini is not installed.")
                 return
             else:
-                chat_response = client.chat.complete(model=model, messages=[{"role": "user", "content": prompt}])
-                result_ai = chat_response.choices[0].message.content
+                response = client.models.generate_content(model = model, contents = prompt)
+                result_ai = response.text
         except Exception:
             _safe_log_exc()
             embed = {
@@ -1083,8 +1083,8 @@ class wiki_task:
     # ----------------------------
 
     def execute(self) -> None:
-        if not api_key or not model:
-            pywikibot.warning("api_key or model not specified in venv.")
+        if not model:
+            pywikibot.warning("model not specified in venv.")
         if not webhooks_url[self.site.family]:
             pywikibot.warning(f"Discord webhook url of {self.site.family} not specified in venv.")
         self.datetime_utcnow = datetime.datetime.utcnow()
@@ -1118,8 +1118,8 @@ class wiki_task:
             time.sleep(600)  # Pause de 10 minutes
 
     def execute_direct(self) -> None:
-        if not api_key or not model:
-            pywikibot.warning("api_key or model not specified in venv.")
+        if not model:
+            pywikibot.warning("model not specified in venv.")
         if not webhooks_url[self.site.family]:
             pywikibot.warning(f"Discord webhook url of {self.site.family} not specified in venv.")
         stopped = False
@@ -1199,10 +1199,10 @@ class wiki_task:
                             )
 
                             if not self.site.config.get("disable_ai"):
-                                print(f"Calcul du score de vandalisme (IA Mistral) sur {page_name}...")
+                                print(f"Calcul du score de vandalisme (IA Gemini) sur {page_name}...")
                                 try:
                                     self.check_vandalism_ai(self.site.config.get("ai_only_for_test"))
-                                    print(f"Probabilité de vandalisme (IA Mistral) : {self.proba_ai} %")
+                                    print(f"Probabilité de vandalisme (IA Gemini) : {self.proba_ai} %")
                                 except Exception:
                                     _safe_log_exc()
 
