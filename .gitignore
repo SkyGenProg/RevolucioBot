@@ -3,9 +3,13 @@
 *.pyc
 *.sqlite3
 /files/ia_wiki_results.csv
+/files/auto_corpus_*.csv
 /files/rc_*.json
 /files/tasks_time_*.txt
 /files/vand_*.txt
+/files/dynamic_common_patterns_*.txt
+/files/dynamic_patterns_*.txt
+/files/dynamic_patterns_validation_*.json
 /files/*.pickle
 *ckpt*
 throttle.ctrl
@@ -13,4 +17,5 @@ throttle.ctrl
 *.lwp
 .env
 .venv/
+.venv312/
 user-password.py
