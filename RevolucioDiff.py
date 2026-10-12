@@ -4,16 +4,13 @@ import argparse, os, pywikibot, difflib
 
 from includes.wiki import get_wiki, prompt_ai
 from includes.wiki_tasks import predict
-from config import api_key, model
+from config import model
 from version import ver
 try:
-    from mistralai import Mistral
+    from google import genai
 except ImportError:
-    try:
-        from mistralai.client import Mistral
-    except ImportError:
-        Mistral = None
-        pywikibot.warning("Mistral AI is not installed.")
+    genai = None
+    pywikibot.warning("Gemini is not installed.")
 
 arg = argparse.ArgumentParser()
 required_arg = arg.add_argument_group("required arguments")
@@ -27,8 +24,8 @@ arg.add_argument("--use_ai")
 arg.add_argument("--use_local_ai")
 args = arg.parse_args()
 
-if Mistral is not None:
-    client = Mistral(api_key=api_key)
+if genai is not None:
+    client = genai.Client()
 else:
     client = None
 
@@ -65,16 +62,8 @@ if __name__ == "__main__":
         pywikibot.output("Prompt :")
         pywikibot.output(prompt)
         pywikibot.output("Analyse de l'IA : ")
-        chat_response = client.chat.complete(
-            model = model,
-            messages = [
-                {
-                    "role": "user",
-                    "content": prompt,
-                },
-            ]
-        )
-        pywikibot.output(chat_response.choices[0].message.content)
+        response = client.models.generate_content(model = model, contents = prompt)
+        pywikibot.output(response.text)
     if args.use_local_ai:
         os.chdir("..")
         prob = predict(

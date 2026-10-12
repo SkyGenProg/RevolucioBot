@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-import argparse, os
+import os
 
 from includes.wiki import get_wiki
 from includes.wiki_tasks import wiki_task
