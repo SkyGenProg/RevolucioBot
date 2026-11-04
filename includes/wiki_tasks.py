@@ -859,6 +859,11 @@ class wiki_task:
             pywikibot.error(traceback.format_exc())
             self.proba_ai = None
             return
+
+        if prob < 0:
+            self.proba_ai = None
+            return
+
         self.proba_ai = prob*100
 
         user_rights = self.page.contributor_rights()
